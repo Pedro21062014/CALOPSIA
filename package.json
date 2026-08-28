@@ -3,7 +3,10 @@
   "productName": "CALOPSIA",
   "version": "0.1.0",
   "description": "CALOPSIA — navegador web moderno baseado em Chromium (Electron), multiplataforma.",
-  "author": "CALOPSIA",
+  "author": {
+    "name": "CALOPSIA",
+    "email": "calopsia@users.noreply.github.com"
+  },
   "license": "MIT",
   "main": "main.js",
   "scripts": {
