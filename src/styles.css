@@ -56,7 +56,7 @@ body { display: flex; flex-direction: column; }
   border-right: 1px solid var(--border);
   height: 60%;
 }
-.brand-logo { width: 24px; height: 24px; flex-shrink: 0; }
+.brand-logo { height: 26px; width: auto; flex-shrink: 0; }
 .brand-name {
   font-weight: 700;
   font-size: 13px;

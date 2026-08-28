@@ -57,12 +57,12 @@ Os instaladores ficam disponíveis como *artifacts* do workflow.
 
 ## 🎨 Logo / ícone
 
-A logo ainda será definida. Por enquanto há um placeholder:
+- `assets/logo.png` — logo oficial (usada na interface).
+- `build/icon.png` — ícone dos instaladores (1024×1024, fundo transparente), gerado a partir da logo oficial.
 
-- `assets/logo.svg` — logo vetorial.
-- `build/icon.png` — ícone usado nos instaladores (1024×1024).
-
-> Para trocar o ícone, substitua `build/icon.png` (mínimo 512×512, ideal 1024×1024).
+> O `electron-builder` converte automaticamente o `build/icon.png` para
+> `.ico` (Windows) e `.icns` (macOS) durante o build. Para trocar a logo,
+> basta substituir `build/icon.png` (mínimo 512×512, ideal 1024×1024).
 
 ---
 
@@ -77,7 +77,7 @@ calopsia/
 │   ├── styles.css             # Estilos (tema escuro profissional)
 │   ├── renderer.js            # Lógica de abas, navegação e atalhos
 │   └── newtab.html            # Página inicial (nova aba)
-├── assets/logo.svg            # Logo placeholder
+├── assets/logo.png            # Logo oficial
 ├── build/icon.png             # Ícone dos instaladores
 └── .github/workflows/build.yml # CI multiplataforma
 ```
