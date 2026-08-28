@@ -1,0 +1,18 @@
+# Dependências
+node_modules/
+
+# Builds e artefatos
+release/
+dist/
+out/
+build/*.icns
+build/*.ico
+build/*.zip
+
+# Sistema / editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.log
+npm-debug.log*

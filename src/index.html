@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta http-equiv="Content-Security-Policy"
+        content="default-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https: http:; script-src 'self';" />
+  <title>CALOPSIA</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <!-- ===== Barra de abas + controles de janela ===== -->
+  <header id="titlebar">
+    <div class="brand" id="brand" title="CALOPSIA">
+      <svg class="brand-logo" viewBox="0 0 48 48" aria-hidden="true">
+        <defs>
+          <linearGradient id="lg" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0" stop-color="#7c5cff"/>
+            <stop offset="1" stop-color="#3ec6ff"/>
+          </linearGradient>
+        </defs>
+        <rect x="2" y="2" width="44" height="44" rx="13" fill="url(#lg)"/>
+        <text x="24" y="33" font-family="Segoe UI, system-ui, sans-serif" font-size="25" font-weight="700" fill="#ffffff" text-anchor="middle">C</text>
+      </svg>
+      <span class="brand-name">CALOPSIA</span>
+    </div>
+
+    <div id="tabstrip"></div>
+
+    <button id="newtab" class="newtab" title="Nova aba (Ctrl+T)">＋</button>
+
+    <div class="window-controls">
+      <button id="win-min" title="Minimizar">&#x2013;</button>
+      <button id="win-max" title="Maximizar">&#x25A1;</button>
+      <button id="win-close" title="Fechar">&#x2715;</button>
+    </div>
+  </header>
+
+  <!-- ===== Barra de navegação ===== -->
+  <nav id="toolbar">
+    <button class="nav-btn" id="back" title="Voltar (Alt+←)">&#8592;</button>
+    <button class="nav-btn" id="forward" title="Avançar (Alt+→)">&#8594;</button>
+    <button class="nav-btn" id="reload" title="Recarregar (Ctrl+R)">&#x21bb;</button>
+
+    <div id="addressbar">
+      <span id="security-icon" class="security" title="Segurança da página">&#9679;</span>
+      <input id="url-input" type="text" spellcheck="false" autocomplete="off"
+             placeholder="Pesquise ou digite uma URL" />
+    </div>
+
+    <button class="nav-btn" id="menu" title="Menu">&#8942;</button>
+  </nav>
+
+  <!-- ===== Conteúdo (webviews) ===== -->
+  <main id="views"></main>
+
+  <!-- ===== Barra de status ===== -->
+  <footer id="statusbar">
+    <span id="status-text">Pronto</span>
+  </footer>
+
+  <script src="renderer.js"></script>
+</body>
+</html>
