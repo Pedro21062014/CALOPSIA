@@ -26,6 +26,21 @@
       </tbody>
     </table>
 
+    <div class="updates">
+      <div class="u-head">
+        <span class="u-title">Atualizações</span>
+        <span class="u-current" id="u-current">—</span>
+      </div>
+      <p class="u-status" id="u-status">A verificação automática acontece a cada 30 minutos.</p>
+      <p class="u-notas" id="u-notas" hidden></p>
+      <div class="u-actions">
+        <button class="u-btn" id="u-check" type="button" hidden>Verificar atualizações</button>
+        <button class="u-btn primary" id="u-install" type="button" hidden>Baixar e instalar</button>
+        <a class="u-link" id="u-link" href="https://github.com/Pedro21062014/CALOPSIA/releases/latest"
+           target="_blank" rel="noreferrer" hidden>ver novidades</a>
+      </div>
+    </div>
+
     <p class="note">
       Interface própria construída com Electron. As páginas são renderizadas pelo
       Chromium em processos isolados (<em>sandbox</em>), com

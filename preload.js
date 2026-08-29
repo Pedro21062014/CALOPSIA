@@ -58,5 +58,11 @@ contextBridge.exposeInMainWorld('calopsia', {
 
   /* misc */
   getInfo: () => ipcRenderer.invoke('app:info'),
-  openFileDialog: () => ipcRenderer.invoke('dialog:open-file')
+  openFileDialog: () => ipcRenderer.invoke('dialog:open-file'),
+
+  /* atualizações (GitHub Releases) */
+  updateState: () => ipcRenderer.invoke('update:state:get'),
+  updateCheckNow: () => ipcRenderer.invoke('update:check'),
+  updateAction: () => ipcRenderer.send('update:action'),
+  onUpdateState: (cb) => ipcRenderer.on('update:state', (_e, estado) => cb(estado))
 });

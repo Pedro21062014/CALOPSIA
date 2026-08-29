@@ -29,7 +29,8 @@ const ICON = {
   sun:      S('<circle cx="12" cy="12" r="4.2"/><line x1="12" y1="2.6" x2="12" y2="4.6"/><line x1="12" y1="19.4" x2="12" y2="21.4"/><line x1="2.6" y1="12" x2="4.6" y2="12"/><line x1="19.4" y1="12" x2="21.4" y2="12"/><line x1="5.4" y1="5.4" x2="6.8" y2="6.8"/><line x1="17.2" y1="17.2" x2="18.6" y2="18.6"/><line x1="5.4" y1="18.6" x2="6.8" y2="17.2"/><line x1="17.2" y1="6.8" x2="18.6" y2="5.4"/>'),
   moon:     S('<path d="M20.2 14.8A8.6 8.6 0 0 1 9.2 3.8a8.6 8.6 0 1 0 11 11Z"/>'),
   monitor:  S('<rect x="2.5" y="4" width="19" height="12.5" rx="2"/><line x1="8.5" y1="20.5" x2="15.5" y2="20.5"/><line x1="12" y1="16.5" x2="12" y2="20.5"/>'),
-  key:      S('<circle cx="8" cy="15" r="4"/><path d="M10.9 12.1 20 3"/><path d="M16.5 6.5 19 9"/>')
+  key:      S('<circle cx="8" cy="15" r="4"/><path d="M10.9 12.1 20 3"/><path d="M16.5 6.5 19 9"/>'),
+  download: S('<path d="M12 4v10.5"/><polyline points="6.8 9.8 12 15 17.2 9.8"/><path d="M4.5 19.5h15"/>')
 };
 
 /* --------------------------- elementos --------------------------- */
@@ -127,8 +128,7 @@ function createTab(url, opts = {}) {
     favicon: '',
     loading: false,
     error: null,
-    zoom: 1,
-    navegacoes: []      // {url, t} — usado só para detectar loop de recarregamento
+    zoom: 1
   };
   tabs.push(tab);
 
@@ -205,7 +205,6 @@ function bindView(tab) {
   const onNavigated = (e) => {
     tab.url = e.url;
     tab.error = null;
-    if (registrarNavegacao(tab, e.url)) return;   // loop: já tratado ali dentro
     const cid = safe(() => v.getWebContentsId());
     if (cid) window.calopsia.senhasNavegou({ contentsId: cid, url: e.url });
     if (tab.id === activeId) {
@@ -313,39 +312,14 @@ function activateTab(id) {
 /** Mostra a webview ativa ou a página de erro — nunca as duas juntas
  *  (no Windows o <webview> é uma janela nativa que cobre o DOM). */
 /* ------------------------------------------------------------
-   Guarda contra loop de recarregamento
+   Loop de recarregamento — REMOVIDO na v0.2.7
    ------------------------------------------------------------
-   Alguns sites (a tela de verificação do Cloudflare é o caso clássico)
-   ficam recarregando a mesma URL para sempre. Sem isto a aba queima CPU
-   e a pessoa fica olhando uma tela que nunca avança. */
-const LOOP_MINIMO = 5;        // quantas vezes a mesma URL
-const LOOP_JANELA = 15000;    // dentro de quantos milissegundos
-
-function registrarNavegacao(tab, url) {
-  if (!url || url === 'about:blank') return false;
-  const agora = Date.now();
-  tab.navegacoes.push({ url, t: agora });
-  if (tab.navegacoes.length > 40) tab.navegacoes.shift();
-
-  const recentes = tab.navegacoes.filter((n) => agora - n.t <= LOOP_JANELA);
-  const repetidas = recentes.filter((n) => n.url === url);
-
-  if (repetidas.length < LOOP_MINIMO) return false;
-
-  // É um loop: para o carregamento e explica o que está acontecendo.
-  tab.navegacoes = [];
-  safe(() => tab.view.stop());
-  tab.loading = false;
-  tab.el.classList.remove('loading');
-  tab.error = { code: 'LOOP', description: null, url };
-  if (tab.id === activeId) {
-    renderActiveView();
-    setStatus('A página não para de recarregar');
-    showProgress(false);
-    reloadBtn.classList.remove('is-loading');
-  }
-  return true;
-}
+   Um "protetor" antigo interrompia páginas que recarregavam
+   várias vezes seguidas. Só que a verificação do Cloudflare
+   recarrega a página de propósito — o protetor matava o desafio
+   no meio e a aba ficava presa no erro. Agora a página segue seu
+   curso normal.
+   ------------------------------------------------------------ */
 
 function renderActiveView() {
   const tab = getActive();
@@ -356,14 +330,9 @@ function renderActiveView() {
   requestAnimationFrame(relayoutViews);
 
   if (showErr && tab) {
-    const loop = String(tab.error.code) === 'LOOP';
-    errTitle.textContent = loop
-      ? 'A página não sai do lugar'
-      : 'Não foi possível carregar esta página';
+    errTitle.textContent = 'Não foi possível carregar esta página';
     errDesc.textContent = describeError(tab.error);
-    errCode.textContent = loop
-      ? tab.error.url
-      : `${tab.error.url}  ·  erro ${tab.error.code}`;
+    errCode.textContent = `${tab.error.url}  ·  erro ${tab.error.code}`;
   }
 }
 
@@ -532,9 +501,47 @@ function runFind(forward) {
 }
 
 /* ============================ menu (lista dropdown) ============================ */
+
+/* Estado do atualizador (chega do processo principal). */
+let updateState = null;
+let avisouAtualizacao = false;
+
+function itemAtualizacao() {
+  if (!updateState) return null;
+  if (updateState.status === 'available')
+    return { id: 'update', icon: ICON.download, label: `Atualizar para a v${updateState.versao}`, accent: true };
+  if (updateState.status === 'downloading')
+    return { id: 'update', icon: ICON.download, label: `Baixando v${updateState.versao}… ${updateState.progresso || 0}%`, disabled: true };
+  if (updateState.status === 'ready')
+    return { id: 'update', icon: ICON.download, label: `Reiniciar e instalar v${updateState.versao}`, accent: true };
+  if (updateState.status === 'error')
+    return { id: 'update', icon: ICON.reload, label: 'Atualização — tentar de novo' };
+  return null;
+}
+
+function onUpdateState(novo) {
+  const anterior = updateState && updateState.status;
+  updateState = novo || null;
+
+  const destaque = !!updateState && ['available', 'ready'].includes(updateState.status);
+  menuBtn.classList.toggle('has-update', destaque);
+
+  if (updateState && updateState.status === 'available' && !avisouAtualizacao && anterior !== 'available') {
+    avisouAtualizacao = true;
+    toast(`Atualização v${updateState.versao} disponível — toque no menu ☰ para atualizar.`, { ok: true, duration: 9000 });
+  }
+}
+
+if (window.calopsia) {
+  window.calopsia.onUpdateState(onUpdateState);
+  window.calopsia.updateState().then(onUpdateState).catch(() => {});
+}
+
 function menuItems() {
   const t = getActive();
+  const atualizacao = itemAtualizacao();
   return [
+    ...(atualizacao ? [atualizacao, { sep: true }] : []),
     { id: 'new-tab',    icon: ICON.plus,    label: 'Nova aba',             shortcut: `${MOD_LABEL}+T` },
     { id: 'find',       icon: ICON.search,  label: 'Localizar na página',  shortcut: `${MOD_LABEL}+F` },
     { id: 'open-file',  icon: ICON.folder,  label: 'Abrir arquivo…',       shortcut: `${MOD_LABEL}+O` },
@@ -619,6 +626,7 @@ function runMenuAction(id) {
     case 'zoom-reset': zoomReset(); break;
     case 'devtools':   if (t) safe(() => t.view.openDevTools()); break;
     case 'fullscreen': if (window.calopsia) window.calopsia.toggleFullscreen(); break;
+    case 'update':     if (window.calopsia) window.calopsia.updateAction(); break;
     case 'about':        openAbout(); break;
     case 'senhas':       createTab(SENHAS_URL); break;
     case 'gerar-senha':  gerarSenhaFortes(); break;
@@ -695,11 +703,6 @@ function describeError(err) {
     '-202': 'Certificado de segurança inválido.',
     '-501': 'Falha no protocolo de segurança (SSL/TLS).'
   };
-  if (String(err.code) === 'LOOP') {
-    return 'Esta página fica recarregando sozinha e nunca termina de abrir — ' +
-           'é comum em telas de verificação de sites (Cloudflare e parecidos). ' +
-           'O carregamento foi interrompido para não travar o navegador.';
-  }
   return map[String(err.code)] || err.description || 'Ocorreu um erro ao carregar a página.';
 }
 

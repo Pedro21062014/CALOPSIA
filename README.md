@@ -218,6 +218,26 @@ de usuário ou senha e escolha a conta na janelinha que abre.
 
 ## 🐛 Histórico de correções
 
+### v0.2.7
+- **Atualizador automático:** o CALOPSIA agora verifica sozinho, a cada
+  30 minutos, se saiu versão nova nas Releases do GitHub. Quando há
+  atualização, um ponto verde aparece no botão ☰ e o primeiro item do
+  menu fica destacado ("Atualizar para a vX") — um clique baixa o
+  instalador certo para o seu sistema com barra de progresso e, no fim,
+  pergunta se quer instalar agora. Também dá para verificar na mão e
+  atualizar pela página **Sobre o CALOPSIA**.
+- **Cloudflare corrigido de vez:** removidas as emulações de
+  `navigator.userAgentData`, `window.chrome.runtime`, `chrome.csi`,
+  `chrome.loadTimes` e `permissions.query` que eram injetadas nas
+  páginas — eram exatamente elas que o desafio do Cloudflare detectava
+  (objetos falsos não têm os protótipos nativos que ele inspeciona),
+  deixando a tela presa em "Verificando…". Também saiu o "protetor
+  contra loop de recarregamento", que interrompia o carregamento no
+  meio da verificação — a tela do Cloudflare recarrega a página de
+  propósito, e o protetor matava o desafio antes dele terminar. Agora
+  o navegador se apresenta de forma honesta e o desafio conclui
+  normalmente.
+
 ### v0.2.6
 - **Gerenciador de senhas:** detecção automática de formulários de login,
   oferta para salvar depois que o login dá certo, preenchimento ao clicar no

@@ -4,7 +4,7 @@
    - não expõe nada em sites da internet;
    - só entrega as pontes às páginas internas (calopsia://). */
 
-const { contextBridge, ipcRenderer, webFrame } = require('electron');
+const { contextBridge, ipcRenderer } = require('electron');
 const INTERNO = location.protocol === 'calopsia:';
 
 /* Ctrl/⌘ + roda do mouse -> zoom só desta aba.
@@ -35,144 +35,35 @@ if (INTERNO) {
       gerarSenha: (n) => ipcRenderer.invoke('senhas:gerar', n),
       avaliarForca: (s) => ipcRenderer.invoke('senhas:forca', s),
       desbloquear: (senha) => ipcRenderer.invoke('senhas:desbloquear', senha),
-      criarCofre: (senha) => ipcRenderer.invoke('senhas:criar', senha)
+      criarCofre: (senha) => ipcRenderer.invoke('senhas:criar', senha),
+
+      /* Atualizações — usadas pela página "Sobre o CALOPSIA". */
+      estadoAtualizacao: () => ipcRenderer.invoke('update:state:get'),
+      verificarAtualizacao: () => ipcRenderer.invoke('update:check'),
+      atualizarAgora: () => ipcRenderer.send('update:action'),
+      onAtualizacao: (cb) => ipcRenderer.on('update:state', (_e, estado) => cb(estado))
     });
   } catch { /* página não isolada: segue sem ponte */ }
 }
 
 /* ============================================================
-   Consistência de "impressão digital"
+   Identidade do navegador — versão 0.2.7
    ------------------------------------------------------------
-   O Electron anuncia um User-Agent de Chrome, mas o resto do
-   navegador continua se identificando como Chromium genérico.
-   Essa contradição é exatamente o que os anti-bots (Cloudflare e
-   companhia) procuram — e o resultado é o desafio nunca passar.
+   A versão anterior emulava aqui navigator.userAgentData,
+   window.chrome.runtime, chrome.csi, chrome.loadTimes e
+   permissions.query para "parecer" Chrome de verdade.
 
-   O código abaixo roda no mundo principal da página (por isso via
-   webFrame) e só alinha o que o Chromium já é, sem mentir sobre
-   hardware nem driblar desafio manual.
+   Era exatamente isso que quebrava a verificação do Cloudflare:
+   os objetos falsos não têm os protótipos nativos que o desafio
+   inspeciona, então o navegador parecia robô e a tela ficava
+   presa em "Verificando…".
+
+   Agora a regra é simples: o User-Agent de Chrome já é definido
+   de forma coerente no processo principal (mesma versão do
+   Chromium real que roda aqui) e NADA é emulado dentro da
+   página. Navegador honesto passa no desafio; navegador
+   disfarçado, não.
    ============================================================ */
-function alinharIdentidade() {
-  const ua = navigator.userAgent;
-  const achou = /Chrome\/([\d.]+)/.exec(ua);
-  const completo = achou ? achou[1] : '126.0.0.0';
-  const principal = completo.split('.')[0];
-
-  let plataforma = 'Linux';
-  if (/Windows/.test(ua)) plataforma = 'Windows';
-  else if (/Macintosh|Mac OS X/.test(ua)) plataforma = 'macOS';
-  else if (/Android/.test(ua)) plataforma = 'Android';
-  else if (/iPhone|iPad/.test(ua)) plataforma = 'iOS';
-  const movel = /Android|iPhone|iPad|Mobile/.test(ua);
-
-  const versaoPlataforma = plataforma === 'Windows' ? '15.0.0'
-    : plataforma === 'macOS' ? '14.0.0'
-    : plataforma === 'Linux' ? '6.5.0' : '';
-
-  /* navigator.userAgentData: era "Chromium" sem o "Google Chrome". */
-  const marcas = [
-    { brand: 'Not)A;Brand', version: '99' },
-    { brand: 'Chromium', version: principal },
-    { brand: 'Google Chrome', version: principal }
-  ];
-  const listaCompleta = [
-    { brand: 'Not)A;Brand', version: '99.0.0.0' },
-    { brand: 'Chromium', version: completo },
-    { brand: 'Google Chrome', version: completo }
-  ];
-
-  const uaData = {
-    brands: marcas,
-    mobile: movel,
-    platform: plataforma,
-    getHighEntropyValues: (dicas) => {
-      const tudo = {
-        architecture: 'x86',
-        bitness: '64',
-        model: '',
-        platformVersion: versaoPlataforma,
-        uaFullVersion: completo,
-        fullVersionList: listaCompleta,
-        wow64: false
-      };
-      const pedido = Array.isArray(dicas) ? dicas : Object.keys(tudo);
-      const resposta = {};
-      for (const d of pedido) if (Object.prototype.hasOwnProperty.call(tudo, d)) resposta[d] = tudo[d];
-      return Promise.resolve(resposta);
-    },
-    toJSON: () => ({ brands: marcas, mobile: movel, platform: plataforma })
-  };
-
-  const define = (obj, prop, valor) => {
-    try { Object.defineProperty(obj, prop, { get: () => valor, configurable: true }); } catch { /* só leitura */ }
-  };
-
-  define(navigator, 'userAgentData', uaData);
-
-  /* window.chrome.runtime — existe no Chrome de verdade. */
-  try {
-    const c = window.chrome && typeof window.chrome === 'object' ? window.chrome : {};
-    if (!c.runtime) {
-      c.runtime = {
-        id: undefined,
-        connect() { return { onMessage: { addListener() {}, removeListener() {} }, onDisconnect: { addListener() {}, removeListener() {} }, postMessage() {}, disconnect() {} }; },
-        sendMessage() {},
-        onMessage: { addListener() {}, removeListener() {} },
-        onConnect: { addListener() {}, removeListener() {} }
-      };
-    }
-    if (!c.csi) {
-      c.csi = () => ({ startE: Date.now(), onloadT: Date.now(), pageT: performance.now(), tran: 15 });
-    }
-    if (!c.loadTimes) {
-      c.loadTimes = () => ({
-        requestTime: performance.timeOrigin / 1000,
-        startLoadTime: performance.timeOrigin / 1000,
-        commitLoadTime: performance.now() / 1000,
-        finishDocumentLoadTime: performance.now() / 1000,
-        finishLoadTime: performance.now() / 1000,
-        firstPaintTime: performance.now() / 1000,
-        firstPaintAfterLoadTime: 0,
-        navigationType: 'Other',
-        wasFetchedViaSpdy: true,
-        wasNpnNegotiated: true,
-        npnNegotiatedProtocol: 'h2',
-        wasAlternateProtocolAvailable: false,
-        connectionInfo: 'h2'
-      });
-    }
-    define(window, 'chrome', c);
-  } catch { /* opcional */ }
-
-  /* Idiomas: o Electron responde só "en-US"; um navegador real
-     devolve a lista de preferências do sistema. */
-  try {
-    const local = (Intl.DateTimeFormat().resolvedOptions().locale || 'pt-BR');
-    const idiomas = [...new Set([local, 'pt-BR', 'pt', 'en-US', 'en'])];
-    define(navigator, 'languages', Object.freeze(idiomas));
-  } catch { /* opcional */ }
-
-  /* Permissões: o Chrome responde "prompt"; automação costuma
-     responder "denied" para notificação. */
-  try {
-    if (window.Notification && Notification.permission === 'denied' && navigator.permissions) {
-      const original = navigator.permissions.query.bind(navigator.permissions);
-      navigator.permissions.query = (p) => (
-        p && p.name === 'notifications'
-          ? Promise.resolve({ state: 'prompt', onchange: null })
-          : original(p)
-      );
-    }
-  } catch { /* opcional */ }
-
-  try {
-    if (navigator.webdriver) define(navigator, 'webdriver', undefined);
-  } catch { /* opcional */ }
-}
-
-try {
-  webFrame.executeJavaScript(`(${alinharIdentidade.toString()})();`);
-} catch { /* ambiente sem webFrame: segue sem o ajuste */ }
 
 /* ============================================================
    Detecção de formulários de senha

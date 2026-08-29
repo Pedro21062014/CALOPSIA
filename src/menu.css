@@ -43,6 +43,15 @@ html, body {
 .item.danger { color: var(--danger-text); }
 .item.danger:hover { background: var(--danger-soft); color: var(--danger-strong); }
 
+/* ---------- destaque: atualização disponível ---------- */
+.item.accent {
+  color: var(--ok);
+  font-weight: 600;
+  background: var(--hover);
+}
+.item.accent .ico { opacity: 1; }
+.item.accent:hover, .item.accent:focus-visible { background: var(--hover-2); color: var(--strong); }
+
 .item .ico { width: 16px; height: 16px; flex-shrink: 0; display: grid; place-items: center; opacity: .85; }
 .item .ico svg { width: 16px; height: 16px; }
 .item .lbl { flex: 1; }

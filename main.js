@@ -9,6 +9,7 @@ const { app, BrowserWindow, shell, session, protocol, ipcMain, Menu, dialog,
         nativeTheme, webContents, clipboard } = require('electron');
 const path = require('path');
 const cofre = require('./src/cofre');
+const { initUpdater } = require('./src/updater');
 const fs = require('fs');
 const os = require('os');
 
@@ -393,6 +394,9 @@ app.whenReady().then(() => {
   setupDownloads();
   buildMenu();
   createWindow();
+
+  /* Atualizador: verifica nas Releases do GitHub 30 em 30 minutos. */
+  initUpdater();
 });
 
 /* ------------------------------------------------------------

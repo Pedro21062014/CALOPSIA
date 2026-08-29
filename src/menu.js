@@ -34,7 +34,7 @@ function render() {
       return;
     }
     const b = document.createElement('button');
-    b.className = 'item' + (it.danger ? ' danger' : '') + (it.checked ? ' checked' : '');
+    b.className = 'item' + (it.danger ? ' danger' : '') + (it.checked ? ' checked' : '') + (it.accent ? ' accent' : '');
     b.type = 'button';
     b.disabled = !!it.disabled;
     b.dataset.id = it.id;

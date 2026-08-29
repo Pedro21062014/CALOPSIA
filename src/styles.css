@@ -243,6 +243,20 @@ body.maximized #win-max .ico-restore { display: block; }
 #reload.is-loading .ico-reload { display: none; }
 #reload.is-loading .ico-stop { display: block; }
 
+/* ---------- aviso de atualização no botão ☰ ---------- */
+#menu { position: relative; }
+#menu.has-update::after {
+  content: '';
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--ok);
+  box-shadow: 0 0 0 2px var(--chrome);
+}
+
 /* ---------- barra de endereço ---------- */
 #addressbar {
   flex: 1;
