@@ -86,6 +86,14 @@ let seq = 0;
 let closedTabs = [];
 let userTyping = false;     // usuário está digitando na barra de endereço?
 let menuOpen = false;
+
+/* Estado do painel DevTools (declarado AQUI no topo porque activateTab,
+   chamada durante o boot, já referencia — deixar depois causaria
+   ReferenceError de zona morta temporal e nenhuma aba abriria). */
+/* (estado devtoolsHost/devtoolsTabId/devtoolsAbrindo: declarado no topo do arquivo) */
+let devtoolsHost = null;      // o <webview> que hospeda o DevTools
+let devtoolsTabId = null;     // aba sendo inspecionada
+let devtoolsAbrindo = false;
 let lastFindId = 0;
 
 const getTab = (id) => tabs.find((t) => t.id === id);
@@ -659,17 +667,78 @@ function definirTema(fonte) {
   window.calopsia.setTheme(fonte).then((info) => { temaFonte = info.source; }).catch(() => {});
 }
 
-/* DevTools: abre/fecha o inspetor completo (Elements, Console, Network,
-   Sources…) DA PÁGINA da aba ativa — acoplado ao lado direito da página. */
-function toggleDevToolsAtiva() {
+/* ------------------------------------------------------------
+   DevTools — painel acoplado ao lado direito da página
+   ------------------------------------------------------------
+   O Electron não sabe "ancorar" DevTools de um <webview>; então o
+   frontend do DevTools é hospedado num segundo webview, criado aqui,
+   que ocupa o painel #devtools-pane ao lado da página.
+   ------------------------------------------------------------ */
+function aguardarDevtoolsHost(host) {
+  return new Promise((resolve) => {
+    let dado = false;
+    const ok = () => { if (!dado) { dado = true; resolve(true); } };
+    host.addEventListener('dom-ready', ok, { once: true });
+    setTimeout(() => ok(), 2500);      // não trava se algo sair errado
+  });
+}
+
+function limparDevtoolsUI() {
+  if (devtoolsHost) { devtoolsHost.remove(); devtoolsHost = null; }
+  devtoolsTabId = null;
+  devtoolsAbrindo = false;
+  document.body.classList.remove('devtools-aberto');
+  requestAnimationFrame(relayoutViews);
+}
+
+function fecharDevtools() {
+  const t = devtoolsTabId != null ? getTab(devtoolsTabId) : null;
+  if (t) safe(() => t.view.closeDevTools && t.view.closeDevTools());
+  limparDevtoolsUI();   // idempotente: o evento 'devtools-closed' também limpa
+}
+
+async function abrirDevtools(inspecionar) {
   const t = getActive();
-  if (!t) return;
+  if (!t || !window.calopsia) return;
+
+  if (devtoolsTabId === t.id && !devtoolsAbrindo) { fecharDevtools(); return; }
+  fecharDevtools();
+
   const cid = safe(() => t.view.getWebContentsId());
-  if (cid && window.calopsia) {
-    window.calopsia.tabDevTools(cid).catch(() => safe(() => t.view.openDevTools()));
-    return;
-  }
-  safe(() => t.view.openDevTools());
+  if (!cid) return;
+
+  devtoolsAbrindo = true;
+  const host = document.createElement('webview');
+  host.setAttribute('src', 'about:blank');   // sem src o webview nunca fica pronto
+  host.setAttribute('webpreferences', 'contextIsolation=yes,nodeIntegration=no,sandbox=yes');
+  document.getElementById('devtools-pane').appendChild(host);
+  devtoolsHost = host;
+  devtoolsTabId = t.id;
+
+  await aguardarDevtoolsHost(host);
+  const hid = safe(() => host.getWebContentsId());
+  if (!hid) { devtoolsAbrindo = false; fecharDevtools(); return; }
+
+  const ok = await window.calopsia.acoplarDevtools(cid, hid, inspecionar || null).catch(() => false);
+  devtoolsAbrindo = false;
+  if (!ok) { fecharDevtools(); toast('Não foi possível abrir as ferramentas do desenvolvedor.'); return; }
+
+  document.body.classList.add('devtools-aberto');
+  requestAnimationFrame(relayoutViews);
+}
+
+function toggleDevToolsAtiva() {
+  abrirDevtools(null);
+}
+
+/* "Inspecionar" no botão direito: abre o painel já parado no elemento. */
+if (window.calopsia) {
+  window.calopsia.onDevtoolsInspecionar(async ({ contentsId, x, y }) => {
+    const t = tabs.find((tb) => safe(() => tb.view.getWebContentsId()) === contentsId);
+    if (!t) return;
+    if (t.id !== activeId) activateTab(t.id);
+    if (devtoolsTabId !== t.id) await abrirDevtools({ x, y });
+  });
 }
 
 function runMenuAction(id) {

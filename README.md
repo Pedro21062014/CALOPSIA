@@ -218,6 +218,18 @@ de usuário ou senha e escolha a conta na janelinha que abre.
 
 ## 🐛 Histórico de correções
 
+### v0.2.11
+- **CORREÇÃO CRÍTICA — nenhuma página carregava:** a v0.2.10 saiu com um erro
+  de inicialização (ReferenceError no boot, causado pelo estado do painel
+  DevTools declarado após o seu primeiro uso). As páginas chegavam a
+  carregar por baixo, mas nenhuma aba era ativada/exibida. Corrigido e
+  **testado de ponta a ponta** com o app rodando de verdade.
+- **Painel DevTools agora abre de fato:** a v0.2.10 também saiu sem a
+  implementação do painel (o botão chamava uma ponte que não existia).
+  Agora F12/Ctrl+Shift+I/menu/"Inspecionar" abrem o painel ao lado
+  direito da página com o DevTools completo (Elements, Console, Network,
+  Sources…), fecha ao trocar/fechar aba e reabre normalmente.
+
 ### v0.2.10
 - **Cloudflare (loop infinito, a fundo):** eram TRÊS contradições somadas.
   (1) o cabeçalho `sec-ch-ua` usava um "grease" que não é o do Chromium 126 —
