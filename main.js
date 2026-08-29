@@ -14,12 +14,18 @@ const abas = require('./src/tabs');
 const fs = require('fs');
 const os = require('os');
 
+/* Particionamento de storage de terceiros DESLIGADO (v0.5.3):
+   descoberta forense mostrou que o cf_clearance do Cloudflare era
+   armazenado PARTICIONADO sob o topLevelSite errado (novacrm.com.br)
+   quando a pessoa navegava para app.novacrm.com.br/login — cookie no
+   "pote" errado = liberação invisível = desafio em loop. Navegadores
+   Chromium de navegador (não app) usam storage não-particionado. */
 /* O Chromium faz descoberta de dispositivos na rede (mDNS/Cast) sozinho,
    e é isso que faz o Firewall do Windows perguntar se o app pode escutar
    a rede na primeira vez que ele abre. Não usamos transmissão para
    dispositivos, então essa descoberta fica desligada. */
 try {
-  app.commandLine.appendSwitch('disable-features', 'MediaRouter');
+  app.commandLine.appendSwitch('disable-features', 'MediaRouter,ThirdPartyStoragePartitioning,PartitionedCookies');
 } catch { /* ignora se o switch não existir nesta versão */ }
 
 /* WebGPU — necessário para o Turnstile do Cloudflare.

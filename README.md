@@ -218,6 +218,20 @@ de usuário ou senha e escolha a conta na janelinha que abre.
 
 ## 🐛 Histórico de correções
 
+### v0.5.3
+- **CAUSA RAIZ DO LOOP ENCONTRADA COM PROVA (forense no app rodando):** o
+  cookie de liberação `cf_clearance` era armazenado PARTICIONADO sob o site
+  errado — `topLevelSite: novacrm.com.br` — quando a pessoa entra pelo site
+  de marketing e clica em Login (que vai para `app.novacrm.com.br`). Com o
+  cookie no "pote" de outro site, a navegação seguinte ao app não carrega a
+  liberação → o Cloudflare desafia de novo → loop infinito. Corrigido
+  desativando o particionamento de storage de terceiros
+  (`ThirdPartyStoragePartitioning` + `PartitionedCookies`), o comportamento
+  clássico de navegadores; presença dos switches confirmada no processo.
+- Forense completa: console da página e do iframe Turnstile, requisições,
+  headers reais enviados (requestWillBeSentExtraInfo) e chaves de partição
+  dos cookies — foi assim que o "pote errado" apareceu.
+
 ### v0.5.2
 - **Correção validada pela ferramenta OFICIAL do Cloudflare:** rodamos o
   Turnstile Troubleshooter (debug.challenges.cloudflare.com) dentro do
