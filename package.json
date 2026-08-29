@@ -1,8 +1,16 @@
 {
   "name": "calopsia",
   "productName": "CALOPSIA",
-  "version": "0.2.2",
+  "version": "0.2.3",
   "description": "CALOPSIA — navegador web moderno baseado em Chromium (Electron). Interface própria com abas, busca integrada, localizar na página, zoom e downloads.",
+  "homepage": "https://github.com/Pedro21062014/CALOPSIA",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Pedro21062014/CALOPSIA.git"
+  },
+  "bugs": {
+    "url": "https://github.com/Pedro21062014/CALOPSIA/issues"
+  },
   "author": {
     "name": "CALOPSIA",
     "email": "calopsia@users.noreply.github.com"
@@ -17,7 +25,12 @@
     "dist:mac": "electron-builder --mac",
     "dist:linux": "electron-builder --linux",
     "lint": "node --check main.js && node --check preload.js && node --check src/renderer.js && node --check src/newtab.js && node --check src/about.js",
-    "release:linux": "npm run dist:linux -- --publish never"
+    "release:linux": "npm run dist:linux -- --publish never",
+    "icons": "node scripts/gen-icons.js",
+    "predist": "npm run icons",
+    "predist:win": "npm run icons",
+    "predist:mac": "npm run icons",
+    "predist:linux": "npm run icons"
   },
   "devDependencies": {
     "electron": "^31.3.0",
@@ -37,7 +50,8 @@
       "preload-menu.js",
       "src/**/*",
       "assets/**/*",
-      "package.json"
+      "package.json",
+      "!assets/icons/**"
     ],
     "mac": {
       "category": "public.app-category.utilities",
@@ -45,14 +59,14 @@
         "dmg",
         "zip"
       ],
-      "icon": "build/icon.png"
+      "icon": "assets/icon-1024.png"
     },
     "win": {
       "target": [
         "nsis",
         "portable"
       ],
-      "icon": "build/icon.png"
+      "icon": "assets/icon-1024.png"
     },
     "linux": {
       "target": [
@@ -60,7 +74,7 @@
         "deb"
       ],
       "category": "Network",
-      "icon": "build/icon.png",
+      "icon": "assets/icons",
       "executableName": "calopsia",
       "maintainer": "CALOPSIA <calopsia@users.noreply.github.com>"
     },
@@ -78,6 +92,7 @@
       "provider": "github",
       "owner": "Pedro21062014",
       "repo": "CALOPSIA"
-    }
+    },
+    "icon": "assets/icon-1024.png"
   }
 }

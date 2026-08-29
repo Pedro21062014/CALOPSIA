@@ -17,11 +17,22 @@ const TAB_PARTITION = 'persist:calopsia';
 const SRC_DIR = path.join(APP_ROOT, 'src');
 const ASSETS_DIR = path.join(APP_ROOT, 'assets');
 
-/* Ícone do app. Dentro do pacote (asar) só existe assets/, nunca build/. */
-const ICON_PATH = [
-  path.join(APP_ROOT, 'build', 'icon.png'),
-  path.join(ASSETS_DIR, 'logo.png')
-].find((p) => { try { return fs.existsSync(p); } catch { return false; } }) || undefined;
+/* Ícone da janela.
+   - No pacote (asar) só existe assets/ — build/ fica fora do app.
+   - No Windows o Electron só aceita .ico para o ícone da janela. */
+const exists = (p) => { try { return fs.existsSync(p); } catch { return false; } };
+const ICON_PATH = (process.platform === 'win32'
+  ? [
+      path.join(APP_ROOT, 'build', 'icon.ico'),
+      path.join(ASSETS_DIR, 'icon.ico'),
+      path.join(ASSETS_DIR, 'logo.png')
+    ]
+  : [
+      path.join(APP_ROOT, 'build', 'icon.png'),
+      path.join(ASSETS_DIR, 'icon-512.png'),
+      path.join(ASSETS_DIR, 'logo.png')
+    ]
+).find(exists) || undefined;
 
 /* ------------------------------------------------------------
    Protocolo interno "calopsia://"

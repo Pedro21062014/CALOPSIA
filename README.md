@@ -111,14 +111,32 @@ sha256sum CALOPSIA-0.2.0-linux-x64.AppImage
 
 ---
 
-## 🎨 Logo / ícone
+## 🎨 Logo / ícones
 
-- `assets/logo.png` — logo oficial (usada na interface).
-- `build/icon.png` — ícone dos instaladores (1024×1024, fundo transparente).
+Todos os ícones são gerados a partir de `assets/logo.png`:
 
-> O `electron-builder` converte automaticamente o `build/icon.png` para
-> `.ico` (Windows) e `.icns` (macOS) durante o build. Para trocar a logo,
-> basta substituir `build/icon.png` (mínimo 512×512, ideal 1024×1024).
+| Arquivo | Uso |
+|---|---|
+| `assets/logo.png` | logo oficial (barra de título, página inicial, favicon das abas) |
+| `assets/icon-1024.png` | mestre 1024×1024 para `.icns` (macOS) e `.ico` (Windows) |
+| `assets/icons/<N>x<N>.png` | conjunto hicolor 16→512, instalado em `/usr/share/icons/hicolor/` no Linux |
+| `assets/icon.ico` | ícone da janela em runtime no Windows |
+| `build/icon.png` | cópia do mestre (convenção do electron-builder) |
+
+Para regenerar tudo depois de trocar a logo:
+
+```bash
+pip install Pillow
+npm run icons
+```
+
+> Os ícones já vão versionados no repositório, então a CI **não** precisa do
+> Pillow — ela só confere se os arquivos existem antes de compilar.
+>
+> **Atenção:** no Linux o ícone só aparece no menu/dock se o `.deb` instalar
+> os PNGs em `hicolor/<tamanho>/apps/`. Por isso `build.linux.icon` aponta para
+> o *diretório* `assets/icons` — passando um arquivo único o electron-builder
+> grava em `hicolor/0x0/` e nenhum ambiente acha o ícone.
 
 ---
 
@@ -156,6 +174,19 @@ calopsia/
 ---
 
 ## 🐛 Histórico de correções
+
+### v0.2.3
+- **Ícone no Linux/installador:** o `build/icon.png` era rejeitado pelo
+  app-builder em runtime e a CI caía no ícone padrão do Electron
+  (`default Electron icon is used`). Além disso, passando um arquivo único o
+  `electron-builder` gravava em `hicolor/0x0/`, caminho inválido na spec XDG.
+  Agora `build.linux.icon` aponta para o diretório `assets/icons` e o `.deb`
+  instala 16×16 … 512×512 nos caminhos corretos.
+- **Logo na página inicial:** logo do CALOPSIA em destaque (78px) e
+  `<link rel="icon">`, para a aba mostrar o logo em vez do ícone genérico.
+- **Ícone da janela no Windows:** gerado `assets/icon.ico` multi-tamanho.
+- **Blindagem:** script `npm run icons` regenera tudo de `assets/logo.png`, e a
+  CI falha se algum ícone estiver faltando.
 
 ### v0.2.2
 - **Robustez de layout:** os webviews agora têm o tamanho reafirmado sempre que

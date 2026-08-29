@@ -52,17 +52,23 @@ body {
 /* ---------- marca ---------- */
 .brand {
   display: flex;
+  flex-direction: column;
   align-items: center;
-  gap: 10px;
-  margin-bottom: 30px;
-  opacity: .8;
+  gap: 14px;
+  margin-bottom: 32px;
 }
-.logo { height: 34px; width: auto; }
+/* logo oficial da CALOPSIA em destaque no topo da página inicial */
+.logo {
+  height: 78px;
+  width: auto;
+  display: block;
+  filter: drop-shadow(0 10px 28px rgba(0, 0, 0, .55));
+}
 .wordmark {
   font-size: 11px;
   font-weight: 600;
-  letter-spacing: 3.4px;
-  color: #9aa0ab;
+  letter-spacing: 4px;
+  color: #7d838d;
 }
 
 /* ---------- relógio ---------- */
@@ -205,7 +211,7 @@ body {
 @media (max-height: 660px) {
   .clock { font-size: 62px; }
   .brand { margin-bottom: 18px; }
-  .logo { height: 28px; }
+  .logo { height: 56px; }
   .quick { margin-top: 22px; grid-template-columns: repeat(5, 80px); }
   .hint { display: none; }
 }
