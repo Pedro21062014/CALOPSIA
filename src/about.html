@@ -11,7 +11,7 @@
   <div class="glow"></div>
 
   <main class="card">
-    <img class="logo" src="../assets/logo.png" alt="CALOPSIA" draggable="false" />
+    <img class="logo" id="logo" src="../assets/logo.png" alt="CALOPSIA" draggable="false" />
     <h1>CALOPSIA</h1>
     <p class="tag">Navegador web moderno baseado em Chromium</p>
     <div class="version" id="version">—</div>
@@ -39,6 +39,20 @@
     </a>
   </main>
 
+  <script src="logo-data.js"></script>
+  <script>
+    (function () {
+      var inline = window.CALOPSIA_LOGO;
+      if (!inline) return;
+      var img = document.getElementById('logo');
+      if (img) {
+        img.addEventListener('error', function () { img.src = inline; });
+        if (img.complete && img.naturalWidth === 0) img.src = inline;
+      }
+      var link = document.querySelector('link[rel=icon]');
+      if (link) link.href = inline;
+    })();
+  </script>
   <script src="about.js"></script>
 </body>
 </html>

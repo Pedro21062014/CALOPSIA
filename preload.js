@@ -5,6 +5,7 @@ const { contextBridge, ipcRenderer } = require('electron');
 /* API mínima e segura exposta para a interface do navegador. */
 contextBridge.exposeInMainWorld('calopsia', {
   platform: process.platform,
+  getAppPath: () => ipcRenderer.invoke('app:path'),
 
   /* janela */
   minimize: () => ipcRenderer.send('win:minimize'),
@@ -14,6 +15,9 @@ contextBridge.exposeInMainWorld('calopsia', {
   toggleDevTools: () => ipcRenderer.send('win:toggle-devtools'),
   onMaximizeChange: (cb) => ipcRenderer.on('win:maximized', (_e, v) => cb(v)),
   onFullscreenChange: (cb) => ipcRenderer.on('win:fullscreen', (_e, v) => cb(v)),
+
+  /* zoom por Ctrl+scroll, aplicado no processo principal */
+  onTabZoom: (cb) => ipcRenderer.on('tab:zoom', (_e, info) => cb(info)),
 
   /* menu do ☰ (janela própria) */
   openMenu: (payload) => ipcRenderer.send('menu:open', payload),

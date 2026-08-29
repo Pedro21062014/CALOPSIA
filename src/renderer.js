@@ -63,6 +63,10 @@ const HOME_URL   = 'calopsia://home/';
 const ABOUT_URL  = 'calopsia://home/about.html';
 const SEARCH_URL = 'https://www.google.com/search?q=';
 const TAB_PARTITION = 'persist:calopsia';   // precisa casar com main.js
+
+/* Diretório do app (dentro do asar quando empacotado). Usado para apontar o
+   preload das abas, que captura o Ctrl+scroll para dar zoom. */
+let APP_DIR = '';
 const IS_WIN     = window.calopsia && window.calopsia.platform === 'win32';
 const MOD_LABEL  = IS_WIN || (window.calopsia && window.calopsia.platform === 'linux') ? 'Ctrl' : '⌘';
 
@@ -141,6 +145,8 @@ function createTab(url, opts = {}) {
   });
 
   tabstrip.appendChild(el);
+  // o botão "+" fica grudado à direita da última aba aberta
+  if (newTabBtn && newTabBtn.parentNode === tabstrip) tabstrip.appendChild(newTabBtn);
   tab.el = el;
 
   /* --- webview --- */
@@ -148,6 +154,7 @@ function createTab(url, opts = {}) {
   view.setAttribute('partition', TAB_PARTITION);
   view.setAttribute('allowpopups', 'on');
   view.setAttribute('webpreferences', 'contextIsolation=yes,nodeIntegration=no,sandbox=yes');
+  if (APP_DIR) view.setAttribute('preload', pathToFileUrl(APP_DIR + '/webview-preload.js'));
   view.dataset.tab = String(id);
   views.appendChild(view);
   tab.view = view;
@@ -428,6 +435,17 @@ function zoomBy(delta) {
 }
 function zoomReset() { const t = getActive(); if (!t) return; t.zoom = 1; applyZoom(t); zoomBadgeUpdate(t); }
 function applyZoom(tab) { safe(() => tab.view.setZoomFactor(tab.zoom)); }
+
+/* Ctrl+scroll é capturado no processo principal (evento zoom-changed); aqui só
+   espelhamos o valor para o indicador da interface. */
+if (window.calopsia) {
+  window.calopsia.onTabZoom(({ id, zoom }) => {
+    const alvo = tabs.find((t) => safe(() => t.view.getWebContentsId()) === id);
+    if (!alvo) return;
+    alvo.zoom = zoom;
+    if (alvo.id === activeId) zoomBadgeUpdate(alvo);
+  });
+}
 function zoomBadgeUpdate(tab) {
   if (!tab || tab.zoom === 1) { zoomBadge.hidden = true; return; }
   zoomBadge.hidden = false;
@@ -752,7 +770,12 @@ window.addEventListener('keydown', (e) => {
 });
 
 /* ============================ boot ============================ */
-createTab(HOME_URL, { focusUrl: true });
+(async function boot() {
+  if (window.calopsia) {
+    try { APP_DIR = await window.calopsia.getAppPath(); } catch { /* segue sem preload */ }
+  }
+  createTab(HOME_URL, { focusUrl: true });
+})();
 
 window.__calopsia = {
   get tabs() { return tabs; },

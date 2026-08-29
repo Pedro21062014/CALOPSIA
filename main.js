@@ -101,6 +101,18 @@ function resolveInternalFile(urlPath) {
   return null;
 }
 
+/** User-Agent "puro" de Chrome.
+ *  O UA padrão do Electron termina com "Electron/31.x", e vários sites
+ *  (WhatsApp Web, alguns bancos, Google) detectam isso e exibem
+ *  "funciona no Google Chrome 100 ou posterior". */
+function chromeUserAgent() {
+  const chrome = process.versions.chrome || '126.0.0.0';
+  const plataforma = process.platform === 'win32' ? 'Windows NT 10.0; Win64; x64'
+    : process.platform === 'darwin' ? 'Macintosh; Intel Mac OS X 10_15_7'
+    : 'X11; Linux x86_64';
+  return `Mozilla/5.0 (${plataforma}) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/${chrome} Safari/537.36`;
+}
+
 let mainWindow = null;
 
 /* ------------------------------------------------------------
@@ -298,8 +310,12 @@ const calopsiaHandler = async (request) => {
 
 app.whenReady().then(() => {
   // Sessão padrão (janela principal) e sessão das abas (webviews).
+  const ua = chromeUserAgent();
   protocol.handle('calopsia', calopsiaHandler);
-  session.fromPartition(TAB_PARTITION).protocol.handle('calopsia', calopsiaHandler);
+  session.defaultSession.setUserAgent(ua);
+  const tabSession = session.fromPartition(TAB_PARTITION);
+  tabSession.protocol.handle('calopsia', calopsiaHandler);
+  tabSession.setUserAgent(ua);
 
   // Permissões: libera só o essencial para os sites dentro das abas.
   const permissionHandler = (webContents, permission, callback) => {
@@ -332,6 +348,15 @@ app.whenReady().then(() => {
 app.on('web-contents-created', (_event, contents) => {
   if (contents.getType() !== 'webview') return;
 
+  // Caminho 2 (fallback): o Chromium também emite zoom-changed para o
+  // gesto de Ctrl+scroll. Se o listener da página já aplicou, ignora para
+  // não zoomar duas vezes.
+  contents.on('zoom-changed', (event, direction) => {
+    event.preventDefault();
+    if (Date.now() - (ultimoZoomPorRoda.get(contents.id) || 0) < 500) return;
+    aplicarZoomPasso(contents, direction);
+  });
+
   contents.setWindowOpenHandler(({ url }) => {
     // Um popup pedido por um site abre como nova aba no próprio navegador.
     if (/^https?:\/\//i.test(url) && mainWindow) {
@@ -362,6 +387,8 @@ ipcMain.on('win:toggle-devtools', () => {
   if (win) win.webContents.toggleDevTools();
 });
 
+ipcMain.handle('app:path', () => app.getAppPath());
+
 ipcMain.handle('app:info', () => ({
   version: app.getVersion(),
   partition: TAB_PARTITION,
@@ -379,6 +406,30 @@ ipcMain.handle('dialog:open-file', async () => {
     properties: ['openFile']
   });
   return res.canceled ? null : res.filePaths[0];
+});
+
+/* ------------------------------------------------------------
+   Zoom por aba (Ctrl+scroll / pinça)
+   ------------------------------------------------------------ */
+const ultimoZoomPorRoda = new Map();   // contents.id -> timestamp
+
+function aplicarZoomPasso(contents, direction) {
+  const atual = contents.getZoomFactor();
+  const bruto = direction === 'in' ? atual + 0.1 : atual - 0.1;
+  const proximo = Math.min(3, Math.max(0.25, Math.round(bruto * 100) / 100));
+  if (proximo === atual) return;
+  contents.setZoomFactor(proximo);
+  if (mainWindow && !mainWindow.isDestroyed()) {
+    mainWindow.webContents.send('tab:zoom', { id: contents.id, zoom: proximo });
+  }
+}
+
+// Caminho 1: listener de wheel injetado nas páginas (webview-preload.js).
+ipcMain.on('tab:zoom-wheel', (event, { delta }) => {
+  const contents = event.sender;
+  if (!contents || contents.isDestroyed() || contents.getType() !== 'webview') return;
+  ultimoZoomPorRoda.set(contents.id, Date.now());
+  aplicarZoomPasso(contents, delta < 0 ? 'in' : 'out');
 });
 
 /* ------------------------------------------------------------

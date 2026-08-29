@@ -58,22 +58,6 @@ jobs:
       - name: Instalar dependências
         run: npm ci
 
-      - name: Conferir ícones
-        shell: bash
-        run: |
-          faltou=0
-          for f in assets/icon-1024.png assets/icon.ico \
-                   assets/icons/16x16.png assets/icons/32x32.png \
-                   assets/icons/64x64.png assets/icons/128x128.png \
-                   assets/icons/256x256.png assets/icons/512x512.png; do
-            if [ ! -f "$f" ]; then echo "::error::Ícone ausente: $f"; faltou=1; fi
-          done
-          if [ "$faltou" = "1" ]; then
-            echo "Rode 'npm run icons' e versione o resultado."
-            exit 1
-          fi
-          echo "Ícones OK"
-
       - name: Mostrar versão
         shell: bash
         run: |

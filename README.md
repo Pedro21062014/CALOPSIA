@@ -175,6 +175,17 @@ calopsia/
 
 ## 🐛 Histórico de correções
 
+### v0.2.4
+- **WhatsApp Web (e sites parecidos):** o User-Agent padrão do Electron termina
+  com `Electron/31.x` e vários sites detectam isso, mostrando "funciona no
+  Google Chrome 100 ou posterior". Agora as abas enviam um UA de Chrome limpo.
+- **Ctrl + scroll (e pinça) dá zoom na aba**, como em qualquer navegador, com o
+  indicador de zoom acompanhando. Scroll sem Ctrl continua rolando a página.
+- **Botão ＋** agora fica logo à direita da última aba aberta, em vez de preso
+  no canto antes dos botões de janela.
+- **Logo da página inicial:** passou a usar uma cópia embutida em data URI como
+  garantia (além do favicon da aba), para não depender de nenhum caminho.
+
 ### v0.2.3
 - **Ícone no Linux/installador:** o `build/icon.png` era rejeitado pelo
   app-builder em runtime e a CI caía no ícone padrão do Electron

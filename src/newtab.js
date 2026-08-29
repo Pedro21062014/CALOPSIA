@@ -79,7 +79,26 @@ function submitSearch(value) {
   window.location.href = url;
 }
 
+/** A logo e o favicon usam a data URI embutida como garantia: se por qualquer
+ *  motivo o arquivo em assets/ nao carregar (cache, empacotamento, permissao),
+ *  a pagina continua mostrando o logo da CALOPSIA. */
+function aplicarLogo() {
+  const inline = window.CALOPSIA_LOGO;
+  if (!inline) return;
+
+  const link = document.getElementById('favicon');
+  if (link) link.href = inline;
+
+  const img = document.getElementById('logo');
+  if (img) {
+    const usaInline = () => { if (img.getAttribute('src') !== inline) img.src = inline; };
+    img.addEventListener('error', usaInline);
+    if (img.complete && img.naturalWidth === 0) usaInline();
+  }
+}
+
 document.addEventListener('DOMContentLoaded', () => {
+  aplicarLogo();
   tick();
   setInterval(tick, 1000);
   buildShortcuts();

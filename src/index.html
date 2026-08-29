@@ -17,14 +17,15 @@
       <span class="brand-name">CALOPSIA</span>
     </div>
 
-    <div id="tabstrip"></div>
-
-    <button id="newtab" class="icon-btn round" title="Nova aba (Ctrl+T)" aria-label="Nova aba">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
-        <line x1="12" y1="5.5" x2="12" y2="18.5"></line>
-        <line x1="5.5" y1="12" x2="18.5" y2="12"></line>
-      </svg>
-    </button>
+    <div id="tabstrip">
+      <!-- fica sempre depois da última aba (reposicionado em createTab) -->
+      <button id="newtab" class="icon-btn round" title="Nova aba (Ctrl+T)" aria-label="Nova aba">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+          <line x1="12" y1="5.5" x2="12" y2="18.5"></line>
+          <line x1="5.5" y1="12" x2="18.5" y2="12"></line>
+        </svg>
+      </button>
+    </div>
 
     <div class="window-controls">
       <button id="win-min" title="Minimizar" aria-label="Minimizar">

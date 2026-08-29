@@ -10,6 +10,7 @@
      assets/icons/<N>x<N>.png   conjunto hicolor (16..512) usado no Linux
      assets/icon-1024.png       mestre para macOS (.icns) e Windows (.ico)
      assets/icon.ico            ícone da janela em runtime no Windows
+     src/logo-data.js           logo embutida em data URI (página inicial / Sobre)
      build/icon.png             cópia do mestre (convenção do electron-builder)
 
    Requer Python + Pillow (só para desenvolvimento — os ícones gerados
@@ -25,13 +26,13 @@ const ROOT = path.resolve(__dirname, '..');
 const SRC = path.join(ROOT, 'assets', 'logo.png');
 
 const PY = `
-import sys
+import sys, base64, io
 from PIL import Image
 
 logo = Image.open(sys.argv[1]).convert('RGBA')
 out_dir = sys.argv[2]
 
-def canvas(size, scale):
+def canvas(size, scale=0.88):
     c = Image.new('RGBA', (size, size), (0, 0, 0, 0))
     f = logo.copy()
     f.thumbnail((int(size * scale), int(size * scale)), Image.LANCZOS)
@@ -55,6 +56,18 @@ for s in sizes:
     f.thumbnail((int(s[0]*0.88),)*2, Image.LANCZOS)
     im.paste(f, ((s[0]-f.width)//2, (s[1]-f.height)//2), f); imgs.append(im)
 imgs[0].save(os.path.join(out_dir, 'assets', 'icon.ico'), 'ICO', sizes=sizes, append_images=imgs[1:])
+
+# logo embutida (data URI) para a pagina inicial e a tela Sobre
+w = 200
+h = int(logo.height * w / logo.width)
+buf = io.BytesIO()
+logo.resize((w, h), Image.LANCZOS).save(buf, 'PNG', optimize=True)
+b64 = base64.b64encode(buf.getvalue()).decode('ascii')
+with open(os.path.join(out_dir, 'src', 'logo-data.js'), 'w', encoding='utf-8') as f:
+    f.write('/* GERADO AUTOMATICAMENTE por scripts/gen-icons.js - nao editar a mao.\\n')
+    f.write('   Logo do CALOPSIA embutida em data URI, para a pagina inicial e a\\n')
+    f.write('   tela Sobre nao dependerem de nenhum caminho de arquivo. */\\n')
+    f.write("window.CALOPSIA_LOGO = 'data:image/png;base64," + b64 + "';\\n")
 print('ok')
 `;
 
