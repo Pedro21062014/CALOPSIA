@@ -218,6 +218,20 @@ de usuário ou senha e escolha a conta na janelinha que abre.
 
 ## 🐛 Histórico de correções
 
+### v0.3.0
+- **Atualização do motor: Electron 31 → 43 (Chromium 126 → 150).** Investigando
+  o loop do Cloudflare a fundo (reproduzindo no app real e comparando com um
+  Electron "puro" de controle), confirmei que a pilha do navegador estava
+  coerente — o gargalo era a **idade do motor**: Chromium 126 é de meados de
+  2024, e a pontuação anti-bot do Cloudflare pune versões antigas. Com o
+  Chrome 150, User-Agent, cabeçalhos `sec-ch-ua`, `navigator.userAgentData` e
+  o motor real voltam a dizer a mesma coisa — e atual. (Num IP de datacenter
+  o desafio continua duro por política do Cloudflare — nem Chrome genuíno
+  passa; em IP residencial a combinação "navegador atual + IP de casa" é o
+  que o desafio pontua bem.)
+- Testado de ponta a ponta no Electron 43: abas, navegação, painel DevTools,
+  páginas internas (calopsia://), Sobre, voltar/avançar com título/favicon.
+
 ### v0.2.11
 - **CORREÇÃO CRÍTICA — nenhuma página carregava:** a v0.2.10 saiu com um erro
   de inicialização (ReferenceError no boot, causado pelo estado do painel
