@@ -1,26 +1,55 @@
-name: Build
+name: Build & Release
 
 on:
   push:
     tags:
       - 'v*'
   workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Tag da release (ex.: v0.2.0). Vazio = usa a versão do package.json'
+        required: false
+        default: ''
+      prerelease:
+        description: 'Marcar como pré-release'
+        type: boolean
+        required: false
+        default: false
+
+permissions:
+  contents: write
 
 jobs:
+  # ------------------------------------------------------------------
+  # 1) Compila os instaladores nos 3 sistemas (e 2 arquiteturas no mac)
+  # ------------------------------------------------------------------
   build:
-    name: ${{ matrix.os }}
+    name: Compilar ${{ matrix.name }}
+    runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
-        os: [macos-latest, ubuntu-latest, windows-latest]
-    runs-on: ${{ matrix.os }}
+        include:
+          - os: ubuntu-latest
+            name: Linux
+            args: --linux
+            exts: AppImage deb
+          - os: macos-latest
+            name: macOS
+            args: --mac --x64 --arm64
+            exts: dmg zip
+          - os: windows-latest
+            name: Windows
+            args: --win
+            exts: exe
     env:
-      CSC_IDENTITY_AUTO_DISCOVERY: "false"
+      CSC_IDENTITY_AUTO_DISCOVERY: "false"   # não assina no macOS (evita falha sem certificado)
+      USE_HARD_LINKS: "false"
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Setup Node.js
+      - name: Configurar Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 20
@@ -29,44 +58,113 @@ jobs:
       - name: Instalar dependências
         run: npm ci
 
-      - name: Compilar (electron-builder)
-        run: npm run dist -- --publish never
+      - name: Mostrar versão
+        run: 'node -p "Versão: " + require("./package.json").version'
+
+      - name: Compilar com electron-builder
+        run: npx electron-builder ${{ matrix.args }} --publish never
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          ELECTRON_CACHE: ${{ github.workspace }}/.cache/electron
 
-      - name: Publicar artefatos
+      - name: Listar artefatos gerados
+        shell: bash
+        run: ls -lh release/ || true
+
+      - name: Gerar checksums (SHA-256)
+        shell: bash
+        run: |
+          cd release
+          for ext in ${{ join(matrix.exts, ' ') }}; do
+            for f in *."$ext"; do
+              [ -e "$f" ] || continue
+              if command -v sha256sum >/dev/null 2>&1; then sha256sum "$f"
+              else shasum -a 256 "$f"; fi
+            done
+          done > SHA256SUMS.txt || true
+          cat SHA256SUMS.txt || true
+
+      - name: Enviar artefatos
         uses: actions/upload-artifact@v4
         with:
-          name: CALOPSIA-${{ matrix.os }}
+          name: CALOPSIA-${{ matrix.name }}
           path: |
             release/*.dmg
             release/*.zip
             release/*.AppImage
             release/*.deb
             release/*.exe
-          if-no-files-found: warn
+            release/SHA256SUMS.txt
+          if-no-files-found: error
+          retention-days: 7
 
+  # ------------------------------------------------------------------
+  # 2) Junta tudo e publica a Release com os instaladores anexados
+  # ------------------------------------------------------------------
   release:
-    name: Criar Release
+    name: Publicar Release
     needs: build
     runs-on: ubuntu-latest
     permissions:
       contents: write
     steps:
-      - name: Baixar artefatos
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Descobrir a tag
+        id: meta
+        run: |
+          set -euo pipefail
+          if [ -n "${{ github.event.inputs.tag }}" ]; then
+            TAG="${{ github.event.inputs.tag }}"
+          elif [[ "${GITHUB_REF}" == refs/tags/* ]]; then
+            TAG="${GITHUB_REF#refs/tags/}"
+          else
+            TAG="v$(node -p "require('./package.json').version")"
+          fi
+          echo "tag=${TAG}" >> "$GITHUB_OUTPUT"
+          echo "Tag definida: ${TAG}"
+
+      - name: Baixar instaladores
         uses: actions/download-artifact@v4
         with:
-          path: dist
+          path: assets
           merge-multiple: true
 
-      - name: Criar Release no GitHub
+      - name: Consolidar checksums
+        run: |
+          cd assets
+          cat SHA256SUMS.txt 2>/dev/null | sort -u > ALL-CHECKSUMS.txt || true
+          cat ALL-CHECKSUMS.txt || true
+
+      - name: Criar Release e anexar os instaladores
         uses: softprops/action-gh-release@v2
         with:
-          name: CALOPSIA ${{ github.ref_name }}
-          tag_name: ${{ github.ref_name }}
+          tag_name: ${{ steps.meta.outputs.tag }}
+          name: CALOPSIA ${{ steps.meta.outputs.tag }}
           draft: false
-          prerelease: false
+          prerelease: ${{ github.event.inputs.prerelease == 'true' }}
+          make_latest: true
           generate_release_notes: true
-          files: dist/**
+          fail_on_unmatched_files: false
+          files: |
+            assets/*.dmg
+            assets/*.zip
+            assets/*.AppImage
+            assets/*.deb
+            assets/*.exe
+            assets/ALL-CHECKSUMS.txt
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Resumo
+        run: |
+          echo "### 🚀 Release ${{ steps.meta.outputs.tag }} publicada" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "Arquivos anexados:" >> "$GITHUB_STEP_SUMMARY"
+          for f in assets/*.dmg assets/*.zip assets/*.AppImage assets/*.deb assets/*.exe; do
+            [ -e "$f" ] || continue
+            echo "- \`$(basename "$f")\` ($(du -h "$f" | cut -f1))" >> "$GITHUB_STEP_SUMMARY"
+          done

@@ -1,0 +1,236 @@
+/* ============================================================
+   CALOPSIA — página de nova aba
+   ============================================================ */
+
+:root {
+  --bg: #0b0d13;
+  --text: #e9ecf5;
+  --muted: #8a93a8;
+  --border: #262e40;
+  --accent: #7c5cff;
+  --accent-2: #35cdf5;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+html, body {
+  height: 100%;
+  overflow: hidden;
+}
+
+body {
+  position: relative;
+  background: var(--bg);
+  color: var(--text);
+  font-family: "Segoe UI Variable", "Segoe UI", system-ui, -apple-system, "Inter",
+               Roboto, "Helvetica Neue", Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  user-select: none;
+  cursor: default;
+}
+
+/* ---------- fundo com brilhos suaves ---------- */
+.glow {
+  position: fixed;
+  border-radius: 50%;
+  filter: blur(90px);
+  pointer-events: none;
+  z-index: 0;
+}
+.glow-1 {
+  width: 620px; height: 620px;
+  top: -260px; left: 50%;
+  margin-left: -310px;
+  background: radial-gradient(circle, rgba(124, 92, 255, .30), transparent 68%);
+}
+.glow-2 {
+  width: 520px; height: 520px;
+  bottom: -280px; right: -120px;
+  background: radial-gradient(circle, rgba(53, 205, 245, .20), transparent 70%);
+}
+
+.stage {
+  position: relative;
+  z-index: 1;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 36px 24px;
+  gap: 0;
+}
+
+/* ---------- marca ---------- */
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 34px;
+  opacity: .96;
+}
+.logo {
+  height: 62px;
+  width: auto;
+  filter: drop-shadow(0 8px 26px rgba(0, 0, 0, .5));
+}
+.wordmark {
+  font-size: 17px;
+  font-weight: 700;
+  letter-spacing: 3.4px;
+  background: linear-gradient(96deg, #b9a6ff, #74dcff);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/* ---------- relógio ---------- */
+.clock {
+  display: flex;
+  align-items: baseline;
+  gap: 2px;
+  font-size: 74px;
+  font-weight: 200;
+  letter-spacing: 1px;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+  text-shadow: 0 6px 30px rgba(0, 0, 0, .45);
+}
+.clock .blink { animation: blink 2s steps(1) infinite; color: var(--muted); }
+@keyframes blink { 50% { opacity: .28; } }
+.clock .sec {
+  font-size: 26px;
+  color: var(--accent-2);
+  margin-left: 8px;
+  font-weight: 400;
+  opacity: .85;
+}
+
+.date {
+  margin-top: 12px;
+  font-size: 14.5px;
+  color: var(--muted);
+}
+.date::first-letter { text-transform: uppercase; }
+
+.greeting {
+  margin-top: 26px;
+  font-size: 19px;
+  font-weight: 500;
+  color: #cdd4e4;
+}
+
+/* ---------- busca ---------- */
+.search {
+  margin-top: 32px;
+  width: min(600px, 94%);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  height: 52px;
+  padding: 0 8px 0 20px;
+  background: rgba(255, 255, 255, .045);
+  border: 1px solid var(--border);
+  border-radius: 26px;
+  backdrop-filter: blur(8px);
+  transition: border-color .18s ease, box-shadow .18s ease, background .18s ease;
+}
+.search:focus-within {
+  border-color: rgba(124, 92, 255, .8);
+  box-shadow: 0 0 0 4px rgba(124, 92, 255, .16);
+  background: rgba(255, 255, 255, .07);
+}
+.s-ico { width: 19px; height: 19px; color: var(--muted); flex-shrink: 0; }
+.search input {
+  flex: 1;
+  min-width: 0;
+  border: none;
+  outline: none;
+  background: transparent;
+  color: var(--text);
+  font-size: 15px;
+}
+.search input::placeholder { color: #737d95; }
+.s-go {
+  width: 36px; height: 36px;
+  display: grid; place-items: center;
+  border: none;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--accent), #6a4bff);
+  color: #fff;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: filter .15s ease, transform .1s ease;
+}
+.s-go svg { width: 17px; height: 17px; }
+.s-go:hover { filter: brightness(1.12); }
+.s-go:active { transform: scale(.93); }
+
+/* ---------- atalhos rápidos ---------- */
+.quick {
+  margin-top: 40px;
+  display: grid;
+  grid-template-columns: repeat(5, 96px);
+  gap: 10px;
+}
+.quick a {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 14px 6px 11px;
+  text-decoration: none;
+  color: #a9b1c4;
+  font-size: 11.5px;
+  border-radius: 14px;
+  border: 1px solid transparent;
+  transition: background .15s ease, color .15s ease, transform .15s ease, border-color .15s ease;
+}
+.quick a:hover {
+  background: rgba(255, 255, 255, .055);
+  border-color: var(--border);
+  color: #fff;
+  transform: translateY(-3px);
+}
+.tile {
+  width: 46px; height: 46px;
+  border-radius: 13px;
+  display: grid;
+  place-items: center;
+  font-size: 16px;
+  font-weight: 700;
+  color: #fff;
+  background: rgba(255, 255, 255, .07);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, .35);
+  overflow: hidden;
+}
+.tile img { width: 26px; height: 26px; border-radius: 5px; display: block; }
+
+/* ---------- rodapé ---------- */
+.hint {
+  position: absolute;
+  bottom: 18px;
+  display: flex;
+  gap: 20px;
+  font-size: 11.5px;
+  color: #6b7488;
+}
+.hint kbd {
+  display: inline-block;
+  padding: 2px 6px;
+  margin: 0 1px;
+  font-family: inherit;
+  font-size: 10.5px;
+  color: #a2abc0;
+  background: rgba(255, 255, 255, .06);
+  border: 1px solid var(--border);
+  border-bottom-width: 2px;
+  border-radius: 5px;
+}
+
+@media (max-height: 640px) {
+  .clock { font-size: 56px; }
+  .logo { height: 48px; }
+  .quick { margin-top: 24px; grid-template-columns: repeat(5, 84px); }
+  .brand { margin-bottom: 20px; }
+}

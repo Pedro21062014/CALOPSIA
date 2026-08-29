@@ -4,12 +4,13 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta http-equiv="Content-Security-Policy"
-        content="default-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https: http:; script-src 'self';" />
+        content="default-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https: http:; script-src 'self';" />
   <title>CALOPSIA</title>
   <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
-  <!-- ===== Barra de abas + controles de janela ===== -->
+
+  <!-- ================= Barra de abas + controles de janela ================= -->
   <header id="titlebar">
     <div class="brand" id="brand" title="CALOPSIA">
       <img class="brand-logo" src="../assets/logo.png" alt="CALOPSIA" draggable="false" />
@@ -18,36 +19,156 @@
 
     <div id="tabstrip"></div>
 
-    <button id="newtab" class="newtab" title="Nova aba (Ctrl+T)">＋</button>
+    <button id="newtab" class="icon-btn round" title="Nova aba (Ctrl+T)" aria-label="Nova aba">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+        <line x1="12" y1="5.5" x2="12" y2="18.5"></line>
+        <line x1="5.5" y1="12" x2="18.5" y2="12"></line>
+      </svg>
+    </button>
 
     <div class="window-controls">
-      <button id="win-min" title="Minimizar">&#x2013;</button>
-      <button id="win-max" title="Maximizar">&#x25A1;</button>
-      <button id="win-close" title="Fechar">&#x2715;</button>
+      <button id="win-min" title="Minimizar" aria-label="Minimizar">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round">
+          <line x1="5" y1="12" x2="19" y2="12"></line>
+        </svg>
+      </button>
+      <button id="win-max" title="Maximizar" aria-label="Maximizar">
+        <svg class="ico-max" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="5.5" y="5.5" width="13" height="13" rx="2"></rect>
+        </svg>
+        <svg class="ico-restore" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="5.5" y="8" width="11" height="11" rx="2"></rect>
+          <path d="M9 8V6.2A1.2 1.2 0 0 1 10.2 5h7.6A1.2 1.2 0 0 1 19 6.2v7.6A1.2 1.2 0 0 1 17.8 15H16"></path>
+        </svg>
+      </button>
+      <button id="win-close" title="Fechar" aria-label="Fechar">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round">
+          <line x1="6.5" y1="6.5" x2="17.5" y2="17.5"></line>
+          <line x1="17.5" y1="6.5" x2="6.5" y2="17.5"></line>
+        </svg>
+      </button>
     </div>
   </header>
 
-  <!-- ===== Barra de navegação ===== -->
+  <!-- ================= Barra de navegação ================= -->
   <nav id="toolbar">
-    <button class="nav-btn" id="back" title="Voltar (Alt+←)">&#8592;</button>
-    <button class="nav-btn" id="forward" title="Avançar (Alt+→)">&#8594;</button>
-    <button class="nav-btn" id="reload" title="Recarregar (Ctrl+R)">&#x21bb;</button>
+    <button class="icon-btn nav" id="back" title="Voltar (Alt+←)" aria-label="Voltar" disabled>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <line x1="19" y1="12" x2="5" y2="12"></line>
+        <polyline points="11.5 18 5 12 11.5 6"></polyline>
+      </svg>
+    </button>
+    <button class="icon-btn nav" id="forward" title="Avançar (Alt+→)" aria-label="Avançar" disabled>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <line x1="5" y1="12" x2="19" y2="12"></line>
+        <polyline points="12.5 6 19 12 12.5 18"></polyline>
+      </svg>
+    </button>
+    <button class="icon-btn nav" id="reload" title="Recarregar (Ctrl+R)" aria-label="Recarregar">
+      <svg class="ico-reload" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <polyline points="20.5 5 20.5 10.5 15 10.5"></polyline>
+        <path d="M4.2 14.8A8.5 8.5 0 0 0 18.4 17.4L20.5 15.4"></path>
+        <path d="M19.8 9.2A8.5 8.5 0 0 0 5.6 6.6L3.5 8.6"></path>
+      </svg>
+      <svg class="ico-stop" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round">
+        <line x1="6.5" y1="6.5" x2="17.5" y2="17.5"></line>
+        <line x1="17.5" y1="6.5" x2="6.5" y2="17.5"></line>
+      </svg>
+    </button>
+    <button class="icon-btn nav" id="home" title="Página inicial (Alt+Home)" aria-label="Página inicial">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M3.5 10.7 12 4l8.5 6.7"></path>
+        <path d="M5.8 9.6V19.5h12.4V9.6"></path>
+        <path d="M9.8 19.5v-5.2h4.4v5.2"></path>
+      </svg>
+    </button>
 
     <div id="addressbar">
-      <span id="security-icon" class="security" title="Segurança da página">&#9679;</span>
+      <span id="security-icon" class="security" title="Segurança da página"></span>
       <input id="url-input" type="text" spellcheck="false" autocomplete="off"
-             placeholder="Pesquise ou digite uma URL" />
+             placeholder="Pesquise no Google ou digite um endereço" aria-label="Barra de endereço" />
+      <button id="btn-find" class="addr-action" title="Localizar na página (Ctrl+F)" aria-label="Localizar na página">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+          <circle cx="11" cy="11" r="6.8"></circle>
+          <line x1="20.8" y1="20.8" x2="16.1" y2="16.1"></line>
+        </svg>
+      </button>
     </div>
 
-    <button class="nav-btn" id="menu" title="Menu">&#8942;</button>
+    <button class="icon-btn nav" id="menu" title="Menu (Alt+E)" aria-label="Menu">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round">
+        <line x1="4" y1="7" x2="20" y2="7"></line>
+        <line x1="4" y1="12" x2="20" y2="12"></line>
+        <line x1="4" y1="17" x2="20" y2="17"></line>
+      </svg>
+    </button>
   </nav>
 
-  <!-- ===== Conteúdo (webviews) ===== -->
-  <main id="views"></main>
+  <!-- barra de progresso (fica na borda inferior da toolbar) -->
+  <div id="progress"><div id="progress-bar"></div></div>
 
-  <!-- ===== Barra de status ===== -->
+  <!-- ================= Painel do menu (empurra o conteúdo) ================= -->
+  <div id="menubar" hidden></div>
+
+  <!-- ================= Barra de localizar (empurra o conteúdo) ================= -->
+  <div id="findbar" hidden>
+    <div class="find-input">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+        <circle cx="11" cy="11" r="6.8"></circle>
+        <line x1="20.8" y1="20.8" x2="16.1" y2="16.1"></line>
+      </svg>
+      <input id="find-text" type="text" spellcheck="false" placeholder="Localizar na página" aria-label="Localizar" />
+      <span id="find-count"></span>
+    </div>
+    <button class="find-btn" id="find-prev" title="Anterior (Shift+Enter)" aria-label="Anterior">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <polyline points="17 15 12 10 7 15"></polyline>
+      </svg>
+    </button>
+    <button class="find-btn" id="find-next" title="Próximo (Enter)" aria-label="Próximo">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <polyline points="7 10 12 15 17 10"></polyline>
+      </svg>
+    </button>
+    <button class="find-btn" id="find-close" title="Fechar (Esc)" aria-label="Fechar localizar">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+        <line x1="6.5" y1="6.5" x2="17.5" y2="17.5"></line>
+        <line x1="17.5" y1="6.5" x2="6.5" y2="17.5"></line>
+      </svg>
+    </button>
+  </div>
+
+  <!-- ================= Conteúdo ================= -->
+  <main id="views">
+    <div id="errorpage" hidden>
+      <div class="err-card">
+        <div class="err-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round">
+            <circle cx="12" cy="12" r="9"></circle>
+            <line x1="12" y1="7.4" x2="12" y2="13.2"></line>
+            <circle cx="12" cy="16.5" r="0.95" fill="currentColor" stroke="none"></circle>
+          </svg>
+        </div>
+        <h2 id="err-title">Não foi possível carregar esta página</h2>
+        <p id="err-desc">Verifique o endereço digitado e a sua conexão com a internet.</p>
+        <code id="err-code"></code>
+        <div class="err-actions">
+          <button id="err-retry" class="primary">Tentar novamente</button>
+          <button id="err-home">Ir para a página inicial</button>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- ================= Toasts (fora da área do webview) ================= -->
+  <div id="toasts"></div>
+
+  <!-- ================= Barra de status ================= -->
   <footer id="statusbar">
     <span id="status-text">Pronto</span>
+    <span class="spacer"></span>
+    <span id="dl-badge" class="badge dl" hidden></span>
+    <span id="zoom-badge" class="badge" hidden>100%</span>
   </footer>
 
   <script src="renderer.js"></script>
