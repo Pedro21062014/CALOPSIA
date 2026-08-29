@@ -6,10 +6,19 @@
    ============================================================ */
 
 const { app, BrowserWindow, shell, session, protocol, ipcMain, Menu, dialog,
-        nativeTheme, webContents } = require('electron');
+        nativeTheme, webContents, clipboard } = require('electron');
 const path = require('path');
+const cofre = require('./src/cofre');
 const fs = require('fs');
 const os = require('os');
+
+/* O Chromium faz descoberta de dispositivos na rede (mDNS/Cast) sozinho,
+   e é isso que faz o Firewall do Windows perguntar se o app pode escutar
+   a rede na primeira vez que ele abre. Não usamos transmissão para
+   dispositivos, então essa descoberta fica desligada. */
+try {
+  app.commandLine.appendSwitch('disable-features', 'MediaRouter');
+} catch { /* ignora se o switch não existir nesta versão */ }
 
 const APP_ROOT = __dirname;
 
@@ -479,6 +488,245 @@ ipcMain.on('tab:zoom-wheel', (event, { delta }) => {
   ultimoZoomPorRoda.set(contents.id, Date.now());
   aplicarZoomPasso(contents, delta < 0 ? 'in' : 'out');
 });
+
+/* ------------------------------------------------------------
+   Senhas — cofre, detecção e preenchimento
+   ------------------------------------------------------------ */
+
+/* Envios ainda não confirmados: só viram "salvar?" depois que o site
+   realmente navegar (ou seja, depois que o login deu certo). */
+const enviosPendentes = new Map();   // webContents.id -> {url, usuario, senha}
+
+/* ------------------------------------------------------------
+   Janelinha flutuante de senhas (desbloquear / criar / salvar / preencher)
+   ------------------------------------------------------------ */
+let popupWindow = null;
+let popupCtx = null;
+let popupAbertoEm = 0;
+
+function fecharPopup() {
+  if (popupWindow && !popupWindow.isDestroyed()) popupWindow.destroy();
+  popupWindow = null;
+  popupCtx = null;
+}
+
+function abrirPopup(ctx) {
+  if (!mainWindow || mainWindow.isDestroyed()) return;
+  fecharPopup();
+  popupCtx = ctx;
+  popupAbertoEm = Date.now();
+
+  popupWindow = new BrowserWindow({
+    width: ctx.largura || 300,
+    height: 60,
+    x: -10000,
+    y: -10000,
+    show: false,
+    frame: false,
+    resizable: false,
+    movable: false,
+    minimizable: false,
+    maximizable: false,
+    fullscreenable: false,
+    skipTaskbar: true,
+    alwaysOnTop: true,
+    focusable: true,
+    hasShadow: true,
+    parent: mainWindow,
+    backgroundColor: temaInfo().dark ? '#1a1d24' : '#ffffff',
+    webPreferences: {
+      preload: path.join(__dirname, 'preload-popup.js'),
+      contextIsolation: true,
+      nodeIntegration: false,
+      sandbox: true
+    }
+  });
+
+  popupWindow.loadFile(path.join(SRC_DIR, 'popup.html'));
+  popupWindow.webContents.once('did-finish-load', () => {
+    if (!popupWindow || popupWindow.isDestroyed()) return;
+    popupWindow.webContents.send('popup:dados', ctx.dados);
+  });
+  popupWindow.on('blur', fecharPopup);
+  popupWindow.on('closed', () => { popupWindow = null; popupCtx = null; });
+}
+
+ipcMain.on('popup:pronto', (_e, { height }) => {
+  if (!popupWindow || popupWindow.isDestroyed() || !popupCtx) return;
+  const w = popupCtx.largura || 300;
+  popupWindow.setSize(w, Math.max(48, height), false);
+
+  if (popupCtx.x != null && popupCtx.y != null) {
+    const [wx, wy] = mainWindow.getPosition();
+    popupWindow.setPosition(wx + Math.round(popupCtx.x), wy + Math.round(popupCtx.y), false);
+  } else {
+    const [wx, wy] = mainWindow.getPosition();
+    const [ww, wh] = mainWindow.getSize();
+    popupWindow.setPosition(wx + Math.round((ww - w) / 2), wy + Math.round(wh * 0.28), false);
+  }
+  popupWindow.show();
+  popupWindow.focus();
+});
+
+ipcMain.on('popup:fechar', () => fecharPopup());
+
+ipcMain.on('popup:acao', (_e, { id, dados }) => {
+  const ctx = popupCtx || {};
+
+  if (id === 'criar') {
+    const r = cofre.criar(dados.senha);
+    if (!r.ok) {
+      abrirPopup({ dados: { modo: 'criar', erro: r.erro, protecaoSO: cofre.situacao().protecaoSO }, depois: ctx.depois, largura: 300 });
+      return;
+    }
+    fecharPopup();
+    if (ctx.depois) ctx.depois();
+    return;
+  }
+
+  if (id === 'desbloquear') {
+    const r = cofre.abrir(dados.senha);
+    if (!r.ok) {
+      abrirPopup({ dados: { modo: 'desbloquear', erro: r.erro }, depois: ctx.depois, largura: 300 });
+      return;
+    }
+    fecharPopup();
+    if (ctx.depois) ctx.depois();
+    return;
+  }
+
+  if (id === 'salvar') {
+    if (ctx.pendente) cofre.guardar(ctx.pendente);
+    fecharPopup();
+    return;
+  }
+
+  if (id === 'nunca') {
+    if (ctx.pendente) cofre.nuncaAqui(ctx.pendente.url);
+    fecharPopup();
+    return;
+  }
+
+  if (id === 'preencher') {
+    const conta = (cofre.contasDoLocal(ctx.url) || []).find((c) => c.id === dados.id);
+    const alvo = webContents.fromId(ctx.contentsId);
+    if (conta && alvo && !alvo.isDestroyed()) {
+      alvo.send('senhas:aplicar', { usuario: conta.usuario, senha: conta.senha, usuarioId: true });
+    }
+    fecharPopup();
+    return;
+  }
+
+  if (id === 'gerar') {
+    const senha = cofre.gerarSenha(20);
+    const alvo = webContents.fromId(ctx.contentsId);
+    if (alvo && !alvo.isDestroyed()) alvo.send('senhas:aplicar', { senha });
+    if (mainWindow && !mainWindow.isDestroyed()) mainWindow.webContents.send('senhas:gerada', senha);
+    fecharPopup();
+    return;
+  }
+
+  fecharPopup();
+});
+
+/** Garante o cofre aberto; pede (ou cria) a senha mestra se precisar. */
+function comCofreAberto(depois) {
+  const sit = cofre.situacao();
+  if (!sit.existe) { abrirPopup({ dados: { modo: 'criar', protecaoSO: sit.protecaoSO }, depois, largura: 300 }); return; }
+  if (sit.aberto) { depois(); return; }
+  abrirPopup({ dados: { modo: 'desbloquear' }, depois, largura: 300 });
+}
+
+/* --- mensagens vindas das páginas (webview-preload) --- */
+
+// Foco num campo de login: a interface decide, pois só ela sabe a aba ativa.
+ipcMain.on('senhas:campo-foco', (evento, info) => {
+  if (!mainWindow || mainWindow.isDestroyed()) return;
+  mainWindow.webContents.send('senhas:campo-foco', {
+    contentsId: evento.sender.id, tipo: info.tipo, rect: info.rect
+  });
+});
+
+ipcMain.on('senhas:fechar-popup', () => {
+  if (Date.now() - popupAbertoEm < 700) return;   // folga: ignora o scroll do próprio clique
+  if (popupCtx && !popupCtx.pendente) fecharPopup();
+});
+
+// Formulário enviado: guarda e espera a navegação confirmar o login.
+ipcMain.on('senhas:enviou', (evento, info) => {
+  if (!info || !info.senha) return;
+  enviosPendentes.set(evento.sender.id, info);
+});
+
+/* --- pedidos da interface --- */
+const origemDe = (u) => { try { return new URL(u).origin; } catch { return String(u || ''); } };
+
+ipcMain.on('senhas:navegou', (_e, { contentsId, url }) => {
+  const p = enviosPendentes.get(contentsId);
+  if (!p) return;
+  enviosPendentes.delete(contentsId);
+  try {
+    const antes = new URL(p.url);
+    const depois = new URL(url);
+    if (antes.origin === depois.origin && antes.pathname === depois.pathname) {
+      enviosPendentes.set(contentsId, p);   // mesma página: ainda não deu certo
+      return;
+    }
+  } catch { /* endereço interno: oferece mesmo assim */ }
+
+  if (cofre.nuncaSalvar(p.url)) return;
+
+  const jaTem = cofre.estaAberto()
+    ? cofre.contasDoLocal(p.url).find((c) => c.usuario === p.usuario) || null
+    : null;
+  const modo = jaTem ? (jaTem.senha === p.senha ? null : 'atualizar') : 'salvar';
+  if (!modo) return;
+
+  const dados = { modo, site: origemDe(p.url), usuario: p.usuario, senha: p.senha };
+
+  if (!cofre.estaAberto()) {
+    comCofreAberto(() => {
+      if (cofre.nuncaSalvar(p.url)) return;
+      const t = cofre.contasDoLocal(p.url).find((c) => c.usuario === p.usuario);
+      if (t && t.senha === p.senha) return;
+      abrirPopup({ dados: { ...dados, modo: t ? 'atualizar' : 'salvar' }, pendente: p, largura: 320 });
+    });
+    return;
+  }
+  abrirPopup({ dados, pendente: p, largura: 320 });
+});
+
+ipcMain.on('senhas:abrir-popup', (_e, { x, y, contentsId, tipo, url }) => {
+  comCofreAberto(() => {
+    const contas = cofre.contasDoLocal(url) || [];
+    if (!contas.length && tipo !== 'nova-senha') return;
+    abrirPopup({
+      x, y, largura: 300, contentsId, url,
+      dados: {
+        modo: 'preencher',
+        site: origemDe(url),
+        contas: contas.map((c) => ({ id: c.id, usuario: c.usuario })),
+        podeGerar: tipo === 'nova-senha'
+      }
+    });
+  });
+});
+
+ipcMain.on('senhas:abrir-cofre', () => comCofreAberto(() => {
+  if (mainWindow && !mainWindow.isDestroyed()) mainWindow.webContents.send('senhas:estado', cofre.situacao());
+}));
+
+/* --- consultas do cofre --- */
+ipcMain.handle('senhas:situacao', () => cofre.situacao());
+ipcMain.handle('senhas:listar', () => (cofre.estaAberto() ? cofre.listar() : []));
+ipcMain.handle('senhas:revelar', (_e, id) => cofre.revelar(id));
+ipcMain.handle('senhas:apagar', (_e, id) => cofre.apagar(id));
+ipcMain.handle('senhas:gerar', (_e, n) => cofre.gerarSenha(n));
+ipcMain.handle('senhas:forca', (_e, s) => cofre.forca(s));
+ipcMain.handle('senhas:desbloquear', (_e, senha) => cofre.abrir(senha));
+ipcMain.handle('senhas:criar', (_e, senha) => cofre.criar(senha));
+ipcMain.on('senhas:fechar', () => cofre.fechar());
+ipcMain.on('senhas:copiar', (_e, texto) => { if (texto) clipboard.writeText(texto); });
 
 /* ------------------------------------------------------------
    Menu do ☰ — janela própria (garante que a lista apareça sempre

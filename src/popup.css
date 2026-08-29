@@ -1,0 +1,147 @@
+/* ============================================================
+   Janelinha flutuante de senhas (desbloquear / salvar / preencher)
+   ============================================================ */
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+html, body {
+  background: var(--surface);
+  color: var(--text);
+  font-family: "Segoe UI Variable", "Segoe UI", system-ui, -apple-system, "Inter",
+               Roboto, "Helvetica Neue", Arial, sans-serif;
+  font-size: 13px;
+  -webkit-font-smoothing: antialiased;
+  user-select: none;
+  cursor: default;
+  overflow: hidden;
+}
+
+#card {
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+}
+
+.titulo {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
+}
+.sub {
+  font-size: 11.5px;
+  line-height: 1.5;
+  color: var(--muted);
+}
+.sub strong { color: var(--text-dim); font-weight: 600; }
+.erro {
+  font-size: 11.5px;
+  color: var(--danger-text);
+  background: var(--danger-soft);
+  border-radius: 6px;
+  padding: 6px 8px;
+}
+
+input[type="password"], input[type="text"] {
+  width: 100%;
+  height: 32px;
+  padding: 0 10px;
+  font: inherit;
+  color: var(--text);
+  background: var(--field);
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  outline: none;
+  user-select: text;
+}
+input:focus { border-color: var(--muted); box-shadow: 0 0 0 3px var(--focus); }
+input::placeholder { color: var(--faint); }
+
+/* ---------- dados da conta (salvar) ---------- */
+.conta { display: flex; flex-direction: column; gap: 4px; }
+.linha {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  color: var(--text-dim);
+}
+.linha .rot { width: 58px; color: var(--muted); flex-shrink: 0; }
+.linha .val {
+  flex: 1; min-width: 0;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  font-family: ui-monospace, Consolas, monospace;
+  font-size: 11.5px;
+}
+.olho {
+  width: 22px; height: 22px;
+  display: grid; place-items: center;
+  border: none; border-radius: 5px;
+  background: transparent; color: var(--muted);
+  cursor: pointer; flex-shrink: 0;
+}
+.olho:hover { background: var(--hover-2); color: var(--text); }
+.olho svg { width: 14px; height: 14px; }
+
+/* ---------- lista de contas (preencher) ---------- */
+.lista { display: flex; flex-direction: column; gap: 2px; max-height: 190px; overflow-y: auto; }
+.item-conta {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  height: 34px;
+  padding: 0 8px;
+  border: none;
+  border-radius: 7px;
+  background: transparent;
+  color: var(--text-dim);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.item-conta:hover, .item-conta:focus-visible {
+  background: var(--hover-2);
+  color: var(--strong);
+  outline: none;
+}
+.item-conta .icone {
+  width: 22px; height: 22px;
+  border-radius: 50%;
+  display: grid; place-items: center;
+  background: var(--tile-bg);
+  border: 1px solid var(--border);
+  font-size: 11px; font-weight: 600;
+  color: var(--strong-2);
+  flex-shrink: 0;
+  text-transform: uppercase;
+}
+.item-conta .txt { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+.item-conta .txt small { display: block; font-size: 10px; color: var(--muted); }
+
+/* ---------- botões ---------- */
+.acoes { display: flex; gap: 6px; justify-content: flex-end; }
+.acoes.vertical { flex-direction: column; }
+button.bt {
+  height: 30px;
+  padding: 0 13px;
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  background: var(--surface-hi);
+  color: var(--text-dim);
+  font: inherit;
+  font-size: 12px;
+  cursor: pointer;
+}
+button.bt:hover { background: var(--hover-2); color: var(--strong); }
+button.bt.primario {
+  background: var(--strong);
+  border-color: transparent;
+  color: var(--on-strong);
+  font-weight: 600;
+}
+button.bt.primario:hover { opacity: .85; color: var(--on-strong); }
+button.bt.suave { background: transparent; }
+button.bt.largo { width: 100%; justify-content: center; }
+
+.sep { height: 1px; margin: 2px 0; background: var(--border); }

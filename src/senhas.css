@@ -1,0 +1,160 @@
+/* ============================================================
+   Página interna de senhas
+   ============================================================ */
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100%; overflow: hidden; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: "Segoe UI Variable", "Segoe UI", system-ui, -apple-system, "Inter",
+               Roboto, "Helvetica Neue", Arial, sans-serif;
+  font-size: 13.5px;
+  -webkit-font-smoothing: antialiased;
+  overflow-y: auto;
+  user-select: none;
+}
+
+.pagina {
+  max-width: 640px;
+  margin: 0 auto;
+  padding: 40px 28px 60px;
+}
+
+.cabecalho { margin-bottom: 26px; }
+h1 { font-size: 20px; font-weight: 600; letter-spacing: .5px; }
+.sub { margin-top: 5px; font-size: 12px; color: var(--muted); }
+
+.bloco {
+  padding: 20px;
+  margin-bottom: 16px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+}
+
+h2 { font-size: 14px; font-weight: 600; margin-bottom: 8px; }
+.nota { font-size: 12px; line-height: 1.6; color: var(--muted); }
+.erro {
+  margin-top: 8px;
+  font-size: 12px;
+  color: var(--danger-text);
+}
+
+.campo { display: flex; flex-direction: column; gap: 8px; margin: 14px 0 4px; }
+input {
+  height: 34px;
+  padding: 0 12px;
+  font: inherit;
+  color: var(--text);
+  background: var(--field);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  outline: none;
+  user-select: text;
+}
+input:focus { border-color: var(--muted); box-shadow: 0 0 0 3px var(--focus); }
+input::placeholder { color: var(--faint); }
+
+button.bt {
+  margin-top: 14px;
+  height: 34px;
+  padding: 0 16px;
+  font: inherit;
+  font-size: 12.5px;
+  color: var(--text-dim);
+  background: var(--surface-hi);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  cursor: pointer;
+}
+button.bt:hover { background: var(--hover-2); color: var(--strong); }
+button.bt.primario {
+  background: var(--strong);
+  border-color: transparent;
+  color: var(--on-strong);
+  font-weight: 600;
+}
+button.bt.primario:hover { opacity: .85; color: var(--on-strong); }
+button.bt.suave { margin-top: 0; background: transparent; }
+button.bt.icone { width: 34px; padding: 0; font-size: 15px; margin-top: 0; }
+
+/* ---------- lista ---------- */
+.linha-topo { display: flex; gap: 8px; align-items: center; }
+.linha-topo input { flex: 1; }
+
+.lista { display: flex; flex-direction: column; gap: 6px; margin-top: 14px; }
+.conta {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+}
+.conta .ico {
+  width: 32px; height: 32px;
+  border-radius: 50%;
+  display: grid; place-items: center;
+  background: var(--tile-bg);
+  border: 1px solid var(--border);
+  font-size: 13px; font-weight: 600;
+  color: var(--strong-2);
+  text-transform: uppercase;
+  flex-shrink: 0;
+}
+.conta .dados { flex: 1; min-width: 0; }
+.conta .site {
+  font-size: 12.5px;
+  color: var(--text);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.conta .usuario {
+  font-size: 11.5px;
+  color: var(--muted);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.conta .senha {
+  font-family: ui-monospace, Consolas, monospace;
+  font-size: 11.5px;
+  color: var(--text-dim);
+  background: var(--kbd);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 4px 9px;
+  cursor: pointer;
+  user-select: all;
+  flex-shrink: 0;
+}
+.conta .senha:hover { color: var(--strong); }
+.conta .acoes { display: flex; gap: 4px; flex-shrink: 0; }
+.conta .acoes button {
+  width: 28px; height: 28px;
+  display: grid; place-items: center;
+  border: none; border-radius: 6px;
+  background: transparent; color: var(--muted);
+  cursor: pointer;
+}
+.conta .acoes button:hover { background: var(--hover-2); color: var(--strong); }
+.conta .acoes button:hover.perigo { background: var(--danger-soft); color: var(--danger-text); }
+
+.vazio { margin-top: 14px; font-size: 12px; color: var(--muted); text-align: center; }
+
+/* ---------- gerador ---------- */
+.gerado { display: flex; gap: 8px; align-items: center; margin: 12px 0 10px; }
+.gerado code {
+  flex: 1;
+  padding: 10px 12px;
+  font-family: ui-monospace, Consolas, monospace;
+  font-size: 13px;
+  color: var(--text);
+  background: var(--field);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  user-select: all;
+  word-break: break-all;
+}
+.forca { height: 4px; border-radius: 2px; background: var(--kbd); overflow: hidden; }
+.barra { height: 100%; width: 0%; background: var(--strong-2); transition: width .2s ease; }

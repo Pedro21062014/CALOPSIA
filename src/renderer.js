@@ -28,7 +28,8 @@ const ICON = {
   zoomFit:  S('<circle cx="11" cy="11" r="6.8"/><line x1="20.8" y1="20.8" x2="16.1" y2="16.1"/><rect x="8.5" y="8.5" width="5" height="5" rx="1"/>'),
   sun:      S('<circle cx="12" cy="12" r="4.2"/><line x1="12" y1="2.6" x2="12" y2="4.6"/><line x1="12" y1="19.4" x2="12" y2="21.4"/><line x1="2.6" y1="12" x2="4.6" y2="12"/><line x1="19.4" y1="12" x2="21.4" y2="12"/><line x1="5.4" y1="5.4" x2="6.8" y2="6.8"/><line x1="17.2" y1="17.2" x2="18.6" y2="18.6"/><line x1="5.4" y1="18.6" x2="6.8" y2="17.2"/><line x1="17.2" y1="6.8" x2="18.6" y2="5.4"/>'),
   moon:     S('<path d="M20.2 14.8A8.6 8.6 0 0 1 9.2 3.8a8.6 8.6 0 1 0 11 11Z"/>'),
-  monitor:  S('<rect x="2.5" y="4" width="19" height="12.5" rx="2"/><line x1="8.5" y1="20.5" x2="15.5" y2="20.5"/><line x1="12" y1="16.5" x2="12" y2="20.5"/>')
+  monitor:  S('<rect x="2.5" y="4" width="19" height="12.5" rx="2"/><line x1="8.5" y1="20.5" x2="15.5" y2="20.5"/><line x1="12" y1="16.5" x2="12" y2="20.5"/>'),
+  key:      S('<circle cx="8" cy="15" r="4"/><path d="M10.9 12.1 20 3"/><path d="M16.5 6.5 19 9"/>')
 };
 
 /* --------------------------- elementos --------------------------- */
@@ -56,6 +57,7 @@ const progress    = $('progress');
 const progressBar = $('progress-bar');
 const errorPage   = $('errorpage');
 const errDesc     = $('err-desc');
+const errTitle    = $('err-title');
 const errCode     = $('err-code');
 const toasts      = $('toasts');
 const zoomBadge   = $('zoom-badge');
@@ -64,6 +66,7 @@ const dlBadge     = $('dl-badge');
 /* --------------------------- constantes --------------------------- */
 const HOME_URL   = 'calopsia://home/';
 const ABOUT_URL  = 'calopsia://home/about.html';
+const SENHAS_URL = 'calopsia://home/senhas.html';
 const SEARCH_URL = 'https://www.google.com/search?q=';
 const TAB_PARTITION = 'persist:calopsia';   // precisa casar com main.js
 
@@ -124,7 +127,8 @@ function createTab(url, opts = {}) {
     favicon: '',
     loading: false,
     error: null,
-    zoom: 1
+    zoom: 1,
+    navegacoes: []      // {url, t} — usado só para detectar loop de recarregamento
   };
   tabs.push(tab);
 
@@ -201,6 +205,9 @@ function bindView(tab) {
   const onNavigated = (e) => {
     tab.url = e.url;
     tab.error = null;
+    if (registrarNavegacao(tab, e.url)) return;   // loop: já tratado ali dentro
+    const cid = safe(() => v.getWebContentsId());
+    if (cid) window.calopsia.senhasNavegou({ contentsId: cid, url: e.url });
     if (tab.id === activeId) {
       updateAddressBar();
       updateNavButtons();
@@ -305,6 +312,41 @@ function activateTab(id) {
 
 /** Mostra a webview ativa ou a página de erro — nunca as duas juntas
  *  (no Windows o <webview> é uma janela nativa que cobre o DOM). */
+/* ------------------------------------------------------------
+   Guarda contra loop de recarregamento
+   ------------------------------------------------------------
+   Alguns sites (a tela de verificação do Cloudflare é o caso clássico)
+   ficam recarregando a mesma URL para sempre. Sem isto a aba queima CPU
+   e a pessoa fica olhando uma tela que nunca avança. */
+const LOOP_MINIMO = 5;        // quantas vezes a mesma URL
+const LOOP_JANELA = 15000;    // dentro de quantos milissegundos
+
+function registrarNavegacao(tab, url) {
+  if (!url || url === 'about:blank') return false;
+  const agora = Date.now();
+  tab.navegacoes.push({ url, t: agora });
+  if (tab.navegacoes.length > 40) tab.navegacoes.shift();
+
+  const recentes = tab.navegacoes.filter((n) => agora - n.t <= LOOP_JANELA);
+  const repetidas = recentes.filter((n) => n.url === url);
+
+  if (repetidas.length < LOOP_MINIMO) return false;
+
+  // É um loop: para o carregamento e explica o que está acontecendo.
+  tab.navegacoes = [];
+  safe(() => tab.view.stop());
+  tab.loading = false;
+  tab.el.classList.remove('loading');
+  tab.error = { code: 'LOOP', description: null, url };
+  if (tab.id === activeId) {
+    renderActiveView();
+    setStatus('A página não para de recarregar');
+    showProgress(false);
+    reloadBtn.classList.remove('is-loading');
+  }
+  return true;
+}
+
 function renderActiveView() {
   const tab = getActive();
   const showErr = !!(tab && tab.error);
@@ -314,8 +356,14 @@ function renderActiveView() {
   requestAnimationFrame(relayoutViews);
 
   if (showErr && tab) {
+    const loop = String(tab.error.code) === 'LOOP';
+    errTitle.textContent = loop
+      ? 'A página não sai do lugar'
+      : 'Não foi possível carregar esta página';
     errDesc.textContent = describeError(tab.error);
-    errCode.textContent = `${tab.error.url}  ·  erro ${tab.error.code}`;
+    errCode.textContent = loop
+      ? tab.error.url
+      : `${tab.error.url}  ·  erro ${tab.error.code}`;
   }
 }
 
@@ -506,6 +554,9 @@ function menuItems() {
     { id: 'theme-light',  icon: ICON.sun,     label: 'Claro',                checked: temaFonte === 'light' },
     { id: 'theme-dark',   icon: ICON.moon,    label: 'Escuro',               checked: temaFonte === 'dark' },
     { sep: true },
+    { id: 'senhas',      icon: ICON.lock,    label: 'Senhas salvas' },
+    { id: 'gerar-senha', icon: ICON.key,     label: 'Gerar senha forte' },
+    { sep: true },
     { id: 'about',      icon: ICON.info,    label: 'Sobre o CALOPSIA' },
     { sep: true },
     { id: 'close-tab',  icon: ICON.close,   label: 'Fechar aba',           shortcut: `${MOD_LABEL}+W`, danger: true }
@@ -541,6 +592,14 @@ function closeMenu() {
   if (window.calopsia) window.calopsia.closeMenu();
 }
 
+/* Gera uma senha forte, copia e avisa. */
+async function gerarSenhaFortes() {
+  if (!window.calopsia) return;
+  const senha = await window.calopsia.senhasGerar(20);
+  window.calopsia.copiar(senha);
+  toast(`Senha de 20 caracteres copiada: ${senha}`, { ok: true });
+}
+
 /* Troca o tema no processo principal (que avisa todas as janelas e abas). */
 function definirTema(fonte) {
   if (!window.calopsia) return;
@@ -561,6 +620,8 @@ function runMenuAction(id) {
     case 'devtools':   if (t) safe(() => t.view.openDevTools()); break;
     case 'fullscreen': if (window.calopsia) window.calopsia.toggleFullscreen(); break;
     case 'about':        openAbout(); break;
+    case 'senhas':       createTab(SENHAS_URL); break;
+    case 'gerar-senha':  gerarSenhaFortes(); break;
     case 'theme-system': definirTema('system'); break;
     case 'theme-light':  definirTema('light'); break;
     case 'theme-dark':   definirTema('dark'); break;
@@ -569,6 +630,31 @@ function runMenuAction(id) {
 }
 
 if (window.calopsia) window.calopsia.onMenuAction((id) => { menuOpen = false; menuBtn.classList.remove('on'); runMenuAction(id); });
+
+/* ------------------------------------------------------------
+   Senhas: quando um campo de login recebe o foco, a janelinha com as
+   contas salvas aparece logo abaixo dele.
+   ------------------------------------------------------------ */
+if (window.calopsia) {
+  window.calopsia.onCampoSenha(({ contentsId, tipo, rect }) => {
+    const t = getActive();
+    if (!t || !rect) return;
+    if (safe(() => t.view.getWebContentsId()) !== contentsId) return;   // aba em segundo plano
+
+    const caixa = t.view.getBoundingClientRect();
+    const z = t.zoom || 1;
+    window.calopsia.senhasAbrirPopup({
+      x: Math.round(caixa.left + rect.x * z),
+      y: Math.round(caixa.top + rect.y * z),
+      contentsId, tipo, url: t.url
+    });
+  });
+
+  window.calopsia.onSenhaGerada((senha) => {
+    window.calopsia.copiar(senha);
+    toast(`Senha sugerida e copiada: ${senha}`, { ok: true });
+  });
+}
 
 /* ============================ extras ============================ */
 async function openFile() {
@@ -609,6 +695,11 @@ function describeError(err) {
     '-202': 'Certificado de segurança inválido.',
     '-501': 'Falha no protocolo de segurança (SSL/TLS).'
   };
+  if (String(err.code) === 'LOOP') {
+    return 'Esta página fica recarregando sozinha e nunca termina de abrir — ' +
+           'é comum em telas de verificação de sites (Cloudflare e parecidos). ' +
+           'O carregamento foi interrompido para não travar o navegador.';
+  }
   return map[String(err.code)] || err.description || 'Ocorreu um erro ao carregar a página.';
 }
 
@@ -703,7 +794,7 @@ $('find-close').addEventListener('click', closeFind);
 
 $('err-retry').addEventListener('click', () => {
   const t = getActive();
-  if (t) { t.error = null; safe(() => t.view.reload()); }
+  if (t) { t.navegacoes = []; t.error = null; safe(() => t.view.reload()); }
   renderActiveView();
 });
 $('err-home').addEventListener('click', () => {

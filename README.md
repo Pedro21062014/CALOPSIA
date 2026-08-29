@@ -188,7 +188,51 @@ O CALOPSIA segue o tema do seu dispositivo (claro ou escuro). Para escolher na m
 A escolha fica salva em `settings.json` e vale para tudo: barras, menus, página
 de nova aba e a tela "Sobre". A paleta é monocromática (grafite), sem matizes.
 
+## 🔐 Senhas
+
+O CALOPSIA detecta formulários de login, oferece para salvar e preenche
+para você.
+
+**Como usar:** entre em um site normalmente. Depois que o login der certo,
+aparece a pergunta *"Salvar esta senha?"*. Da próxima vez, clique no campo
+de usuário ou senha e escolha a conta na janelinha que abre.
+
+**Seção "Tema" e "Senhas" no menu ☰:**
+- **Senhas salvas** — abre a lista, com busca, revelar e esquecer
+- **Gerar senha forte** — gera 20 caracteres e copia
+
+### Como as senhas são protegidas
+
+| Camada | O que faz |
+|---|---|
+| **Senha mestra** | deriva a chave com scrypt (16 MB por tentativa) e cifra tudo com AES-256-GCM |
+| **Chaveiro do sistema** | Keychain (macOS), DPAPI (Windows) ou libsecret (Linux) por cima da primeira camada |
+
+- A senha mestra **não** é gravada em lugar nenhum — só um verificador scrypt.
+- O cofre fica em `cofre.json` dentro do perfil do app, **nunca** em texto puro.
+- Se o Linux não tiver `gnome-keyring`/`kwallet`, o cofre avisa e segue
+  protegido apenas pela senha mestra (nunca desprotegido).
+- A chave só existe na memória enquanto o cofre está aberto.
+
+⚠️ **Se você esquecer a senha mestra, as senhas salvas não podem ser recuperadas.**
+
 ## 🐛 Histórico de correções
+
+### v0.2.6
+- **Gerenciador de senhas:** detecção automática de formulários de login,
+  oferta para salvar depois que o login dá certo, preenchimento ao clicar no
+  campo, gerador de senhas fortes e tela interna para ver/revelar/esquecer.
+  Cofre cifrado com senha mestra (scrypt + AES-256-GCM) e, por cima, com o
+  chaveiro do sistema quando ele existir.
+- **Identidade do navegador:** o Electron anunciava User-Agent de Chrome mas
+  se identificava como "Chromium" sem a marca "Google Chrome" no
+  `navigator.userAgentData` — contradição que os anti-bots usam para travar
+  a verificação. Agora o navegador é coerente com o que diz ser.
+- **Loop de recarregamento:** páginas que ficam se recarregando para sempre
+  (o sintoma clássico da tela de verificação do Cloudflare) agora são
+  interrompidas com um aviso, em vez de travar a aba queimando CPU.
+- **Firewall do Windows:** desligada a descoberta de dispositivos na rede
+  (mDNS/Cast), que não usamos e que provocava o aviso do firewall.
 
 ### v0.2.5
 - **Tema do dispositivo:** a interface agora acompanha o tema claro/escuro do

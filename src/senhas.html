@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Senhas salvas</title>
+  <link rel="icon" href="../assets/logo.png" />
+  <link rel="stylesheet" href="theme.css" />
+  <link rel="stylesheet" href="senhas.css" />
+</head>
+<body>
+  <main class="pagina">
+    <header class="cabecalho">
+      <h1>Senhas</h1>
+      <p class="sub" id="sub">—</p>
+    </header>
+
+    <!-- 1. ainda não existe cofre -->
+    <section class="bloco" id="tela-criar" hidden>
+      <h2>Criar a senha mestra</h2>
+      <p class="nota">
+        Ela cifra as senhas que o navegador salvar. Guarde-a com cuidado:
+        sem ela não há como recuperar as senhas salvas.
+      </p>
+      <div class="campo">
+        <input type="password" id="nova-senha" placeholder="Senha mestra" autocomplete="off" />
+        <input type="password" id="nova-senha-2" placeholder="Repita a senha mestra" autocomplete="off" />
+      </div>
+      <p class="erro" id="erro-criar" hidden></p>
+      <button class="bt primario" id="btn-criar">Criar cofre</button>
+    </section>
+
+    <!-- 2. existe cofre, mas está trancado -->
+    <section class="bloco" id="tela-abrir" hidden>
+      <h2>Cofre trancado</h2>
+      <p class="nota">Digite a senha mestra para ver e editar as senhas salvas.</p>
+      <div class="campo">
+        <input type="password" id="senha-mestra" placeholder="Senha mestra" autocomplete="off" />
+      </div>
+      <p class="erro" id="erro-abrir" hidden></p>
+      <button class="bt primario" id="btn-abrir">Desbloquear</button>
+    </section>
+
+    <!-- 3. cofre aberto -->
+    <section class="bloco" id="tela-lista" hidden>
+      <div class="linha-topo">
+        <input type="search" id="busca" placeholder="Buscar site ou usuário" autocomplete="off" />
+        <button class="bt suave" id="btn-trancar">Trancar</button>
+      </div>
+      <div id="lista" class="lista"></div>
+      <p class="vazio" id="vazio" hidden>Nenhuma senha salva ainda. Elas aparecem aqui depois que você entrar em algum site.</p>
+    </section>
+
+    <!-- 4. gerador -->
+    <section class="bloco" id="tela-gerar" hidden>
+      <h2>Gerar senha forte</h2>
+      <div class="gerado">
+        <code id="senha-gerada">—</code>
+        <button class="bt icone" id="btn-gerar" title="Gerar outra">⟳</button>
+      </div>
+      <div class="forca"><div class="barra" id="barra-forca"></div></div>
+      <p class="nota" id="forca-rotulo">—</p>
+      <button class="bt" id="btn-copiar">Copiar senha</button>
+    </section>
+  </main>
+
+  <script src="theme-boot.js"></script>
+  <script src="senhas.js"></script>
+</body>
+</html>
