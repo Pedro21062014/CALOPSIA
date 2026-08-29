@@ -4,7 +4,7 @@
    - não expõe nada em sites da internet;
    - só entrega as pontes às páginas internas (calopsia://). */
 
-const { contextBridge, ipcRenderer, webFrame } = require('electron');
+const { contextBridge, ipcRenderer } = require('electron');
 const INTERNO = location.protocol === 'calopsia:';
 
 /* Ctrl/⌘ + roda do mouse -> zoom só desta aba.
@@ -47,89 +47,16 @@ if (INTERNO) {
 }
 
 /* ============================================================
-   Identidade do navegador — versão 0.4.2 ("navegador honesto")
+   Identidade do navegador — NENHUMA interferência (v0.5.0)
    ------------------------------------------------------------
-    Padrão Edge/Vivaldi/Opera: declarar a PRÓPRIA marca em vez
-    de fingir ser o Google Chrome. A única interferência na
-    página é acrescentar a marca "Calopsia" à lista de marcas do
-    navigator.userAgentData (nos objetos reais, protótipos nativos
-    intactos). Nada de window.chrome artificial, nada de objetos
-    falsos: quanto menos disfarce, menos inconsistência para os
-    anti-bots acharem.
+    Desde a v0.5.0 o CALOPSIA não injeta JavaScript no mundo das
+    páginas nem patcheia nenhuma API: o User-Agent e as dicas de
+    cliente são as NATIVAS do Chromium (apenas sem os tokens do
+    wrapper). Um Chromium nativo é consistente consigo mesmo —
+    modifier prototypes (brands/getHighEntropyValues/toJSON) ou
+    criar window.chrome era exatamente o tipo de "comportamento
+    central modificado" que os desafios anti-bot detectam.
    ============================================================ */
-function declararMarcaCalopsia() {
-  const principal = (/Chrome\/(\d+)/.exec(navigator.userAgent) || [])[1];
-  if (!principal || !navigator.userAgentData) return;
-
-  /* Acrescenta "Calopsia" à lista de marcas, logo após "Chromium",
-     mantendo versões e ordem originais (o UA e os cabeçalhos dizem
-     o mesmo — coerência total). */
-  const comMarca = (lista) => {
-    const copia = [];
-    let inserido = false;
-    for (const b of (lista || [])) {
-      if (!b || !b.brand) continue;
-      if (b.brand === 'Calopsia') { inserido = true; continue; }
-      if (b.brand === 'Google Chrome') continue;   // não fingimos ser Chrome
-      copia.push({ brand: b.brand, version: b.version });
-      if (b.brand === 'Chromium' && !inserido) {
-        copia.push({ brand: 'Calopsia', version: b.version });
-        inserido = true;
-      }
-    }
-    if (!inserido) copia.push({ brand: 'Calopsia', version: principal });
-    return Object.freeze(copia.map((b) => Object.freeze(b)));
-  };
-
-  const nativo = (nome, fn) => {
-    try {
-      Object.defineProperty(fn, 'toString', {
-        value: () => `function ${nome}() { [native code] }`
-      });
-    } catch { /* ignora */ }
-    return fn;
-  };
-
-  try {
-    const uad = navigator.userAgentData;
-    const proto = Object.getPrototypeOf(uad);
-
-    const descBrands = Object.getOwnPropertyDescriptor(proto, 'brands');
-    if (descBrands && descBrands.get) {
-      const getterOriginal = descBrands.get;
-      Object.defineProperty(proto, 'brands', {
-        get() { return comMarca(getterOriginal.call(this)); },
-        configurable: true
-      });
-    }
-
-    if (typeof proto.getHighEntropyValues === 'function') {
-      const hevOriginal = proto.getHighEntropyValues;
-      proto.getHighEntropyValues = nativo('getHighEntropyValues', function (dicas) {
-        return hevOriginal.call(this, dicas).then((r) => {
-          if (r && r.brands) r.brands = comMarca(r.brands);
-          if (r && r.fullVersionList) r.fullVersionList = comMarca(r.fullVersionList);
-          return r;
-        });
-      });
-    }
-
-    if (typeof proto.toJSON === 'function') {
-      const toJSONOriginal = proto.toJSON;
-      proto.toJSON = nativo('toJSON', function () {
-        const r = toJSONOriginal.call(this);
-        if (r && r.brands) r.brands = comMarca(r.brands);
-        return r;
-      });
-    }
-  } catch { /* ignora */ }
-}
-
-if (!INTERNO) {
-  try {
-    webFrame.executeJavaScript(`(${declararMarcaCalopsia.toString()})();`);
-  } catch { /* ambiente sem webFrame: segue sem o ajuste */ }
-}
 
 /* ============================================================
    Detecção de formulários de senha

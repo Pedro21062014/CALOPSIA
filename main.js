@@ -22,14 +22,12 @@ try {
   app.commandLine.appendSwitch('disable-features', 'MediaRouter');
 } catch { /* ignora se o switch não existir nesta versão */ }
 
-/* WebGPU — sem isso o Turnstile do Cloudflare entra em loop.
-   A verificação nova usa WebGPU; quando o adapter não está disponível
-   ("No available adapters" no console), o desafio falha e recarrega a
-   página para sempre. O Chrome, sem GPU utilizável, cai para um adapter
-   de software; o Electron não faz isso sozinho — as flags abaixo
-   garantem que exista SEMPRE um adapter (hardware ou software). */
-app.commandLine.appendSwitch('enable-unsafe-webgpu');
-app.commandLine.appendSwitch('ignore-gpu-blocklist');
+/* WebGPU: nenhuma flag experimental (v0.5.0). Forçar
+   "ignore-gpu-blocklist" sobrepõe uma decisão de segurança do próprio
+   Chromium e cria um estado que um Chrome real na mesma máquina não
+   teria — o Turnstile lida normalmente com Chrome sem WebGPU
+   (milhões de GPUs bloqueadas existem por aí). O que vale é ser
+   o mais próximo possível do Chrome nativo neste hardware. */
 
 const APP_ROOT = __dirname;
 
@@ -168,64 +166,37 @@ function resolveInternalFile(urlPath) {
  *  (WhatsApp Web, alguns bancos, Google) detectam isso e exibem
  *  "funciona no Google Chrome 100 ou posterior". */
 function chromeUserAgent() {
+  /* Identidade 100% NATIVA (v0.5.0 — "modo compatibilidade"):
+     o UA padrão do Electron carrega os tokens "Electron/x" e o nome do app,
+     que travam sites (WhatsApp/bancos) e denunciam o wrapper. Basta REMOVER
+     esses tokens: o resultado é exatamente o UA de um Chromium puro — que
+     é o que somos — e as dicas de cliente (sec-ch-ua, userAgentData) ficam
+     nativas e coerentes com ele, sem nenhum patch. Um Chromium nativo é
+     consistente consigo mesmo; quanto menos mexido, melhor. */
+  const padrao = app.userAgent || '';
+  const limpo = padrao
+    .replace(new RegExp('\\s+Electron/[\\d.]+', 'gi'), '')
+    .replace(new RegExp('\\s+' + String(app.name || 'calopsia').replace(/[^a-z0-9]/gi, '') + '/[\\d.]+', 'i'), '')
+    .replace(/\s{2,}/g, ' ')
+    .trim();
+  if (/Chrome\/[\d.]+/.test(limpo)) return limpo;
   const chrome = process.versions.chrome || '126.0.0.0';
   const plataforma = process.platform === 'win32' ? 'Windows NT 10.0; Win64; x64'
     : process.platform === 'darwin' ? 'Macintosh; Intel Mac OS X 10_15_7'
     : 'X11; Linux x86_64';
-  /* Identidade HONESTA, no padrão dos navegadores Chromium (Edge apenda
-     "Edg/...", Vivaldi "Vivaldi/..."): mantem o token do motor — o que
-     sites como WhatsApp Web e bancos exigem — e declara a propria marca.
-     Nada de fingir ser o Google Chrome: a marca propria explica as dicas
-     de cliente listarem apenas "Chromium". */
-  return `Mozilla/5.0 (${plataforma}) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/${chrome} Safari/537.36 Calopsia/${app.getVersion()}`;
+  return `Mozilla/5.0 (${plataforma}) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/${chrome} Safari/537.36`;
 }
 
 let mainWindow = null;
 
 /* ------------------------------------------------------------
-   Identidade na rede — arquitetura "navegador honesto" (v0.4.2)
+   Identidade na rede — NENHUMA (v0.5.0)
    ------------------------------------------------------------
-    Assim como Edge, Vivaldi e Opera, o CALOPSIA declara a PRÓPRIA
-    marca no User-Agent e nas dicas de cliente (sec-ch-ua*), em vez
-    de fingir ser o Google Chrome. Menos fingimento = menos
-    inconsistência para os anti-bots acharem.
-
-    Regras:
-    - UA mantém o token do motor (Chrome/150), exigido por sites
-      como WhatsApp Web e bancos, e apenda "Calopsia/<versão>";
-    - sec-ch-ua* preserva o grease real do Chromium e apenas
-      acrescenta a marca própria (padrão da classe);
-    - NUNCA se mexe em cookies de terceiros: a versão anterior
-      apagava o cf_clearance ao ver "challenge" — uma resposta
-      tardia podia apagar o cookie recém-emitido e recriar o loop.
-      Cookie é do Cloudflare; ele cuida dos dele.
+    Nada de reescrever sec-ch-ua / sec-ch-ua-full-version-list:
+    o Chromium gera dicas coerentes com o UA nativo sozinho.
+    Qualquer edição manual cria o tipo de inconsistência que os
+    anti-bots procuram. Cookie de terceiro então, nem se fala.
    ------------------------------------------------------------ */
-function coerirCabecalhos(ses) {
-  const filtro = { urls: ['http://*/*', 'https://*/*'] };
-
-  /* Dicas de cliente (sec-ch-ua): o Chromium lista apenas a marca dele.
-     No padrão dos navegadores Chromium de verdade (Edge, Vivaldi, Opera),
-     cada um ACRESCENTA a própria marca — é isso que fazemos aqui,
-     preservando o "grease" real gerado pelo motor. Ninguém apaga cookies
-     de terceiros: o Cloudflare cuida dos dele sozinho. */
-  ses.webRequest.onBeforeSendHeaders(filtro, (details, callback) => {
-    const h = details.requestHeaders || {};
-    const principal = (process.versions.chrome || '126.0.0.0').split('.')[0];
-    const marca = `"Calopsia";v="${principal}"`;
-
-    const scua = h['sec-ch-ua'];
-    if (typeof scua === 'string' && scua.includes('Chromium') && !scua.includes('"Calopsia"')) {
-      h['sec-ch-ua'] = `${scua}, ${marca}`;
-    }
-
-    const fvl = h['sec-ch-ua-full-version-list'];
-    if (typeof fvl === 'string' && fvl.includes('Chromium') && !fvl.includes('"Calopsia"')) {
-      h['sec-ch-ua-full-version-list'] = `${fvl}, ${marca}`;
-    }
-
-    callback({ requestHeaders: h });
-  });
-}
 
 /* ------------------------------------------------------------
    Instância única
@@ -456,10 +427,6 @@ app.whenReady().then(() => {
     fundoEscuro: () => nativeTheme.shouldUseDarkColors
   });
 
-  /* Cloudflare: cabeçalhos coerentes com o UA + cookie de liberação
-     morto é descartado em vez de reenviado em loop. */
-  coerirCabecalhos(session.defaultSession);
-  coerirCabecalhos(tabSession);
 
   // Permissões: libera só o essencial para os sites dentro das abas.
   const permissionHandler = (webContents, permission, callback) => {

@@ -218,6 +218,28 @@ de usuário ou senha e escolha a conta na janelinha que abre.
 
 ## 🐛 Histórico de correções
 
+### v0.5.0 — "modo compatibilidade": identidade 100% nativa
+- **Zero modificações no ambiente da página.** Análise externa da v0.4.2
+  apontou o caminho certo: cada camada custom (UA montado à mão, `sec-ch-ua`
+  reescrito, `navigator.userAgentData` patcheado, `window.chrome` criado,
+  flags de GPU forçadas) tornava o navegador MAIS inconsistente, não menos.
+  Um Chromium nativo é consistente consigo mesmo.
+- **User-Agent**: agora é o UA NATIVO do Chromium com apenas os tokens do
+  wrapper (`Electron/x`, nome do app) removidos — exatamente um Chromium
+  puro, que é o que o CALOPSIA é. Dicas de cliente (`sec-ch-ua`,
+  `userAgentData`) ficam as nativas do motor, sem nenhum patch.
+- **Removido** o rewrite de `sec-ch-ua`/`sec-ch-ua-full-version-list`
+  (função `coerirCabecalhos` inteira) — o Chromium gera dicas coerentes
+  sozinho.
+- **Removida** qualquer injeção de JavaScript no mundo das páginas
+  (`declararMarcaCalopsia`/`webFrame` fora do preload).
+- **Removidas** as flags `enable-unsafe-webgpu`/`ignore-gpu-blocklist`:
+  forçá-las sobrepõe decisões de segurança do Chromium e cria um estado
+  que um Chrome real na mesma máquina não teria.
+- Mantidos: permissões restritas ao essencial, preload de recursos do
+  navegador (zoom/senhas) apenas no mundo isolado — como os content
+  scripts do Chrome.
+
 ### v0.4.2
 - **Removido o apagador de `cf_clearance` (causa do loop apontada em
   análise externa):** ao receber uma resposta `challenge`, o app apagava o
