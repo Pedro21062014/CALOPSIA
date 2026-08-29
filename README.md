@@ -218,6 +218,19 @@ de usuário ou senha e escolha a conta na janelinha que abre.
 
 ## 🐛 Histórico de correções
 
+### v0.5.2
+- **Correção validada pela ferramenta OFICIAL do Cloudflare:** rodamos o
+  Turnstile Troubleshooter (debug.challenges.cloudflare.com) dentro do
+  CALOPSIA e ele acusou "Graphics Information Appears Fake — WebGL renderer
+  info is spoofed". A causa era a flag `ignore-gpu-blocklist` (v0.5.1):
+  forçar uma GPU que o Chromium bloqueou cria uma impressão de vídeo que
+  nenhum Chrome real teria na mesma máquina. A flag foi removida — o
+  WebGPU continua disponível pelo caminho de software (o mesmo fallback
+  do Chrome). Rodando a ferramenta de novo: diagnóstico limpo, sem
+  advertências.
+- Página "Diagnóstico do navegador" ganhou atalho para a verificação
+  oficial do Cloudflare.
+
 ### v0.5.1
 - **Motor atualizado: Electron 44 (Chromium 152)** — inclui correções de
   GPU/WebGPU recentes (houve relatos de crash do processo de GPU no

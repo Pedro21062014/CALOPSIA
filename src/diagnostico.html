@@ -28,6 +28,13 @@
     .valor { color: var(--muted); word-break: break-all; font-variant-numeric: tabular-nums; }
     .erro .valor { color: var(--danger-text); }
     .rodape { margin-top: 18px; font-size: 11.5px; color: var(--faint); line-height: 1.6; }
+    .cf-tool {
+      display: block; margin-top: 16px; padding: 10px 14px;
+      text-align: center; text-decoration: none;
+      font-size: 12.5px; color: var(--text-dim);
+      background: var(--hover-2); border: 1px solid var(--border); border-radius: 10px;
+    }
+    .cf-tool:hover { background: var(--hover-3); color: var(--strong); }
   </style>
 </head>
 <body>
@@ -35,9 +42,13 @@
     <h1>Diagnóstico do navegador</h1>
     <p class="sub">Estado do ambiente na sua máquina — o que a verificação do Cloudflare enxerga.</p>
     <div id="lista"></div>
+    <a class="cf-tool" href="https://debug.challenges.cloudflare.com/" target="_blank" rel="noreferrer">
+      Executar a verificação oficial do Cloudflare (Turnstile Troubleshooter)
+    </a>
     <p class="rodape">
       WebGPU com erro aqui é a causa clássica do loop na tela "Verificando…" do Cloudflare.
       Tente atualizar o driver de vídeo da sua placa (NVIDIA/AMD/Intel) e rode o diagnóstico de novo.
+      A verificação oficial do Cloudflare abre fora do navegador, no site deles.
     </p>
   </div>
 

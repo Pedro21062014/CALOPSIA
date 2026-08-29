@@ -22,17 +22,21 @@ try {
   app.commandLine.appendSwitch('disable-features', 'MediaRouter');
 } catch { /* ignora se o switch não existir nesta versão */ }
 
-/* WebGPU — necessário para o Turnstile do Cloudflare (v0.5.1).
-   A verificação nova chama navigator.gpu.requestAdapter(); quando não há
-   adapter ("No available adapters" no console — erro capturado na máquina
-   do usuário), o desafio morre e recarrega em loop. O Chrome, com GPU na
-   blocklist, oferece caminho de software; o Electron não faz isso sozinho.
-   No Linux o WebGPU exige o backend Vulkan (por isso o enable-features).
-   Mantidas as demais decisões da v0.5.0: identidade 100% nativa. */
+/* WebGPU — necessário para o Turnstile do Cloudflare.
+   A verificação chama navigator.gpu.requestAdapter(); sem adapter
+   ("No available adapters", capturado na máquina do usuário), o desafio
+   morre e recarrega em loop. enable-unsafe-webgpu (+Vulkan no Linux)
+   garante o caminho de fallback por software — o MESMO que um Chrome
+   real usa quando a GPU/driver está na blocklist.
+
+   IMPORTANTE: NÃO usar "ignore-gpu-blocklist". Forçar hardware que o
+   Chromium bloqueou cria uma impressão de GPU que nenhum Chrome real
+   teria na mesma máquina — a ferramenta oficial do Cloudflare
+   (debug.challenges.cloudflare.com) classifica exatamente isso como
+   "Graphics Information Appears Fake", ou seja, fingerprint suspeito. */
 try {
   app.commandLine.appendSwitch('enable-features', 'Vulkan');
   app.commandLine.appendSwitch('enable-unsafe-webgpu');
-  app.commandLine.appendSwitch('ignore-gpu-blocklist');
 } catch { /* ignora */ }
 const APP_ROOT = __dirname;
 
