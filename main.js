@@ -17,6 +17,12 @@ const TAB_PARTITION = 'persist:calopsia';
 const SRC_DIR = path.join(APP_ROOT, 'src');
 const ASSETS_DIR = path.join(APP_ROOT, 'assets');
 
+/* Ícone do app. Dentro do pacote (asar) só existe assets/, nunca build/. */
+const ICON_PATH = [
+  path.join(APP_ROOT, 'build', 'icon.png'),
+  path.join(ASSETS_DIR, 'logo.png')
+].find((p) => { try { return fs.existsSync(p); } catch { return false; } }) || undefined;
+
 /* ------------------------------------------------------------
    Protocolo interno "calopsia://"
    Registrado ANTES do app ficar pronto (obrigatório).
@@ -112,7 +118,7 @@ function createWindow() {
     backgroundColor: '#0b0d13',
     show: false,
     autoHideMenuBar: true,
-    icon: path.join(APP_ROOT, 'build', 'icon.png'),
+    icon: ICON_PATH,
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
       webviewTag: true,           // obrigatório para <webview>
@@ -293,14 +299,16 @@ app.whenReady().then(() => {
   session.defaultSession.setPermissionRequestHandler(permissionHandler);
   session.fromPartition(TAB_PARTITION).setPermissionRequestHandler(permissionHandler);
 
-  app.setAboutPanelOptions({
-    applicationName: 'CALOPSIA',
-    applicationVersion: app.getVersion(),
-    version: app.getVersion(),
-    copyright: '© CALOPSIA — licença MIT',
-    iconPath: path.join(APP_ROOT, 'build', 'icon.png'),
-    website: 'https://github.com/Pedro21062014/CALOPSIA'
-  });
+  try {
+    app.setAboutPanelOptions({
+      applicationName: 'CALOPSIA',
+      applicationVersion: app.getVersion(),
+      version: app.getVersion(),
+      copyright: '© CALOPSIA — licença MIT',
+      iconPath: ICON_PATH,
+      website: 'https://github.com/Pedro21062014/CALOPSIA'
+    });
+  } catch (e) { console.warn('about panel:', e.message); }
 
   setupDownloads();
   buildMenu();

@@ -157,6 +157,15 @@ calopsia/
 
 ## 🐛 Histórico de correções
 
+### v0.2.2
+- **Robustez de layout:** os webviews agora têm o tamanho reafirmado sempre que
+  a janela é redimensionada, maximizada/restaurada ou a aba é ativada — mata
+  qualquer viewport "preso" que deixe a página cortada.
+- **Zoom normalizado:** ao anexar a aba o fator de zoom é aplicado sempre
+  (inclusive `1`), impedindo zoom herdado da sessão ou da escala do SO.
+- **Ícone:** dentro do pacote só existe `assets/`; o caminho do ícone agora é
+  resolvido com `existsSync` em vez de apontar para `build/` (inexistente no asar).
+
 ### v0.2.1
 - **Corrigido:** a página inicial não carregava: `protocol.handle()` registra o
   esquema só na sessão padrão, e as abas usam a partição `persist:calopsia`.

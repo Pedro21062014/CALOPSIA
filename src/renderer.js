@@ -164,7 +164,10 @@ function bindView(tab) {
   const v = tab.view;
 
   v.addEventListener('did-attach-webview', () => {
-    if (tab.zoom !== 1) applyZoom(tab);
+    // Aplica sempre (inclusive 1): garante que nenhum zoom herdado da sessão
+    // ou da escala do SO deixe a página "ampliada".
+    applyZoom(tab);
+    relayoutViews();
     if (tab.id === activeId) updateNavButtons();
   });
 
@@ -252,6 +255,19 @@ function bindView(tab) {
   });
 }
 
+/** Reafirma o tamanho dos webviews. O guest às vezes mantém um viewport
+ *  antigo quando o elemento foi criado/escondido ou a janela mudou de tamanho
+ *  (sintoma: página aparece cortada/ampliada). */
+function relayoutViews() {
+  const w = views.clientWidth;
+  const h = views.clientHeight;
+  if (!w || !h) return;
+  tabs.forEach((t) => {
+    t.view.style.width = w + 'px';
+    t.view.style.height = h + 'px';
+  });
+}
+
 function activateTab(id) {
   const tab = getTab(id);
   if (!tab) return;
@@ -259,6 +275,7 @@ function activateTab(id) {
 
   tabs.forEach((t) => t.el.classList.toggle('active', t.id === id));
   renderActiveView();
+  requestAnimationFrame(relayoutViews);
 
   if (tab.el.scrollIntoView) tab.el.scrollIntoView({ block: 'nearest', inline: 'nearest' });
 
@@ -281,6 +298,7 @@ function renderActiveView() {
 
   errorPage.hidden = !showErr;
   tabs.forEach((t) => t.view.classList.toggle('visible', t.id === activeId && !showErr));
+  requestAnimationFrame(relayoutViews);
 
   if (showErr && tab) {
     errDesc.textContent = describeError(tab.error);
@@ -681,6 +699,9 @@ $('titlebar').addEventListener('dblclick', (e) => {
 document.addEventListener('mousedown', (e) => {
   if (menuOpen && !e.target.closest('#menu')) closeMenu();
 });
+
+/* redimensionar a janela (inclusive maximizar/restaurar) reajusta as abas */
+window.addEventListener('resize', () => requestAnimationFrame(relayoutViews));
 
 /* --------------------------- atalhos --------------------------- */
 window.addEventListener('keydown', (e) => {
