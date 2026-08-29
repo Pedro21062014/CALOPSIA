@@ -22,13 +22,18 @@ try {
   app.commandLine.appendSwitch('disable-features', 'MediaRouter');
 } catch { /* ignora se o switch não existir nesta versão */ }
 
-/* WebGPU: nenhuma flag experimental (v0.5.0). Forçar
-   "ignore-gpu-blocklist" sobrepõe uma decisão de segurança do próprio
-   Chromium e cria um estado que um Chrome real na mesma máquina não
-   teria — o Turnstile lida normalmente com Chrome sem WebGPU
-   (milhões de GPUs bloqueadas existem por aí). O que vale é ser
-   o mais próximo possível do Chrome nativo neste hardware. */
-
+/* WebGPU — necessário para o Turnstile do Cloudflare (v0.5.1).
+   A verificação nova chama navigator.gpu.requestAdapter(); quando não há
+   adapter ("No available adapters" no console — erro capturado na máquina
+   do usuário), o desafio morre e recarrega em loop. O Chrome, com GPU na
+   blocklist, oferece caminho de software; o Electron não faz isso sozinho.
+   No Linux o WebGPU exige o backend Vulkan (por isso o enable-features).
+   Mantidas as demais decisões da v0.5.0: identidade 100% nativa. */
+try {
+  app.commandLine.appendSwitch('enable-features', 'Vulkan');
+  app.commandLine.appendSwitch('enable-unsafe-webgpu');
+  app.commandLine.appendSwitch('ignore-gpu-blocklist');
+} catch { /* ignora */ }
 const APP_ROOT = __dirname;
 
 /* Partição das abas — precisa ser a mesma string usada no renderer.js */

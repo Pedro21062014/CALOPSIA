@@ -67,6 +67,7 @@ const dlBadge     = $('dl-badge');
 /* --------------------------- constantes --------------------------- */
 const HOME_URL   = 'calopsia://home/';
 const ABOUT_URL  = 'calopsia://home/about.html';
+const DIAG_URL   = 'calopsia://home/diagnostico.html';
 const SENHAS_URL = 'calopsia://home/senhas.html';
 const SEARCH_URL = 'https://www.google.com/search?q=';
 const TAB_PARTITION = 'persist:calopsia';   // precisa casar com main.js
@@ -600,6 +601,7 @@ function menuItems() {
     { id: 'senhas',      icon: ICON.lock,    label: 'Senhas salvas' },
     { id: 'gerar-senha', icon: ICON.key,     label: 'Gerar senha forte' },
     { sep: true },
+    { id: 'diagnostico', icon: ICON.monitor, label: 'Diagnóstico do navegador' },
     { id: 'about',      icon: ICON.info,    label: 'Sobre o CALOPSIA' },
     { sep: true },
     { id: 'close-tab',  icon: ICON.close,   label: 'Fechar aba',           shortcut: `${MOD_LABEL}+W`, danger: true }
@@ -681,6 +683,7 @@ function runMenuAction(id) {
     case 'fullscreen': if (window.calopsia) window.calopsia.toggleFullscreen(); break;
     case 'update':     if (window.calopsia) window.calopsia.updateAction(); break;
     case 'about':        openAbout(); break;
+    case 'diagnostico':  createTab(DIAG_URL); break;
     case 'senhas':       createTab(SENHAS_URL); break;
     case 'gerar-senha':  gerarSenhaFortes(); break;
     case 'theme-system': definirTema('system'); break;

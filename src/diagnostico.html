@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Diagnóstico do CALOPSIA</title>
+  <link rel="stylesheet" href="theme.css" />
+  <style>
+    body {
+      margin: 0; padding: 36px 20px;
+      background: var(--bg); color: var(--text);
+      font-family: "Segoe UI Variable", "Segoe UI", system-ui, sans-serif;
+      -webkit-font-smoothing: antialiased;
+    }
+    .caixa { max-width: 680px; margin: 0 auto; }
+    h1 { font-size: 19px; letter-spacing: .4px; color: var(--strong); }
+    p.sub { margin: 6px 0 22px; font-size: 13px; color: var(--muted); }
+    .item {
+      display: flex; align-items: center; gap: 12px;
+      padding: 11px 14px; margin-bottom: 8px;
+      background: var(--hover); border: 1px solid var(--border);
+      border-radius: 10px; font-size: 13px;
+    }
+    .bolinha { width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; background: var(--muted); }
+    .ok   .bolinha { background: var(--ok); }
+    .erro .bolinha { background: var(--danger); }
+    .nome { color: var(--text-dim); width: 190px; flex-shrink: 0; }
+    .valor { color: var(--muted); word-break: break-all; font-variant-numeric: tabular-nums; }
+    .erro .valor { color: var(--danger-text); }
+    .rodape { margin-top: 18px; font-size: 11.5px; color: var(--faint); line-height: 1.6; }
+  </style>
+</head>
+<body>
+  <div class="caixa">
+    <h1>Diagnóstico do navegador</h1>
+    <p class="sub">Estado do ambiente na sua máquina — o que a verificação do Cloudflare enxerga.</p>
+    <div id="lista"></div>
+    <p class="rodape">
+      WebGPU com erro aqui é a causa clássica do loop na tela "Verificando…" do Cloudflare.
+      Tente atualizar o driver de vídeo da sua placa (NVIDIA/AMD/Intel) e rode o diagnóstico de novo.
+    </p>
+  </div>
+
+  <script src="theme-boot.js"></script>
+  <script>
+    (function () {
+      var lista = document.getElementById('lista');
+      var itens = [];
+
+      function add(nome, valor, classe) {
+        itens.push({ nome: nome, valor: valor == null ? '—' : String(valor), classe: classe || '' });
+      }
+
+      function finish() {
+        lista.innerHTML = '';
+        itens.forEach(function (it) {
+          var div = document.createElement('div');
+          div.className = 'item ' + it.classe;
+          var b = document.createElement('span'); b.className = 'bolinha';
+          var n = document.createElement('span'); n.className = 'nome'; n.textContent = it.nome;
+          var v = document.createElement('span'); v.className = 'valor'; v.textContent = it.valor;
+          div.appendChild(b); div.appendChild(n); div.appendChild(v);
+          lista.appendChild(div);
+        });
+      }
+
+      add('User-Agent', navigator.userAgent);
+
+      var uad = navigator.userAgentData;
+      if (uad) {
+        add('Marcas (sec-ch-ua)', uad.brands.map(function (b) { return b.brand + ' ' + b.version; }).join(' · '));
+      }
+
+      /* cookies e storage */
+      var cookiesOk = navigator.cookieEnabled;
+      add('Cookies', cookiesOk ? 'habilitados' : 'DESABILITADOS', cookiesOk ? 'ok' : 'erro');
+      try {
+        localStorage.setItem('__t', '1'); localStorage.removeItem('__t');
+        add('DOM Storage', 'disponível', 'ok');
+      } catch (e) {
+        add('DOM Storage', 'INDISPONÍVEL', 'erro');
+      }
+
+      /* WebGL */
+      try {
+        var c = document.createElement('canvas');
+        var gl = c.getContext('webgl') || c.getContext('experimental-webgl');
+        if (!gl) { add('WebGL', 'indisponível', 'erro'); }
+        else {
+          var dbg = gl.getExtension('WEBGL_debug_renderer_info');
+          var gpu = dbg ? gl.getParameter(dbg.UNMASKED_RENDERER_WEBGL) : 'presente';
+          add('WebGL', gpu, 'ok');
+        }
+      } catch (e) { add('WebGL', 'erro: ' + e.message, 'erro'); }
+
+      /* WebGPU — o teste decisivo para o Cloudflare/Turnstile */
+      if (!navigator.gpu) {
+        add('WebGPU', 'AUSENTE neste navegador', 'erro');
+        finish();
+        return;
+      }
+      add('WebGPU', 'presente (navigator.gpu)', 'ok');
+
+      navigator.gpu.requestAdapter().then(function (adapter) {
+        if (!adapter) {
+          add('Adapter WebGPU', 'NULL — "No available adapters" (causa do loop do Cloudflare)', 'erro');
+          finish();
+          return;
+        }
+        add('Adapter WebGPU', 'disponível', 'ok');
+        var infoPromise = adapter.requestAdapterInfo
+          ? adapter.requestAdapterInfo()
+          : Promise.resolve(null);
+        infoPromise.then(function (info) {
+          if (info) {
+            var txt = (info.vendor || '?') + ' ' + (info.architecture || '') + (info.device || (' · ' + info.device));
+            add('GPU (WebGPU)', txt.trim());
+          }
+          return adapter.requestDevice().then(function (device) {
+            add('Device WebGPU', device ? 'criado com sucesso' : 'falhou', device ? 'ok' : 'erro');
+            finish();
+          });
+        }).catch(function (e) { add('Device WebGPU', 'erro: ' + e.message, 'erro'); finish(); });
+      }).catch(function (e) {
+        add('Adapter WebGPU', 'erro: ' + e.message, 'erro');
+        finish();
+      });
+    })();
+  </script>
+</body>
+</html>

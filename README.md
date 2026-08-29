@@ -218,6 +218,21 @@ de usuário ou senha e escolha a conta na janelinha que abre.
 
 ## 🐛 Histórico de correções
 
+### v0.5.1
+- **Motor atualizado: Electron 44 (Chromium 152)** — inclui correções de
+  GPU/WebGPU recentes (houve relatos de crash do processo de GPU no
+  Windows durante o Turnstile em versões anteriores).
+- **WebGPU garantido de volta:** o log capturado na máquina do usuário
+  ("No available adapters") mostrou que, sem as flags, o Turnstile morre
+  no `requestAdapter()` e recarrega em loop. Restauradas
+  `enable-unsafe-webgpu` + `ignore-gpu-blocklist` e acrescentada
+  `enable-features=Vulkan` (necessária ao WebGPU no Linux). Identidade
+  continua 100% nativa (v0.5.0).
+- **Nova página "Diagnóstico do navegador"** (menu ☰): mostra na tela
+  User-Agent, marcas, cookies, DOM Storage, WebGL e o teste decisivo de
+  WebGPU (adapter/dispositivo) — para saber na hora se a máquina está
+  apta à verificação do Cloudflare.
+
 ### v0.5.0 — "modo compatibilidade": identidade 100% nativa
 - **Zero modificações no ambiente da página.** Análise externa da v0.4.2
   apontou o caminho certo: cada camada custom (UA montado à mão, `sec-ch-ua`
