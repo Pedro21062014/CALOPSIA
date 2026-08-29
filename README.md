@@ -218,6 +218,16 @@ de usuário ou senha e escolha a conta na janelinha que abre.
 
 ## 🐛 Histórico de correções
 
+### v0.4.1
+- **Cloudflare/Turnstile — causa raiz encontrada no console do usuário:**
+  o erro `No available adapters` (WebGPU sem adapter) fazia a verificação
+  falhar e recarregar em loop. O Turnstile atual usa WebGPU; quando o
+  Electron não consegue um adapter (GPU na blocklist ou ausente), o desafio
+  nunca conclui. Corrigido: o CALOPSIA agora garante sempre um adapter
+  (hardware ou software), como o Chrome faz (`enable-unsafe-webgpu` +
+  `ignore-gpu-blocklist`). Validado com o app rodando: `requestAdapter()`
+  e `requestDevice()` voltam OK.
+
 ### v0.4.0
 - **Fim do `<webview>`: abas agora são `WebContentsView` nativas.** O Electron
   desaconselha o `<webview>` ("mudanças arquitetônicas que afetam a

@@ -22,6 +22,15 @@ try {
   app.commandLine.appendSwitch('disable-features', 'MediaRouter');
 } catch { /* ignora se o switch não existir nesta versão */ }
 
+/* WebGPU — sem isso o Turnstile do Cloudflare entra em loop.
+   A verificação nova usa WebGPU; quando o adapter não está disponível
+   ("No available adapters" no console), o desafio falha e recarrega a
+   página para sempre. O Chrome, sem GPU utilizável, cai para um adapter
+   de software; o Electron não faz isso sozinho — as flags abaixo
+   garantem que exista SEMPRE um adapter (hardware ou software). */
+app.commandLine.appendSwitch('enable-unsafe-webgpu');
+app.commandLine.appendSwitch('ignore-gpu-blocklist');
+
 const APP_ROOT = __dirname;
 
 /* Partição das abas — precisa ser a mesma string usada no renderer.js */
@@ -35,12 +44,12 @@ const ASSETS_DIR = path.join(APP_ROOT, 'assets');
 const exists = (p) => { try { return fs.existsSync(p); } catch { return false; } };
 const ICON_PATH = (process.platform === 'win32'
   ? [
-      path.join(APP_ROOT, 'build', 'icon.ico'),
+      path.join(APP_ROOT, 'buildres', 'icon.ico'),
       path.join(ASSETS_DIR, 'icon.ico'),
       path.join(ASSETS_DIR, 'logo.png')
     ]
   : [
-      path.join(APP_ROOT, 'build', 'icon.png'),
+      path.join(APP_ROOT, 'buildres', 'icon.png'),
       path.join(ASSETS_DIR, 'icon-512.png'),
       path.join(ASSETS_DIR, 'logo.png')
     ]

@@ -53,8 +53,8 @@ for s in (16, 32, 64, 128, 256, 512):
     canvas(s, 0.96 if s <= 32 else 0.94).save(os.path.join(icons, '%dx%d.png' % (s, s)), 'PNG', optimize=True)
 
 canvas(1024).save(os.path.join(out_dir, 'assets', 'icon-1024.png'), 'PNG', optimize=True)
-os.makedirs(os.path.join(out_dir, 'build'), exist_ok=True)
-canvas(1024).save(os.path.join(out_dir, 'build', 'icon.png'), 'PNG', optimize=True)
+os.makedirs(os.path.join(out_dir, 'buildres'), exist_ok=True)
+canvas(1024).save(os.path.join(out_dir, 'buildres', 'icon.png'), 'PNG', optimize=True)
 
 sizes = [(256,256),(128,128),(64,64),(48,48),(32,32),(16,16)]
 imgs = []
