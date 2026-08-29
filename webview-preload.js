@@ -47,40 +47,37 @@ if (INTERNO) {
 }
 
 /* ============================================================
-   Identidade do navegador — versão 0.2.10
+   Identidade do navegador — versão 0.4.2 ("navegador honesto")
    ------------------------------------------------------------
-   A regra continua: NADA de objetos falsos. Mas há dois pontos
-   em que o Electron se contradiz e o Cloudflare explora:
-
-   1. navigator.userAgentData lista só a marca "Chromium", enquanto
-      o User-Agent e os cabeçalhos sec-ch-ua dizem "Chrome".
-   2. window.chrome não existe (todo Chrome de verdade o tem).
-
-   O ajuste abaixo roda NO MUNDO PRINCIPAL da página e mexe nos
-   OBJETOS REAIS — os protótipos continuam nativos (instanceof,
-   Object.prototype.toString e cia. continuam passando, ao
-   contrário dos objetos falsos que quebravam a verificação).
-   É a mesma jogada do Brave: coerência, não disfarce.
+    Padrão Edge/Vivaldi/Opera: declarar a PRÓPRIA marca em vez
+    de fingir ser o Google Chrome. A única interferência na
+    página é acrescentar a marca "Calopsia" à lista de marcas do
+    navigator.userAgentData (nos objetos reais, protótipos nativos
+    intactos). Nada de window.chrome artificial, nada de objetos
+    falsos: quanto menos disfarce, menos inconsistência para os
+    anti-bots acharem.
    ============================================================ */
-function alinharMarcasChrome() {
+function declararMarcaCalopsia() {
   const principal = (/Chrome\/(\d+)/.exec(navigator.userAgent) || [])[1];
   if (!principal || !navigator.userAgentData) return;
 
-  /* Acrescenta "Google Chrome" à lista de marcas, logo após
-     "Chromium", mantendo versões e ordem originais. */
-  const comChrome = (lista) => {
+  /* Acrescenta "Calopsia" à lista de marcas, logo após "Chromium",
+     mantendo versões e ordem originais (o UA e os cabeçalhos dizem
+     o mesmo — coerência total). */
+  const comMarca = (lista) => {
     const copia = [];
     let inserido = false;
     for (const b of (lista || [])) {
       if (!b || !b.brand) continue;
-      if (b.brand === 'Google Chrome') { inserido = true; continue; }
+      if (b.brand === 'Calopsia') { inserido = true; continue; }
+      if (b.brand === 'Google Chrome') continue;   // não fingimos ser Chrome
       copia.push({ brand: b.brand, version: b.version });
       if (b.brand === 'Chromium' && !inserido) {
-        copia.push({ brand: 'Google Chrome', version: b.version });
+        copia.push({ brand: 'Calopsia', version: b.version });
         inserido = true;
       }
     }
-    if (!inserido) copia.push({ brand: 'Google Chrome', version: principal });
+    if (!inserido) copia.push({ brand: 'Calopsia', version: principal });
     return Object.freeze(copia.map((b) => Object.freeze(b)));
   };
 
@@ -101,7 +98,7 @@ function alinharMarcasChrome() {
     if (descBrands && descBrands.get) {
       const getterOriginal = descBrands.get;
       Object.defineProperty(proto, 'brands', {
-        get() { return comChrome(getterOriginal.call(this)); },
+        get() { return comMarca(getterOriginal.call(this)); },
         configurable: true
       });
     }
@@ -110,8 +107,8 @@ function alinharMarcasChrome() {
       const hevOriginal = proto.getHighEntropyValues;
       proto.getHighEntropyValues = nativo('getHighEntropyValues', function (dicas) {
         return hevOriginal.call(this, dicas).then((r) => {
-          if (r && r.brands) r.brands = comChrome(r.brands);
-          if (r && r.fullVersionList) r.fullVersionList = comChrome(r.fullVersionList);
+          if (r && r.brands) r.brands = comMarca(r.brands);
+          if (r && r.fullVersionList) r.fullVersionList = comMarca(r.fullVersionList);
           return r;
         });
       });
@@ -121,36 +118,8 @@ function alinharMarcasChrome() {
       const toJSONOriginal = proto.toJSON;
       proto.toJSON = nativo('toJSON', function () {
         const r = toJSONOriginal.call(this);
-        if (r && r.brands) r.brands = comChrome(r.brands);
+        if (r && r.brands) r.brands = comMarca(r.brands);
         return r;
-      });
-    }
-  } catch { /* ignora */ }
-
-  /* window.chrome existe em todo Chrome real (csi/loadTimes). */
-  try {
-    if (!window.chrome) {
-      const csi = nativo('csi', () => ({
-        startE: Date.now(), onloadT: Date.now(), pageT: performance.now(), tran: 15
-      }));
-      const loadTimes = nativo('loadTimes', () => ({
-        requestTime: performance.timeOrigin / 1000,
-        startLoadTime: performance.timeOrigin / 1000,
-        commitLoadTime: performance.now() / 1000,
-        finishDocumentLoadTime: performance.now() / 1000,
-        finishLoadTime: performance.now() / 1000,
-        firstPaintTime: performance.now() / 1000,
-        firstPaintAfterLoadTime: 0,
-        navigationType: 'Other',
-        wasFetchedViaSpdy: true,
-        wasNpnNegotiated: true,
-        npnNegotiatedProtocol: 'h2',
-        wasAlternateProtocolAvailable: false,
-        connectionInfo: 'h2'
-      }));
-      Object.defineProperty(window, 'chrome', {
-        value: { app: {}, csi, loadTimes },
-        configurable: true
       });
     }
   } catch { /* ignora */ }
@@ -158,7 +127,7 @@ function alinharMarcasChrome() {
 
 if (!INTERNO) {
   try {
-    webFrame.executeJavaScript(`(${alinharMarcasChrome.toString()})();`);
+    webFrame.executeJavaScript(`(${declararMarcaCalopsia.toString()})();`);
   } catch { /* ambiente sem webFrame: segue sem o ajuste */ }
 }
 

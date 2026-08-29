@@ -172,77 +172,58 @@ function chromeUserAgent() {
   const plataforma = process.platform === 'win32' ? 'Windows NT 10.0; Win64; x64'
     : process.platform === 'darwin' ? 'Macintosh; Intel Mac OS X 10_15_7'
     : 'X11; Linux x86_64';
-  return `Mozilla/5.0 (${plataforma}) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/${chrome} Safari/537.36`;
+  /* Identidade HONESTA, no padrão dos navegadores Chromium (Edge apenda
+     "Edg/...", Vivaldi "Vivaldi/..."): mantem o token do motor — o que
+     sites como WhatsApp Web e bancos exigem — e declara a propria marca.
+     Nada de fingir ser o Google Chrome: a marca propria explica as dicas
+     de cliente listarem apenas "Chromium". */
+  return `Mozilla/5.0 (${plataforma}) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/${chrome} Safari/537.36 Calopsia/${app.getVersion()}`;
 }
 
 let mainWindow = null;
 
 /* ------------------------------------------------------------
-   Coerência da identidade na rede (Cloudflare e companhia)
+   Identidade na rede — arquitetura "navegador honesto" (v0.4.2)
    ------------------------------------------------------------
-   Enviamos um User-Agent de Chrome, mas os cabeçalhos de dicas de
-   cliente (sec-ch-ua…) que o Electron gera dizem apenas "Chromium".
-   Essa contradição é um sinal clássico de bot para o Cloudflare: a
-   verificação parece passar, o site redireciona… e cai de novo na
-   tela de verificação, sem fim — porque o cookie de liberação
-   (cf_clearance) nasce amarrado a uma identidade considerada
-   suspeita.
+    Assim como Edge, Vivaldi e Opera, o CALOPSIA declara a PRÓPRIA
+    marca no User-Agent e nas dicas de cliente (sec-ch-ua*), em vez
+    de fingir ser o Google Chrome. Menos fingimento = menos
+    inconsistência para os anti-bots acharem.
 
-   Duas medidas, ambas na camada de REDE (nada de falsificar objetos
-   dentro da página, que era o que quebrava antes):
-   1. os cabeçalhos sec-ch-ua* passam a dizer exatamente o que o
-      User-Agent já diz (mesma estratégia do Brave);
-   2. quando o Cloudflare responde "challenge" (cabeçalho
-      cf-mitigated), o cf_clearance antigo já não vale nada: ele é
-      removido na hora para uma liberação nova ser emitida —
-      reenviar um cookie morto é o que cria o loop.
+    Regras:
+    - UA mantém o token do motor (Chrome/150), exigido por sites
+      como WhatsApp Web e bancos, e apenda "Calopsia/<versão>";
+    - sec-ch-ua* preserva o grease real do Chromium e apenas
+      acrescenta a marca própria (padrão da classe);
+    - NUNCA se mexe em cookies de terceiros: a versão anterior
+      apagava o cf_clearance ao ver "challenge" — uma resposta
+      tardia podia apagar o cookie recém-emitido e recriar o loop.
+      Cookie é do Cloudflare; ele cuida dos dele.
    ------------------------------------------------------------ */
 function coerirCabecalhos(ses) {
   const filtro = { urls: ['http://*/*', 'https://*/*'] };
 
+  /* Dicas de cliente (sec-ch-ua): o Chromium lista apenas a marca dele.
+     No padrão dos navegadores Chromium de verdade (Edge, Vivaldi, Opera),
+     cada um ACRESCENTA a própria marca — é isso que fazemos aqui,
+     preservando o "grease" real gerado pelo motor. Ninguém apaga cookies
+     de terceiros: o Cloudflare cuida dos dele sozinho. */
   ses.webRequest.onBeforeSendHeaders(filtro, (details, callback) => {
     const h = details.requestHeaders || {};
+    const principal = (process.versions.chrome || '126.0.0.0').split('.')[0];
+    const marca = `"Calopsia";v="${principal}"`;
 
-    /* sec-ch-ua: o Electron lista só "Chromium"; o UA diz "Chrome".
-       Preserva o "grease" REAL gerado pelo Chromium (cada versão usa o
-       seu — inventar um, como acontecia antes, é outro sinal de bot) e
-       apenas acrescenta a marca "Google Chrome" com o mesmo número. */
     const scua = h['sec-ch-ua'];
-    if (typeof scua === 'string' && scua.includes('Chromium') && !scua.includes('Google Chrome')) {
-      const m = /"Chromium";v="(\d+)"/.exec(scua);
-      if (m) h['sec-ch-ua'] = scua.replace(m[0], `${m[0]}, "Google Chrome";v="${m[1]}"`);
+    if (typeof scua === 'string' && scua.includes('Chromium') && !scua.includes('"Calopsia"')) {
+      h['sec-ch-ua'] = `${scua}, ${marca}`;
     }
 
-    /* Dicas de versão completa (quando o servidor pede via Accept-CH):
-       a marca Google Chrome entra com a MESMA versão do Chromium local —
-       que é uma versão real de Chrome estável. */
     const fvl = h['sec-ch-ua-full-version-list'];
-    if (typeof fvl === 'string' && fvl.includes('Chromium') && !fvl.includes('Google Chrome')) {
-      const m = /"Chromium";v="([^"]+)"/.exec(fvl);
-      if (m) h['sec-ch-ua-full-version-list'] = fvl.replace(m[0], `${m[0]}, "Google Chrome";v="${m[1]}"`);
+    if (typeof fvl === 'string' && fvl.includes('Chromium') && !fvl.includes('"Calopsia"')) {
+      h['sec-ch-ua-full-version-list'] = `${fvl}, ${marca}`;
     }
 
     callback({ requestHeaders: h });
-  });
-
-  ses.webRequest.onHeadersReceived(filtro, (details, callback) => {
-    try {
-      const headers = details.responseHeaders || {};
-      const mitigado = Object.keys(headers).some((k) => {
-        const v = headers[k];
-        return k.toLowerCase() === 'cf-mitigated' && String(Array.isArray(v) ? v[0] : v).toLowerCase() === 'challenge';
-      });
-      if (mitigado) {
-        // O cookie de liberação foi rejeitado: descarta para não ficar
-        // reenviando um morto (é isso que faz voltar para a verificação).
-        const u = new URL(details.url);
-        const alvos = [u.origin + '/', u.protocol + '//' + u.hostname + '/'];
-        for (const url of alvos) {
-          ses.cookies.remove(url, 'cf_clearance').catch(() => { /* ignora */ });
-        }
-      }
-    } catch { /* ignora */ }
-    callback({});
   });
 }
 

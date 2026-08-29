@@ -218,6 +218,20 @@ de usuário ou senha e escolha a conta na janelinha que abre.
 
 ## 🐛 Histórico de correções
 
+### v0.4.2
+- **Removido o apagador de `cf_clearance` (causa do loop apontada em
+  análise externa):** ao receber uma resposta `challenge`, o app apagava o
+  cookie de liberação do Cloudflare — uma resposta tardia podia apagar o
+  cookie RECIÉM-EMITIDO e o desafio recomeçava para sempre. Navegador
+  nenhum mexe em cookie de terceiro; o bloco foi eliminado.
+- **Identidade "navegador honesto" (padrão Edge/Vivaldi/Opera):** em vez
+  de fingir ser o Google Chrome, o CALOPSIA agora declara a própria
+  marca — `Calopsia/<versão>` no User-Agent, `Calopsia` nas dicas
+  sec-ch-ua e no `navigator.userAgentData` (patch mínimo nos objetos
+  reais). O `window.chrome` artificial foi removido (o próprio Chromium
+  o fornece). Menos fingimento = menos inconsistências para o anti-bot.
+- WebGPU (correção v0.4.1) mantido: adapter sempre disponível.
+
 ### v0.4.1
 - **Cloudflare/Turnstile — causa raiz encontrada no console do usuário:**
   o erro `No available adapters` (WebGPU sem adapter) fazia a verificação
