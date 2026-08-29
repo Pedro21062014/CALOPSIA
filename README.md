@@ -173,7 +173,27 @@ calopsia/
 
 ---
 
+## 🎨 Tema
+
+O CALOPSIA segue o tema do seu dispositivo (claro ou escuro). Para escolher na mão:
+
+**☰ (três barrinhas) → Tema**
+
+| Opção | O que faz |
+|---|---|
+| **Seguir o dispositivo** | padrão — acompanha o sistema em tempo real |
+| **Claro** | fixa o tema claro |
+| **Escuro** | fixa o tema escuro |
+
+A escolha fica salva em `settings.json` e vale para tudo: barras, menus, página
+de nova aba e a tela "Sobre". A paleta é monocromática (grafite), sem matizes.
+
 ## 🐛 Histórico de correções
+
+### v0.2.5
+- **Tema do dispositivo:** a interface agora acompanha o tema claro/escuro do
+  sistema, inclusive em tempo real, e o menu ☰ ganhou a seção "Tema" para fixar
+  claro ou escuro à escolha da pessoa. A preferência fica salva entre sessões.
 
 ### v0.2.4
 - **WhatsApp Web (e sites parecidos):** o User-Agent padrão do Electron termina

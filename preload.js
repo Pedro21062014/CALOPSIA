@@ -16,6 +16,11 @@ contextBridge.exposeInMainWorld('calopsia', {
   onMaximizeChange: (cb) => ipcRenderer.on('win:maximized', (_e, v) => cb(v)),
   onFullscreenChange: (cb) => ipcRenderer.on('win:fullscreen', (_e, v) => cb(v)),
 
+  /* tema: 'system' segue o dispositivo; 'light'/'dark' fixam */
+  getTheme: () => ipcRenderer.invoke('theme:get'),
+  setTheme: (fonte) => ipcRenderer.invoke('theme:set', fonte),
+  onTheme: (cb) => ipcRenderer.on('theme:changed', (_e, info) => cb(info)),
+
   /* zoom por Ctrl+scroll, aplicado no processo principal */
   onTabZoom: (cb) => ipcRenderer.on('tab:zoom', (_e, info) => cb(info)),
 

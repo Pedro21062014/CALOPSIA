@@ -5,7 +5,8 @@
    Janela, protocolo interno, menu, permissões e downloads.
    ============================================================ */
 
-const { app, BrowserWindow, shell, session, protocol, ipcMain, Menu, dialog } = require('electron');
+const { app, BrowserWindow, shell, session, protocol, ipcMain, Menu, dialog,
+        nativeTheme, webContents } = require('electron');
 const path = require('path');
 const fs = require('fs');
 const os = require('os');
@@ -33,6 +34,47 @@ const ICON_PATH = (process.platform === 'win32'
       path.join(ASSETS_DIR, 'logo.png')
     ]
 ).find(exists) || undefined;
+
+/* ------------------------------------------------------------
+   Tema — segue o sistema por padrão; o menu pode fixar claro/escuro.
+   ------------------------------------------------------------ */
+const SETTINGS_FILE = path.join(app.getPath('userData'), 'settings.json');
+const settings = { theme: 'system' };          // 'system' | 'light' | 'dark'
+
+function loadSettings() {
+  try {
+    const salvo = JSON.parse(fs.readFileSync(SETTINGS_FILE, 'utf8'));
+    if (salvo && ['system', 'light', 'dark'].includes(salvo.theme)) settings.theme = salvo.theme;
+  } catch { /* primeira execução ou arquivo ausente */ }
+}
+
+function saveSettings() {
+  try { fs.writeFileSync(SETTINGS_FILE, JSON.stringify(settings, null, 2)); } catch { /* só visual */ }
+}
+
+const temaInfo = () => ({ source: settings.theme, dark: nativeTheme.shouldUseDarkColors });
+
+/* Avisa tudo que está aberto: janela principal, menu e as abas (webviews). */
+function broadcastTema() {
+  const info = temaInfo();
+  for (const wc of webContents.getAllWebContents()) {
+    try { wc.send('theme:changed', info); } catch { /* conteúdo morrendo */ }
+  }
+  const fundo = info.dark ? '#0e1013' : '#f3f4f6';
+  if (mainWindow && !mainWindow.isDestroyed()) mainWindow.setBackgroundColor(fundo);
+  if (menuWindow && !menuWindow.isDestroyed()) menuWindow.setBackgroundColor(info.dark ? '#1a1d24' : '#ffffff');
+  return info;
+}
+
+function definirTema(fonte) {
+  settings.theme = ['light', 'dark'].includes(fonte) ? fonte : 'system';
+  saveSettings();
+  nativeTheme.themeSource = settings.theme;   // também ajusta o prefers-color-scheme
+  return broadcastTema();
+}
+
+// O sistema mudou de tema (e então só seguimos se a escolha for "sistema").
+nativeTheme.on('updated', broadcastTema);
 
 /* ------------------------------------------------------------
    Protocolo interno "calopsia://"
@@ -138,7 +180,7 @@ function createWindow() {
     minHeight: 600,
     frame: false,
     title: 'CALOPSIA',
-    backgroundColor: '#0b0d13',
+    backgroundColor: temaInfo().dark ? '#0e1013' : '#f3f4f6',
     show: false,
     autoHideMenuBar: true,
     icon: ICON_PATH,
@@ -309,6 +351,8 @@ const calopsiaHandler = async (request) => {
 };
 
 app.whenReady().then(() => {
+  loadSettings();
+  nativeTheme.themeSource = settings.theme;   // antes de qualquer janela existir
   // Sessão padrão (janela principal) e sessão das abas (webviews).
   const ua = chromeUserAgent();
   protocol.handle('calopsia', calopsiaHandler);
@@ -388,6 +432,10 @@ ipcMain.on('win:toggle-devtools', () => {
 });
 
 ipcMain.handle('app:path', () => app.getAppPath());
+
+/* Tema: fonte escolhida ('system' | 'light' | 'dark') e tema resolvido. */
+ipcMain.handle('theme:get', () => temaInfo());
+ipcMain.handle('theme:set', (_e, fonte) => definirTema(fonte));
 
 ipcMain.handle('app:info', () => ({
   version: app.getVersion(),
@@ -470,7 +518,7 @@ ipcMain.on('menu:open', (_e, payload) => {
     focusable: true,
     hasShadow: true,
     parent: mainWindow,
-    backgroundColor: '#16191f',
+    backgroundColor: temaInfo().dark ? '#1a1d24' : '#ffffff',
     webPreferences: {
       preload: path.join(__dirname, 'preload-menu.js'),
       contextIsolation: true,

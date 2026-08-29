@@ -1,16 +1,7 @@
 /* ============================================================
    CALOPSIA — página de nova aba (minimalista)
+   Cores em theme.css: segue o tema do sistema ou a escolha do menu.
    ============================================================ */
-
-:root {
-  --bg:      #0e1013;
-  --text:    #e7e9ee;
-  --text-2:  #b7bcc6;
-  --muted:   #6f757f;
-  --line:    #20242b;
-  --field:   #12151a;
-  --hover:   rgba(255, 255, 255, .055);
-}
 
 * { box-sizing: border-box; margin: 0; padding: 0; }
 html, body { height: 100%; overflow: hidden; }
@@ -33,7 +24,7 @@ body {
   width: 760px; height: 620px;
   margin-left: -380px;
   border-radius: 50%;
-  background: radial-gradient(circle, rgba(255, 255, 255, .045), transparent 68%);
+  background: radial-gradient(circle, var(--glow), transparent 68%);
   pointer-events: none;
   z-index: 0;
 }
@@ -62,13 +53,13 @@ body {
   height: 78px;
   width: auto;
   display: block;
-  filter: drop-shadow(0 10px 28px rgba(0, 0, 0, .55));
+  filter: drop-shadow(0 10px 28px var(--shadow));
 }
 .wordmark {
   font-size: 11px;
   font-weight: 600;
   letter-spacing: 4px;
-  color: #7d838d;
+  color: var(--muted);
 }
 
 /* ---------- relógio ---------- */
@@ -81,9 +72,9 @@ body {
   letter-spacing: -1px;
   line-height: 1;
   font-variant-numeric: tabular-nums;
-  color: #f2f4f7;
+  color: var(--text-strong);
 }
-.clock .blink { animation: blink 2s steps(1) infinite; color: #4a4f58; margin: 0 2px; }
+.clock .blink { animation: blink 2s steps(1) infinite; color: var(--faint); margin: 0 2px; }
 @keyframes blink { 50% { opacity: .25; } }
 .clock .sec {
   font-size: 22px;
@@ -104,7 +95,7 @@ body {
 .greeting {
   margin-top: 22px;
   font-size: 14px;
-  color: var(--text-2);
+  color: var(--text-dim);
 }
 
 /* ---------- busca ---------- */
@@ -117,13 +108,13 @@ body {
   height: 46px;
   padding: 0 6px 0 16px;
   background: var(--field);
-  border: 1px solid var(--line);
+  border: 1px solid var(--border);
   border-radius: 23px;
   transition: border-color .15s ease, box-shadow .15s ease;
 }
 .search:focus-within {
-  border-color: #3c424c;
-  box-shadow: 0 0 0 4px rgba(255, 255, 255, .05);
+  border-color: var(--border-hi);
+  box-shadow: 0 0 0 4px var(--focus);
 }
 .s-ico { width: 17px; height: 17px; color: var(--muted); flex-shrink: 0; }
 .search input {
@@ -135,7 +126,7 @@ body {
   color: var(--text);
   font-size: 14px;
 }
-.search input::placeholder { color: #5f656f; }
+.search input::placeholder { color: var(--faint); }
 .s-go {
   width: 34px; height: 34px;
   display: grid; place-items: center;
@@ -148,7 +139,7 @@ body {
   transition: background .13s ease, color .13s ease;
 }
 .s-go svg { width: 16px; height: 16px; }
-.s-go:hover { background: rgba(255, 255, 255, .07); color: var(--text); }
+.s-go:hover { background: var(--hover-2); color: var(--strong); }
 
 /* ---------- atalhos ---------- */
 .quick {
@@ -164,7 +155,7 @@ body {
   gap: 8px;
   padding: 12px 4px 10px;
   text-decoration: none;
-  color: #868d98;
+  color: var(--muted-2);
   font-size: 11px;
   border-radius: 10px;
   transition: background .13s ease, color .13s ease;
@@ -178,13 +169,13 @@ body {
   place-items: center;
   font-size: 13px;
   font-weight: 600;
-  color: #cfd4de;
-  background: #171a20;
-  border: 1px solid var(--line);
+  color: var(--strong-2);
+  background: var(--tile-bg);
+  border: 1px solid var(--border);
   overflow: hidden;
   transition: border-color .13s ease, background .13s ease;
 }
-.quick a:hover .tile { border-color: #333943; background: #1c2027; }
+.quick a:hover .tile { border-color: var(--border-hi); background: var(--tile-bg-hover); }
 .tile img { width: 20px; height: 20px; border-radius: 4px; display: block; }
 
 /* ---------- rodapé ---------- */
@@ -194,7 +185,7 @@ body {
   display: flex;
   gap: 18px;
   font-size: 11px;
-  color: #545a64;
+  color: var(--faint);
 }
 .hint kbd {
   display: inline-block;
@@ -202,9 +193,9 @@ body {
   margin: 0 1px;
   font-family: inherit;
   font-size: 10px;
-  color: #7b818c;
-  background: rgba(255, 255, 255, .04);
-  border: 1px solid var(--line);
+  color: var(--muted);
+  background: var(--kbd);
+  border: 1px solid var(--border);
   border-radius: 4px;
 }
 

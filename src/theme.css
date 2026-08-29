@@ -1,0 +1,170 @@
+/* ============================================================
+   CALOPSIA — temas (compartilhado por todas as interfaces)
+   Monocromatico: tudo grafite, sem matiz.
+   O Electron controla `prefers-color-scheme` pelo nativeTheme,
+   entao antes do JS rodar a pagina ja pinta no tom certo.
+   ============================================================ */
+
+:root {
+  --bg: #0e1013;
+  --chrome: #12151a;
+  --chrome-2: #15181e;
+  --surface: #1a1d24;
+  --surface-hi: #21252d;
+  --field: #0b0d10;
+  --border: #23272f;
+  --border-soft: #1b1f26;
+  --border-hi: #3c424c;
+  --text: #e7e9ee;
+  --text-dim: #b7bcc6;
+  --text-strong: #f2f4f7;
+  --muted: #7d838f;
+  --muted-2: #868d98;
+  --faint: #6a707b;
+  --hover: rgba(255, 255, 255, .05);
+  --hover-2: rgba(255, 255, 255, .08);
+  --hover-3: rgba(255, 255, 255, .13);
+  --kbd: rgba(255, 255, 255, .045);
+  --card: rgba(255, 255, 255, .035);
+  --tile-bg: #171a20;
+  --tile-bg-hover: #1c2027;
+  --strong: #ffffff;
+  --strong-2: #cfd4de;
+  --on-strong: #16181d;
+  --focus: rgba(255, 255, 255, .10);
+  --glow: rgba(255, 255, 255, .045);
+  --shadow: rgba(0, 0, 0, .55);
+  --shadow-soft: rgba(0, 0, 0, .45);
+  --page-bg: #ffffff;
+  --ok: #3fb27f;
+  --warn: #dfa23c;
+  --danger: #ef5f6b;
+  --danger-text: #ef8a92;
+  --danger-soft: rgba(239, 95, 107, .14);
+  --danger-strong: #ff9aa2;
+  color-scheme: dark;
+}
+
+/* Tema claro: segue o sistema quando nao ha escolha manual... */
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme="dark"]) {
+    --bg: #f3f4f6;
+    --chrome: #ffffff;
+    --chrome-2: #fafbfc;
+    --surface: #ffffff;
+    --surface-hi: #eef0f3;
+    --field: #ffffff;
+    --border: #d8dce2;
+    --border-soft: #e6e8ec;
+    --border-hi: #a9b0bb;
+    --text: #15181d;
+    --text-dim: #3f444d;
+    --text-strong: #0b0d10;
+    --muted: #5b6472;
+    --muted-2: #5d636d;
+    --faint: #676e79;
+    --hover: rgba(0, 0, 0, .045);
+    --hover-2: rgba(0, 0, 0, .07);
+    --hover-3: rgba(0, 0, 0, .11);
+    --kbd: rgba(0, 0, 0, .04);
+    --card: rgba(255, 255, 255, .78);
+    --tile-bg: #ffffff;
+    --tile-bg-hover: #f0f1f4;
+    --strong: #15181d;
+    --strong-2: #454b57;
+    --on-strong: #ffffff;
+    --focus: rgba(0, 0, 0, .07);
+    --glow: rgba(0, 0, 0, .04);
+    --shadow: rgba(0, 0, 0, .16);
+    --shadow-soft: rgba(0, 0, 0, .10);
+    --page-bg: #ffffff;
+    --ok: #17855a;
+    --warn: #a2741c;
+    --danger: #d33a48;
+    --danger-text: #c22f3d;
+    --danger-soft: rgba(211, 58, 72, .12);
+    --danger-strong: #a51f2c;
+    color-scheme: light;
+  }
+}
+
+/* ...e tambem quando a pessoa escolheu claro no menu. */
+:root[data-theme="light"] {
+  --bg: #f3f4f6;
+  --chrome: #ffffff;
+  --chrome-2: #fafbfc;
+  --surface: #ffffff;
+  --surface-hi: #eef0f3;
+  --field: #ffffff;
+  --border: #d8dce2;
+  --border-soft: #e6e8ec;
+  --border-hi: #a9b0bb;
+  --text: #15181d;
+  --text-dim: #3f444d;
+  --text-strong: #0b0d10;
+  --muted: #5b6472;
+  --muted-2: #5d636d;
+  --faint: #676e79;
+  --hover: rgba(0, 0, 0, .045);
+  --hover-2: rgba(0, 0, 0, .07);
+  --hover-3: rgba(0, 0, 0, .11);
+  --kbd: rgba(0, 0, 0, .04);
+  --card: rgba(255, 255, 255, .78);
+  --tile-bg: #ffffff;
+  --tile-bg-hover: #f0f1f4;
+  --strong: #15181d;
+  --strong-2: #454b57;
+  --on-strong: #ffffff;
+  --focus: rgba(0, 0, 0, .07);
+  --glow: rgba(0, 0, 0, .04);
+  --shadow: rgba(0, 0, 0, .16);
+  --shadow-soft: rgba(0, 0, 0, .10);
+  --page-bg: #ffffff;
+  --ok: #17855a;
+  --warn: #a2741c;
+  --danger: #d33a48;
+  --danger-text: #c22f3d;
+  --danger-soft: rgba(211, 58, 72, .12);
+  --danger-strong: #a51f2c;
+  color-scheme: light;
+}
+
+:root[data-theme="dark"] {
+  --bg: #0e1013;
+  --chrome: #12151a;
+  --chrome-2: #15181e;
+  --surface: #1a1d24;
+  --surface-hi: #21252d;
+  --field: #0b0d10;
+  --border: #23272f;
+  --border-soft: #1b1f26;
+  --border-hi: #3c424c;
+  --text: #e7e9ee;
+  --text-dim: #b7bcc6;
+  --text-strong: #f2f4f7;
+  --muted: #7d838f;
+  --muted-2: #868d98;
+  --faint: #6a707b;
+  --hover: rgba(255, 255, 255, .05);
+  --hover-2: rgba(255, 255, 255, .08);
+  --hover-3: rgba(255, 255, 255, .13);
+  --kbd: rgba(255, 255, 255, .045);
+  --card: rgba(255, 255, 255, .035);
+  --tile-bg: #171a20;
+  --tile-bg-hover: #1c2027;
+  --strong: #ffffff;
+  --strong-2: #cfd4de;
+  --on-strong: #16181d;
+  --focus: rgba(255, 255, 255, .10);
+  --glow: rgba(255, 255, 255, .045);
+  --shadow: rgba(0, 0, 0, .55);
+  --shadow-soft: rgba(0, 0, 0, .45);
+  --page-bg: #ffffff;
+  --ok: #3fb27f;
+  --warn: #dfa23c;
+  --danger: #ef5f6b;
+  --danger-text: #ef8a92;
+  --danger-soft: rgba(239, 95, 107, .14);
+  --danger-strong: #ff9aa2;
+  color-scheme: dark;
+}

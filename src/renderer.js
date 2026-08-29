@@ -25,7 +25,10 @@ const ICON = {
   print:    S('<polyline points="6.5 9 6.5 3.5 17.5 3.5 17.5 9"/><path d="M6.5 15H5a1.5 1.5 0 0 1-1.5-1.5v-3A1.5 1.5 0 0 1 5 9h14a1.5 1.5 0 0 1 1.5 1.5v3A1.5 1.5 0 0 1 19 15h-1.5"/><rect x="6.5" y="13.5" width="11" height="7" rx="1"/>'),
   zoomIn:   S('<circle cx="11" cy="11" r="6.8"/><line x1="20.8" y1="20.8" x2="16.1" y2="16.1"/><line x1="8.5" y1="11" x2="13.5" y2="11"/><line x1="11" y1="8.5" x2="11" y2="13.5"/>'),
   zoomOut:  S('<circle cx="11" cy="11" r="6.8"/><line x1="20.8" y1="20.8" x2="16.1" y2="16.1"/><line x1="8.5" y1="11" x2="13.5" y2="11"/>'),
-  zoomFit:  S('<circle cx="11" cy="11" r="6.8"/><line x1="20.8" y1="20.8" x2="16.1" y2="16.1"/><rect x="8.5" y="8.5" width="5" height="5" rx="1"/>')
+  zoomFit:  S('<circle cx="11" cy="11" r="6.8"/><line x1="20.8" y1="20.8" x2="16.1" y2="16.1"/><rect x="8.5" y="8.5" width="5" height="5" rx="1"/>'),
+  sun:      S('<circle cx="12" cy="12" r="4.2"/><line x1="12" y1="2.6" x2="12" y2="4.6"/><line x1="12" y1="19.4" x2="12" y2="21.4"/><line x1="2.6" y1="12" x2="4.6" y2="12"/><line x1="19.4" y1="12" x2="21.4" y2="12"/><line x1="5.4" y1="5.4" x2="6.8" y2="6.8"/><line x1="17.2" y1="17.2" x2="18.6" y2="18.6"/><line x1="5.4" y1="18.6" x2="6.8" y2="17.2"/><line x1="17.2" y1="6.8" x2="18.6" y2="5.4"/>'),
+  moon:     S('<path d="M20.2 14.8A8.6 8.6 0 0 1 9.2 3.8a8.6 8.6 0 1 0 11 11Z"/>'),
+  monitor:  S('<rect x="2.5" y="4" width="19" height="12.5" rx="2"/><line x1="8.5" y1="20.5" x2="15.5" y2="20.5"/><line x1="12" y1="16.5" x2="12" y2="20.5"/>')
 };
 
 /* --------------------------- elementos --------------------------- */
@@ -67,6 +70,9 @@ const TAB_PARTITION = 'persist:calopsia';   // precisa casar com main.js
 /* Diretório do app (dentro do asar quando empacotado). Usado para apontar o
    preload das abas, que captura o Ctrl+scroll para dar zoom. */
 let APP_DIR = '';
+
+/* Tema: 'system' segue o dispositivo; 'light'/'dark' fixam a escolha da pessoa. */
+let temaFonte = 'system';
 const IS_WIN     = window.calopsia && window.calopsia.platform === 'win32';
 const MOD_LABEL  = IS_WIN || (window.calopsia && window.calopsia.platform === 'linux') ? 'Ctrl' : '⌘';
 
@@ -495,6 +501,11 @@ function menuItems() {
     { id: 'devtools',   icon: ICON.code,    label: 'Ferramentas do desenvolvedor', shortcut: `${MOD_LABEL}+Shift+I` },
     { id: 'fullscreen', icon: ICON.expand,  label: 'Tela cheia',           shortcut: 'F11' },
     { sep: true },
+    { header: 'Tema' },
+    { id: 'theme-system', icon: ICON.monitor, label: 'Seguir o dispositivo', checked: temaFonte === 'system' },
+    { id: 'theme-light',  icon: ICON.sun,     label: 'Claro',                checked: temaFonte === 'light' },
+    { id: 'theme-dark',   icon: ICON.moon,    label: 'Escuro',               checked: temaFonte === 'dark' },
+    { sep: true },
     { id: 'about',      icon: ICON.info,    label: 'Sobre o CALOPSIA' },
     { sep: true },
     { id: 'close-tab',  icon: ICON.close,   label: 'Fechar aba',           shortcut: `${MOD_LABEL}+W`, danger: true }
@@ -530,6 +541,12 @@ function closeMenu() {
   if (window.calopsia) window.calopsia.closeMenu();
 }
 
+/* Troca o tema no processo principal (que avisa todas as janelas e abas). */
+function definirTema(fonte) {
+  if (!window.calopsia) return;
+  window.calopsia.setTheme(fonte).then((info) => { temaFonte = info.source; }).catch(() => {});
+}
+
 function runMenuAction(id) {
   const t = getActive();
   switch (id) {
@@ -543,8 +560,11 @@ function runMenuAction(id) {
     case 'zoom-reset': zoomReset(); break;
     case 'devtools':   if (t) safe(() => t.view.openDevTools()); break;
     case 'fullscreen': if (window.calopsia) window.calopsia.toggleFullscreen(); break;
-    case 'about':      openAbout(); break;
-    case 'close-tab':  closeTab(activeId); break;
+    case 'about':        openAbout(); break;
+    case 'theme-system': definirTema('system'); break;
+    case 'theme-light':  definirTema('light'); break;
+    case 'theme-dark':   definirTema('dark'); break;
+    case 'close-tab':    closeTab(activeId); break;
   }
 }
 
@@ -772,7 +792,12 @@ window.addEventListener('keydown', (e) => {
 /* ============================ boot ============================ */
 (async function boot() {
   if (window.calopsia) {
-    try { APP_DIR = await window.calopsia.getAppPath(); } catch { /* segue sem preload */ }
+    try {
+      const [dir, tema] = await Promise.all([window.calopsia.getAppPath(), window.calopsia.getTheme()]);
+      APP_DIR = dir;
+      temaFonte = tema.source;
+    } catch { /* segue sem preload nas abas */ }
+    window.calopsia.onTheme((info) => { temaFonte = info.source; });
   }
   createTab(HOME_URL, { focusUrl: true });
 })();

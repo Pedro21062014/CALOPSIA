@@ -3,6 +3,8 @@
 /* Renderiza a lista do menu e avisa o processo principal sobre o tamanho. */
 
 const list = document.getElementById('list');
+const CHECK = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" ' +
+              'stroke-linecap="round" stroke-linejoin="round"><polyline points="4 12.5 9.5 18 20 6.5"/></svg>';
 let items = [];
 
 window.menuApi.onItems((data) => {
@@ -24,14 +26,23 @@ function render() {
       list.appendChild(s);
       return;
     }
+    if (it.header) {
+      const h = document.createElement('div');
+      h.className = 'header';
+      h.textContent = it.header;
+      list.appendChild(h);
+      return;
+    }
     const b = document.createElement('button');
-    b.className = 'item' + (it.danger ? ' danger' : '');
+    b.className = 'item' + (it.danger ? ' danger' : '') + (it.checked ? ' checked' : '');
     b.type = 'button';
     b.disabled = !!it.disabled;
     b.dataset.id = it.id;
+    if (it.checked) b.setAttribute('aria-checked', 'true');
     b.innerHTML =
       `<span class="ico">${it.icon || ''}</span>` +
       `<span class="lbl"></span>` +
+      (it.checked ? `<span class="ck">${CHECK}</span>` : '') +
       (it.shortcut ? `<span class="sc">${it.shortcut}</span>` : '');
     b.querySelector('.lbl').textContent = it.label;
     if (!b.disabled) b.addEventListener('click', () => window.menuApi.action(it.id));

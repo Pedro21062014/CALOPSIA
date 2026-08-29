@@ -1,30 +1,9 @@
 /* ============================================================
-   CALOPSIA — tema escuro minimalista (monocromático)
+   CALOPSIA — interface principal (minimalista, monocromática)
+   As cores vivem em theme.css e mudam com o tema escolhido.
    ============================================================ */
 
 :root {
-  /* superfícies — tudo grafite, sem matiz */
-  --bg:            #0e1013;
-  --chrome:        #12151a;
-  --chrome-2:      #15181e;
-  --surface:       #1a1d24;
-  --surface-hi:    #21252d;
-  --field:         #0b0d10;
-
-  --border:        #23272f;
-  --border-soft:   #1b1f26;
-
-  /* texto */
-  --text:          #e7e9ee;
-  --text-dim:      #b7bcc6;
-  --muted:         #787e8a;
-
-  /* acentos — usados só em estado semântico */
-  --focus:         rgba(255, 255, 255, .10);
-  --ok:            #3fb27f;
-  --warn:          #dfa23c;
-  --danger:        #ef5f6b;
-
   --radius:        8px;
   --titlebar-h:    40px;
   --toolbar-h:     46px;
@@ -84,7 +63,7 @@ input { font: inherit; user-select: text; }
   font-weight: 600;
   font-size: 11.5px;
   letter-spacing: 2.2px;
-  color: #c9ced8;
+  color: var(--text-dim);
   white-space: nowrap;
 }
 
@@ -122,7 +101,7 @@ input { font: inherit; user-select: text; }
   flex: 1 1 200px;
   transition: background .12s ease, color .12s ease, border-color .12s ease;
 }
-.tab:hover { background: rgba(255, 255, 255, .05); color: var(--text-dim); }
+.tab:hover { background: var(--hover); color: var(--text-dim); }
 
 .tab.active {
   background: var(--surface);
@@ -135,7 +114,7 @@ input { font: inherit; user-select: text; }
   left: 11px; right: 11px; top: -1px;
   height: 2px;
   border-radius: 0 0 2px 2px;
-  background: #cfd4de;
+  background: var(--strong-2);
 }
 
 .tab .favicon-wrap {
@@ -150,8 +129,8 @@ input { font: inherit; user-select: text; }
 .tab .spin {
   display: none;
   width: 12px; height: 12px;
-  border: 1.5px solid rgba(255, 255, 255, .18);
-  border-top-color: #d3d8e2;
+  border: 1.5px solid var(--border-hi);
+  border-top-color: var(--strong-2);
   border-radius: 50%;
   animation: spin .7s linear infinite;
 }
@@ -182,7 +161,7 @@ input { font: inherit; user-select: text; }
 }
 .tab:hover .tab-close,
 .tab.active .tab-close { opacity: .65; }
-.tab .tab-close:hover { opacity: 1; background: rgba(255, 255, 255, .12); }
+.tab .tab-close:hover { opacity: 1; background: var(--hover-3); }
 .tab .tab-close svg { width: 11px; height: 11px; }
 
 #newtab {
@@ -203,7 +182,7 @@ input { font: inherit; user-select: text; }
   cursor: pointer;
   transition: background .12s ease, color .12s ease;
 }
-.icon-btn.round:hover { background: rgba(255, 255, 255, .07); color: var(--text); }
+.icon-btn.round:hover { background: var(--hover-2); color: var(--strong); }
 .icon-btn.round svg { width: 16px; height: 16px; }
 
 /* ---------- controles de janela ---------- */
@@ -222,7 +201,7 @@ input { font: inherit; user-select: text; }
   cursor: pointer;
   transition: background .12s ease, color .12s ease;
 }
-.window-controls button:hover { background: rgba(255, 255, 255, .07); color: var(--text); }
+.window-controls button:hover { background: var(--hover-2); color: var(--strong); }
 .window-controls button svg { width: 14px; height: 14px; }
 #win-close:hover { background: #c42b1c; color: #fff; }
 #win-max .ico-restore { display: none; }
@@ -255,10 +234,10 @@ body.maximized #win-max .ico-restore { display: block; }
   transition: background .12s ease, color .12s ease, transform .08s ease;
 }
 .icon-btn.nav svg { width: 17px; height: 17px; }
-.icon-btn.nav:hover:not(:disabled) { background: rgba(255, 255, 255, .07); color: #fff; }
+.icon-btn.nav:hover:not(:disabled) { background: var(--hover-2); color: var(--strong); }
 .icon-btn.nav:active:not(:disabled) { transform: scale(.93); }
 .icon-btn.nav:disabled { opacity: .28; cursor: default; }
-.icon-btn.nav.on { background: rgba(255, 255, 255, .09); color: #fff; }
+.icon-btn.nav.on { background: var(--hover-2); color: var(--strong); }
 
 #reload .ico-stop { display: none; }
 #reload.is-loading .ico-reload { display: none; }
@@ -278,9 +257,9 @@ body.maximized #win-max .ico-restore { display: block; }
   border-radius: 16px;
   transition: border-color .14s ease, box-shadow .14s ease;
 }
-#addressbar:hover { border-color: #2c313b; }
+#addressbar:hover { border-color: var(--border-hi); }
 #addressbar:focus-within {
-  border-color: #454b57;
+  border-color: var(--muted);
   box-shadow: 0 0 0 3px var(--focus);
 }
 
@@ -288,7 +267,7 @@ body.maximized #win-max .ico-restore { display: block; }
 .security svg { width: 14px; height: 14px; }
 .security.secure { color: var(--ok); }
 .security.insecure { color: var(--warn); }
-.security.internal { color: #9aa0ab; }
+.security.internal { color: var(--muted); }
 
 #url-input {
   flex: 1;
@@ -299,7 +278,7 @@ body.maximized #win-max .ico-restore { display: block; }
   color: var(--text);
   font-size: 13px;
 }
-#url-input::placeholder { color: #6a707b; }
+#url-input::placeholder { color: var(--faint); }
 
 .addr-action {
   width: 24px; height: 24px;
@@ -309,7 +288,7 @@ body.maximized #win-max .ico-restore { display: block; }
   cursor: pointer; flex-shrink: 0;
   transition: background .12s ease, color .12s ease;
 }
-.addr-action:hover { background: rgba(255, 255, 255, .08); color: var(--text); }
+.addr-action:hover { background: var(--hover-2); color: var(--strong); }
 .addr-action svg { width: 14px; height: 14px; }
 
 /* ---------- progresso ---------- */
@@ -327,7 +306,7 @@ body.maximized #win-max .ico-restore { display: block; }
 #progress-bar {
   height: 100%;
   width: 0%;
-  background: #d3d8e2;
+  background: var(--strong-2);
   transition: width .16s ease;
 }
 #progress.indeterminate #progress-bar {
@@ -364,7 +343,7 @@ body.maximized #win-max .ico-restore { display: block; }
   border-radius: 15px;
   color: var(--muted);
 }
-.find-input:focus-within { border-color: #454b57; box-shadow: 0 0 0 3px var(--focus); }
+.find-input:focus-within { border-color: var(--muted); box-shadow: 0 0 0 3px var(--focus); }
 .find-input svg { width: 14px; height: 14px; flex-shrink: 0; }
 .find-input input {
   flex: 1; min-width: 0;
@@ -383,7 +362,7 @@ body.maximized #win-max .ico-restore { display: block; }
   transition: background .12s ease, color .12s ease;
 }
 .find-btn svg { width: 15px; height: 15px; }
-.find-btn:hover { background: rgba(255, 255, 255, .07); color: #fff; }
+.find-btn:hover { background: var(--hover-2); color: var(--strong); }
 
 /* ============================ Área de conteúdo ============================ */
 #views {
@@ -391,7 +370,7 @@ body.maximized #win-max .ico-restore { display: block; }
   flex: 1;
   min-height: 0;
   overflow: hidden;
-  background: #fff;
+  background: var(--page-bg);
 }
 
 /* IMPORTANTE: o <webview> só dimensiona o conteúdo certo com display:flex.
@@ -403,7 +382,7 @@ body.maximized #win-max .ico-restore { display: block; }
   width: 100%;
   height: 100%;
   border: none;
-  background: #fff;
+  background: var(--page-bg);
 }
 #views webview.visible { display: flex; }
 
@@ -430,7 +409,7 @@ body.maximized #win-max .ico-restore { display: block; }
   font-size: 11px;
   font-family: ui-monospace, Consolas, monospace;
   color: var(--text-dim);
-  background: rgba(255, 255, 255, .04);
+  background: var(--kbd);
   border: 1px solid var(--border);
   border-radius: 6px;
 }
@@ -446,9 +425,9 @@ body.maximized #win-max .ico-restore { display: block; }
   cursor: pointer;
   transition: background .12s ease, color .12s ease;
 }
-.err-actions button:hover { background: var(--surface-hi); color: #fff; }
-.err-actions .primary { background: #e7e9ee; border-color: transparent; color: #16181d; font-weight: 600; }
-.err-actions .primary:hover { background: #fff; color: #16181d; }
+.err-actions button:hover { background: var(--surface-hi); color: var(--strong); }
+.err-actions .primary { background: var(--strong); border-color: transparent; color: var(--on-strong); font-weight: 600; }
+.err-actions .primary:hover { opacity: .85; }
 
 /* ============================ Toasts ============================ */
 #toasts {
@@ -477,21 +456,21 @@ body.maximized #win-max .ico-restore { display: block; }
 .toast .t-bar {
   width: 80px; height: 3px;
   border-radius: 2px;
-  background: rgba(255, 255, 255, .10);
+  background: var(--kbd);
   overflow: hidden;
   flex-shrink: 0;
 }
-.toast .t-bar span { display: block; height: 100%; width: 0%; background: #cfd4de; }
+.toast .t-bar span { display: block; height: 100%; width: 0%; background: var(--strong-2); }
 .toast .t-action {
   height: 24px; padding: 0 11px;
   border: none; border-radius: 6px;
-  background: rgba(255, 255, 255, .07);
+  background: var(--hover-2);
   color: var(--text);
   font-size: 11.5px; cursor: pointer;
   flex-shrink: 0;
 }
-.toast .t-action:hover { background: rgba(255, 255, 255, .13); }
-.toast .t-dot { width: 7px; height: 7px; border-radius: 50%; background: #9aa0ab; flex-shrink: 0; }
+.toast .t-action:hover { background: var(--hover-3); }
+.toast .t-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--muted); flex-shrink: 0; }
 .toast.ok .t-dot { background: var(--ok); }
 
 /* ============================ Statusbar ============================ */
@@ -514,11 +493,11 @@ body.maximized #win-max .ico-restore { display: block; }
 .badge {
   padding: 1px 7px;
   border-radius: 5px;
-  background: rgba(255, 255, 255, .05);
+  background: var(--hover);
   border: 1px solid var(--border);
   color: var(--text-dim);
   font-size: 10.5px;
   white-space: nowrap;
 }
 .badge.dl { cursor: pointer; }
-.badge.dl:hover { background: rgba(255, 255, 255, .1); }
+.badge.dl:hover { background: var(--hover-2); }
