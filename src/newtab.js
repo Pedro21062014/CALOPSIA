@@ -8,16 +8,16 @@
 const SEARCH_URL = 'https://www.google.com/search?q=';
 
 const SHORTCUTS = [
-  { label: 'Google',    url: 'https://www.google.com',        domain: 'google.com',        letter: 'G',  bg: 'linear-gradient(135deg,#4285f4,#2f9e57)' },
-  { label: 'YouTube',   url: 'https://www.youtube.com',       domain: 'youtube.com',       letter: '▶',  bg: 'linear-gradient(135deg,#ff2b2b,#c20000)' },
-  { label: 'GitHub',    url: 'https://github.com',            domain: 'github.com',        letter: 'GH', bg: 'linear-gradient(135deg,#3a3f47,#13161b)' },
-  { label: 'WhatsApp',  url: 'https://web.whatsapp.com',      domain: 'whatsapp.com',      letter: 'W',  bg: 'linear-gradient(135deg,#25d366,#0f9d58)' },
-  { label: 'Gmail',     url: 'https://mail.google.com',       domain: 'mail.google.com',   letter: 'M',  bg: 'linear-gradient(135deg,#ea4335,#c5221f)' },
-  { label: 'ChatGPT',   url: 'https://chat.openai.com',       domain: 'openai.com',        letter: 'AI', bg: 'linear-gradient(135deg,#10a37f,#0d7f63)' },
-  { label: 'Netflix',   url: 'https://www.netflix.com',       domain: 'netflix.com',       letter: 'N',  bg: 'linear-gradient(135deg,#e50914,#8c0509)' },
-  { label: 'Spotify',   url: 'https://open.spotify.com',      domain: 'spotify.com',       letter: '♫',  bg: 'linear-gradient(135deg,#1ed760,#12a747)' },
-  { label: 'Maps',      url: 'https://www.google.com/maps',   domain: 'maps.google.com',   letter: '⌖',  bg: 'linear-gradient(135deg,#2a7dfb,#1257c9)' },
-  { label: 'Wikipedia', url: 'https://pt.wikipedia.org',      domain: 'pt.wikipedia.org',  letter: 'W',  bg: 'linear-gradient(135deg,#6b7280,#3b414b)' }
+  { label: 'Google',    url: 'https://www.google.com',        domain: 'google.com',        letter: 'G' },
+  { label: 'YouTube',   url: 'https://www.youtube.com',       domain: 'youtube.com',       letter: '▶' },
+  { label: 'GitHub',    url: 'https://github.com',            domain: 'github.com',        letter: 'GH' },
+  { label: 'WhatsApp',  url: 'https://web.whatsapp.com',      domain: 'whatsapp.com',      letter: 'W' },
+  { label: 'Gmail',     url: 'https://mail.google.com',       domain: 'mail.google.com',   letter: 'M' },
+  { label: 'ChatGPT',   url: 'https://chat.openai.com',       domain: 'openai.com',        letter: 'AI' },
+  { label: 'Netflix',   url: 'https://www.netflix.com',       domain: 'netflix.com',       letter: 'N' },
+  { label: 'Spotify',   url: 'https://open.spotify.com',      domain: 'spotify.com',       letter: '♫' },
+  { label: 'Maps',      url: 'https://www.google.com/maps',   domain: 'maps.google.com',   letter: '⌖' },
+  { label: 'Wikipedia', url: 'https://pt.wikipedia.org',      domain: 'pt.wikipedia.org',  letter: 'W' }
 ];
 
 const pad = (n) => String(n).padStart(2, '0');
@@ -47,7 +47,6 @@ function buildShortcuts() {
 
     const tile = document.createElement('span');
     tile.className = 'tile';
-    tile.style.background = s.bg;
     tile.textContent = s.letter;
 
     // Tenta o favicon real; se falhar (sem rede), mantém a letra.

@@ -16,7 +16,7 @@ body {
   top: -300px; left: 50%; margin-left: -320px;
   border-radius: 50%;
   filter: blur(90px);
-  background: radial-gradient(circle, rgba(124,92,255,.28), transparent 68%);
+  background: radial-gradient(circle, rgba(255,255,255,.05), transparent 68%);
   pointer-events: none;
 }
 .card {
@@ -36,8 +36,7 @@ h1 {
   font-size: 24px;
   font-weight: 700;
   letter-spacing: 4px;
-  background: linear-gradient(96deg,#b9a6ff,#74dcff);
-  -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;
+  color: #dfe3ea;
 }
 .tag { margin-top: 8px; font-size: 13.5px; color: #8a93a8; }
 .version {

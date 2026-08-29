@@ -11,6 +11,9 @@ const fs = require('fs');
 const os = require('os');
 
 const APP_ROOT = __dirname;
+
+/* Partição das abas — precisa ser a mesma string usada no renderer.js */
+const TAB_PARTITION = 'persist:calopsia';
 const SRC_DIR = path.join(APP_ROOT, 'src');
 const ASSETS_DIR = path.join(APP_ROOT, 'assets');
 
@@ -116,7 +119,7 @@ function createWindow() {
       contextIsolation: true,
       nodeIntegration: false,
       sandbox: false,             // o shell confia no preload; webviews continuam isoladas
-      spellcheck: true,
+      spellcheck: false,           // evita carregar o dicionário no boot
       backgroundThrottling: false
     }
   });
@@ -139,7 +142,12 @@ function createWindow() {
     return { action: 'deny' };
   });
 
-  mainWindow.on('closed', () => { mainWindow = null; });
+  // Qualquer mudança de geometria da janela principal fecha o menu do ☰.
+  mainWindow.on('resize', closeMenuWindow);
+  mainWindow.on('move', closeMenuWindow);
+  mainWindow.on('minimize', closeMenuWindow);
+  mainWindow.on('restore', closeMenuWindow);
+  mainWindow.on('closed', () => { closeMenuWindow(); mainWindow = null; });
 }
 
 /* ------------------------------------------------------------
@@ -223,7 +231,7 @@ function buildMenu() {
    Downloads
    ------------------------------------------------------------ */
 function setupDownloads() {
-  session.defaultSession.on('will-download', (_event, item, webContents) => {
+  for (const ses of [session.defaultSession, session.fromPartition(TAB_PARTITION)]) ses.on('will-download', (_event, item, webContents) => {
     const win = BrowserWindow.fromWebContents(webContents) || mainWindow;
     const fileName = item.getFilename();
     const target = path.join(app.getPath('downloads'), fileName);
@@ -252,29 +260,38 @@ function setupDownloads() {
 /* ------------------------------------------------------------
    Boot
    ------------------------------------------------------------ */
-app.whenReady().then(() => {
-  // Serve os arquivos internos (newtab, logo, css) com o MIME correto.
-  protocol.handle('calopsia', async (request) => {
-    const file = resolveInternalFile(new URL(request.url).pathname);
-    if (!file) {
-      return new Response('404 — recurso interno não encontrado', {
-        status: 404,
-        headers: { 'content-type': 'text/plain; charset=utf-8' }
-      });
-    }
-    const data = await fs.promises.readFile(file);
-    return new Response(data, {
-      status: 200,
-      headers: { 'content-type': mimeFor(file), 'cache-control': 'no-cache' }
+/* Handler do protocolo interno.
+   ATENÇÃO: precisa ser registrado em CADA sessão usada pelo app.
+   As abas (<webview>) rodam na partição "persist:calopsia", que é uma sessão
+   diferente da padrão — registrar só em `protocol` não resolve dentro delas. */
+const calopsiaHandler = async (request) => {
+  const file = resolveInternalFile(new URL(request.url).pathname);
+  if (!file) {
+    return new Response('404 — recurso interno não encontrado', {
+      status: 404,
+      headers: { 'content-type': 'text/plain; charset=utf-8' }
     });
+  }
+  const data = await fs.promises.readFile(file);
+  return new Response(data, {
+    status: 200,
+    headers: { 'content-type': mimeFor(file), 'cache-control': 'no-cache' }
   });
+};
+
+app.whenReady().then(() => {
+  // Sessão padrão (janela principal) e sessão das abas (webviews).
+  protocol.handle('calopsia', calopsiaHandler);
+  session.fromPartition(TAB_PARTITION).protocol.handle('calopsia', calopsiaHandler);
 
   // Permissões: libera só o essencial para os sites dentro das abas.
-  session.defaultSession.setPermissionRequestHandler((webContents, permission, callback, details) => {
+  const permissionHandler = (webContents, permission, callback) => {
     if (webContents.getType() === 'webview' && permission === 'fullscreen') return callback(true);
     const allowed = ['fullscreen', 'clipboard-sanitized-write', 'notifications', 'media'];
     callback(allowed.includes(permission));
-  });
+  };
+  session.defaultSession.setPermissionRequestHandler(permissionHandler);
+  session.fromPartition(TAB_PARTITION).setPermissionRequestHandler(permissionHandler);
 
   app.setAboutPanelOptions({
     applicationName: 'CALOPSIA',
@@ -328,6 +345,7 @@ ipcMain.on('win:toggle-devtools', () => {
 
 ipcMain.handle('app:info', () => ({
   version: app.getVersion(),
+  partition: TAB_PARTITION,
   electron: process.versions.electron,
   chrome: process.versions.chrome,
   node: process.versions.node,
@@ -344,6 +362,83 @@ ipcMain.handle('dialog:open-file', async () => {
   return res.canceled ? null : res.filePaths[0];
 });
 
+/* ------------------------------------------------------------
+   Menu do ☰ — janela própria (garante que a lista apareça sempre
+   acima do <webview>, que no Windows é uma janela nativa e cobre
+   qualquer elemento DOM sobreposto).
+   ------------------------------------------------------------ */
+let menuWindow = null;
+let menuPayload = null;
+
+function closeMenuWindow() {
+  if (menuWindow && !menuWindow.isDestroyed()) menuWindow.destroy();
+  menuWindow = null;
+  menuPayload = null;
+}
+
+ipcMain.on('menu:open', (_e, payload) => {
+  if (!mainWindow || mainWindow.isDestroyed()) return;
+  closeMenuWindow();
+
+  menuPayload = payload;
+  const width = payload.width || 272;
+
+  menuWindow = new BrowserWindow({
+    width,
+    height: 40,
+    x: -10000,
+    y: -10000,
+    show: false,
+    frame: false,
+    resizable: false,
+    movable: false,
+    minimizable: false,
+    maximizable: false,
+    fullscreenable: false,
+    skipTaskbar: true,
+    alwaysOnTop: true,
+    focusable: true,
+    hasShadow: true,
+    parent: mainWindow,
+    backgroundColor: '#16191f',
+    webPreferences: {
+      preload: path.join(__dirname, 'preload-menu.js'),
+      contextIsolation: true,
+      nodeIntegration: false,
+      sandbox: true
+    }
+  });
+
+  menuWindow.loadFile(path.join(SRC_DIR, 'menu.html'));
+
+  menuWindow.webContents.once('did-finish-load', () => {
+    if (!menuWindow || menuWindow.isDestroyed()) return;
+    menuWindow.webContents.send('menu:items', menuPayload.items);
+  });
+
+  menuWindow.on('blur', closeMenuWindow);
+  menuWindow.on('closed', () => { menuWindow = null; menuPayload = null; });
+
+});
+
+ipcMain.on('menu:ready', (_e, { height }) => {
+  if (!menuWindow || menuWindow.isDestroyed() || !menuPayload) return;
+  const width = menuPayload.width || 272;
+  const [wx, wy] = mainWindow.getPosition();
+
+  menuWindow.setSize(width, Math.max(40, height), false);
+  menuWindow.setPosition(wx + Math.round(menuPayload.x), wy + Math.round(menuPayload.y), false);
+  menuWindow.show();
+  menuWindow.focus();
+});
+
+ipcMain.on('menu:action', (_e, id) => {
+  if (mainWindow && !mainWindow.isDestroyed()) mainWindow.webContents.send('menu:action', id);
+  closeMenuWindow();
+});
+
+ipcMain.on('menu:close', () => closeMenuWindow());
+
 ipcMain.on('shell:show-item', (_e, p) => { if (p) shell.showItemInFolder(p); });
 ipcMain.on('shell:open-path', (_e, p) => { if (p) shell.openPath(p); });
 
@@ -352,5 +447,6 @@ app.on('window-all-closed', () => {
 });
 
 app.on('activate', () => {
-  if (BrowserWindow.getAllWindows().length === 0) createWindow();
+  const visiveis = BrowserWindow.getAllWindows().filter((w) => w !== menuWindow && !w.isDestroyed());
+  if (visiveis.length === 0) createWindow();
 });

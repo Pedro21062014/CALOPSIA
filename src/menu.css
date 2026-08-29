@@ -1,0 +1,61 @@
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+html, body {
+  background: #16191f;
+  color: #e7e9ee;
+  font-family: "Segoe UI Variable", "Segoe UI", system-ui, -apple-system, "Inter",
+               Roboto, "Helvetica Neue", Arial, sans-serif;
+  font-size: 13px;
+  -webkit-font-smoothing: antialiased;
+  user-select: none;
+  cursor: default;
+  overflow: hidden;
+}
+
+#list {
+  padding: 5px;
+  display: flex;
+  flex-direction: column;
+}
+
+.item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  height: 32px;
+  padding: 0 10px;
+  border: none;
+  border-radius: 7px;
+  background: transparent;
+  color: #dfe2e9;
+  font: inherit;
+  text-align: left;
+  white-space: nowrap;
+  cursor: pointer;
+}
+.item:hover:not(:disabled),
+.item:focus-visible {
+  background: rgba(255, 255, 255, .08);
+  color: #fff;
+  outline: none;
+}
+.item:disabled { color: #6a6f78; cursor: default; }
+.item.danger { color: #ef8a92; }
+.item.danger:hover { background: rgba(239, 95, 107, .14); color: #ff9aa2; }
+
+.item .ico { width: 16px; height: 16px; flex-shrink: 0; display: grid; place-items: center; opacity: .85; }
+.item .ico svg { width: 16px; height: 16px; }
+.item .lbl { flex: 1; }
+.item .sc {
+  font-size: 11px;
+  color: #767c86;
+  letter-spacing: .3px;
+  padding-left: 18px;
+}
+.item:hover .sc { color: #9aa0aa; }
+
+.sep {
+  height: 1px;
+  margin: 5px 8px;
+  background: #262a32;
+}

@@ -15,6 +15,11 @@ contextBridge.exposeInMainWorld('calopsia', {
   onMaximizeChange: (cb) => ipcRenderer.on('win:maximized', (_e, v) => cb(v)),
   onFullscreenChange: (cb) => ipcRenderer.on('win:fullscreen', (_e, v) => cb(v)),
 
+  /* menu do ☰ (janela própria) */
+  openMenu: (payload) => ipcRenderer.send('menu:open', payload),
+  closeMenu: () => ipcRenderer.send('menu:close'),
+  onMenuAction: (cb) => ipcRenderer.on('menu:action', (_e, id) => cb(id)),
+
   /* comandos vindos do menu nativo */
   onNewTab: (cb) => ipcRenderer.on('app:new-tab', (_e, url) => cb(url)),
   onCloseTab: (cb) => ipcRenderer.on('app:close-tab', () => cb()),

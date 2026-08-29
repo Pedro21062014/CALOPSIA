@@ -1,7 +1,7 @@
 {
   "name": "calopsia",
   "productName": "CALOPSIA",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "CALOPSIA — navegador web moderno baseado em Chromium (Electron). Interface própria com abas, busca integrada, localizar na página, zoom e downloads.",
   "author": {
     "name": "CALOPSIA",
@@ -34,6 +34,7 @@
     "files": [
       "main.js",
       "preload.js",
+      "preload-menu.js",
       "src/**/*",
       "assets/**/*",
       "package.json"
@@ -61,13 +62,7 @@
       "category": "Network",
       "icon": "build/icon.png",
       "executableName": "calopsia",
-      "maintainer": "CALOPSIA <calopsia@users.noreply.github.com>",
-      "synopsis": "Navegador web moderno baseado em Chromium",
-      "desktop": {
-        "Name": "CALOPSIA",
-        "Comment": "Navegador web moderno baseado em Chromium",
-        "StartupWMClass": "calopsia"
-      }
+      "maintainer": "CALOPSIA <calopsia@users.noreply.github.com>"
     },
     "nsis": {
       "oneClick": false,
@@ -79,7 +74,6 @@
     "portable": {
       "artifactName": "${productName}-${version}-${os}-${arch}-portatil.${ext}"
     },
-    "compression": "maximum",
     "publish": {
       "provider": "github",
       "owner": "Pedro21062014",

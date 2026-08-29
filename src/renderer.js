@@ -10,21 +10,22 @@ const S = (body, extra = '') =>
         stroke-linecap="round" stroke-linejoin="round" ${extra}>${body}</svg>`;
 
 const ICON = {
-  close:   S('<line x1="6.5" y1="6.5" x2="17.5" y2="17.5"/><line x1="17.5" y1="6.5" x2="6.5" y2="17.5"/>'),
-  lock:    S('<rect x="4.5" y="10.5" width="15" height="10" rx="2"/><path d="M8 10.5V7.5a4 4 0 0 1 8 0v3"/>'),
-  unlock:  S('<rect x="4.5" y="10.5" width="15" height="10" rx="2"/><path d="M8 10.5V7.5a4 4 0 0 1 7.7-1.5"/>'),
-  info:    S('<circle cx="12" cy="12" r="9"/><line x1="12" y1="11" x2="12" y2="16"/><line x1="12" y1="7.8" x2="12" y2="8.4"/>'),
-  home:    S('<path d="M3.5 10.7 12 4l8.5 6.7"/><path d="M5.8 9.6V19.5h12.4V9.6"/><path d="M9.8 19.5v-5.2h4.4v5.2"/>'),
-  plus:    S('<line x1="12" y1="5.5" x2="12" y2="18.5"/><line x1="5.5" y1="12" x2="18.5" y2="12"/>'),
-  minus:   S('<line x1="5.5" y1="12" x2="18.5" y2="12"/>'),
-  search:  S('<circle cx="11" cy="11" r="6.8"/><line x1="20.8" y1="20.8" x2="16.1" y2="16.1"/>'),
-  reload:  S('<polyline points="20.5 5 20.5 10.5 15 10.5"/><path d="M4.2 14.8A8.5 8.5 0 0 0 18.4 17.4L20.5 15.4"/><path d="M19.8 9.2A8.5 8.5 0 0 0 5.6 6.6L3.5 8.6"/>'),
-  folder:  S('<path d="M3.5 7.5A1.5 1.5 0 0 1 5 6h3.7l1.8 2.2H19a1.5 1.5 0 0 1 1.5 1.5v7.8A1.5 1.5 0 0 1 19 19H5a1.5 1.5 0 0 1-1.5-1.5Z"/>'),
-  code:    S('<polyline points="16 18 21 12 16 6"/><polyline points="8 6 3 12 8 18"/>'),
-  expand:  S('<polyline points="9 4 4 4 4 9"/><polyline points="15 20 20 20 20 15"/><line x1="4" y1="4" x2="10" y2="10"/><line x1="20" y1="20" x2="14" y2="14"/>'),
-  print:   S('<polyline points="6.5 9 6.5 3.5 17.5 3.5 17.5 9"/><path d="M6.5 15H5a1.5 1.5 0 0 1-1.5-1.5v-3A1.5 1.5 0 0 1 5 9h14a1.5 1.5 0 0 1 1.5 1.5v3A1.5 1.5 0 0 1 19 15h-1.5"/><rect x="6.5" y="13.5" width="11" height="7" rx="1"/>'),
-  download:S('<path d="M12 3.5v11"/><polyline points="7.5 10 12 14.5 16.5 10"/><path d="M4.5 18.5h15"/>'),
-  copy:    S('<rect x="8.5" y="8.5" width="12" height="12" rx="2"/><path d="M15.5 5.5h-9a2 2 0 0 0-2 2v9"/>')
+  close:    S('<line x1="6.5" y1="6.5" x2="17.5" y2="17.5"/><line x1="17.5" y1="6.5" x2="6.5" y2="17.5"/>'),
+  lock:     S('<rect x="4.5" y="10.5" width="15" height="10" rx="2"/><path d="M8 10.5V7.5a4 4 0 0 1 8 0v3"/>'),
+  unlock:   S('<rect x="4.5" y="10.5" width="15" height="10" rx="2"/><path d="M8 10.5V7.5a4 4 0 0 1 7.7-1.5"/>'),
+  info:     S('<circle cx="12" cy="12" r="9"/><line x1="12" y1="11" x2="12" y2="16"/><line x1="12" y1="7.8" x2="12" y2="8.4"/>'),
+  home:     S('<path d="M3.5 10.7 12 4l8.5 6.7"/><path d="M5.8 9.6V19.5h12.4V9.6"/>'),
+  plus:     S('<line x1="12" y1="5.5" x2="12" y2="18.5"/><line x1="5.5" y1="12" x2="18.5" y2="12"/>'),
+  minus:    S('<line x1="5.5" y1="12" x2="18.5" y2="12"/>'),
+  search:   S('<circle cx="11" cy="11" r="6.8"/><line x1="20.8" y1="20.8" x2="16.1" y2="16.1"/>'),
+  reload:   S('<polyline points="20.5 5 20.5 10.5 15 10.5"/><path d="M4.2 14.8A8.5 8.5 0 0 0 18.4 17.4L20.5 15.4"/><path d="M19.8 9.2A8.5 8.5 0 0 0 5.6 6.6L3.5 8.6"/>'),
+  folder:   S('<path d="M3.5 7.5A1.5 1.5 0 0 1 5 6h3.7l1.8 2.2H19a1.5 1.5 0 0 1 1.5 1.5v7.8A1.5 1.5 0 0 1 19 19H5a1.5 1.5 0 0 1-1.5-1.5Z"/>'),
+  code:     S('<polyline points="16 18 21 12 16 6"/><polyline points="8 6 3 12 8 18"/>'),
+  expand:   S('<polyline points="9 4 4 4 4 9"/><polyline points="15 20 20 20 20 15"/><line x1="4" y1="4" x2="10" y2="10"/><line x1="20" y1="20" x2="14" y2="14"/>'),
+  print:    S('<polyline points="6.5 9 6.5 3.5 17.5 3.5 17.5 9"/><path d="M6.5 15H5a1.5 1.5 0 0 1-1.5-1.5v-3A1.5 1.5 0 0 1 5 9h14a1.5 1.5 0 0 1 1.5 1.5v3A1.5 1.5 0 0 1 19 15h-1.5"/><rect x="6.5" y="13.5" width="11" height="7" rx="1"/>'),
+  zoomIn:   S('<circle cx="11" cy="11" r="6.8"/><line x1="20.8" y1="20.8" x2="16.1" y2="16.1"/><line x1="8.5" y1="11" x2="13.5" y2="11"/><line x1="11" y1="8.5" x2="11" y2="13.5"/>'),
+  zoomOut:  S('<circle cx="11" cy="11" r="6.8"/><line x1="20.8" y1="20.8" x2="16.1" y2="16.1"/><line x1="8.5" y1="11" x2="13.5" y2="11"/>'),
+  zoomFit:  S('<circle cx="11" cy="11" r="6.8"/><line x1="20.8" y1="20.8" x2="16.1" y2="16.1"/><rect x="8.5" y="8.5" width="5" height="5" rx="1"/>')
 };
 
 /* --------------------------- elementos --------------------------- */
@@ -45,7 +46,6 @@ const winMax      = $('win-max');
 const winClose    = $('win-close');
 const menuBtn     = $('menu');
 const findBtn     = $('btn-find');
-const menuBar     = $('menubar');
 const findBar     = $('findbar');
 const findInput   = $('find-text');
 const findCount   = $('find-count');
@@ -62,17 +62,22 @@ const dlBadge     = $('dl-badge');
 const HOME_URL   = 'calopsia://home/';
 const ABOUT_URL  = 'calopsia://home/about.html';
 const SEARCH_URL = 'https://www.google.com/search?q=';
+const TAB_PARTITION = 'persist:calopsia';   // precisa casar com main.js
 const IS_WIN     = window.calopsia && window.calopsia.platform === 'win32';
 const MOD_LABEL  = IS_WIN || (window.calopsia && window.calopsia.platform === 'linux') ? 'Ctrl' : '⌘';
 
 let tabs = [];
 let activeId = null;
 let seq = 0;
-let closedTabs = [];          // pilha de "reabrir aba fechada"
+let closedTabs = [];
+let userTyping = false;     // usuário está digitando na barra de endereço?
+let menuOpen = false;
+let lastFindId = 0;
 
 const getTab = (id) => tabs.find((t) => t.id === id);
 const getActive = () => getTab(activeId);
 const isHome = (url) => /^calopsia:\/\//i.test(url || '');
+const safe = (fn) => { try { return fn(); } catch { return null; } };
 
 /* ============================ URL ============================ */
 function looksLikeUrl(text) {
@@ -80,7 +85,6 @@ function looksLikeUrl(text) {
   if (/^(https?|ftp):\/\//i.test(text)) return true;
   if (/^localhost(:\d+)?(\/\S*)?$/i.test(text)) return true;
   if (/^\d{1,3}(\.\d{1,3}){3}(:\d+)?(\/\S*)?$/.test(text)) return true;
-  // exemplo.com / exemplo.com/pagina / sub.exemplo.com:8080/x
   if (/^[a-z0-9](?:[a-z0-9-]*[a-z0-9])?(?:\.[a-z0-9](?:[a-z0-9-]*[a-z0-9])?)+(:\d+)?(\/\S*)?$/i.test(text)) {
     const host = text.split('/')[0].split(':')[0];
     if (host.includes('.') && !host.endsWith('.')) return true;
@@ -97,17 +101,15 @@ function toUrl(text) {
   return SEARCH_URL + encodeURIComponent(t);
 }
 
-const pathToFileUrl = (p) =>
-  'file://' + encodeURI(String(p).replace(/\\/g, '/').replace(/^\/+/, '/').replace(/^(\w):/, '$1:'));
+const pathToFileUrl = (p) => 'file://' + encodeURI(String(p).replace(/\\/g, '/'));
 
 /* ============================ abas ============================ */
 function createTab(url, opts = {}) {
   const id = ++seq;
-  const initial = url || HOME_URL;
 
   const tab = {
     id,
-    url: initial,
+    url: url || HOME_URL,
     title: 'Nova aba',
     favicon: '',
     loading: false,
@@ -116,7 +118,7 @@ function createTab(url, opts = {}) {
   };
   tabs.push(tab);
 
-  /* --- elementos da aba --- */
+  /* --- elemento da aba --- */
   const el = document.createElement('div');
   el.className = 'tab';
   el.dataset.id = String(id);
@@ -138,12 +140,12 @@ function createTab(url, opts = {}) {
     if (e.button === 1) { e.preventDefault(); closeTab(id); }
   });
 
-  tabstrip.appendChild(el);          // <= aqui estava o bug: insertBefore com nó de outro pai
+  tabstrip.appendChild(el);
   tab.el = el;
 
   /* --- webview --- */
   const view = document.createElement('webview');
-  view.setAttribute('partition', 'persist:calopsia');
+  view.setAttribute('partition', TAB_PARTITION);
   view.setAttribute('allowpopups', 'on');
   view.setAttribute('webpreferences', 'contextIsolation=yes,nodeIntegration=no,sandbox=yes');
   view.dataset.tab = String(id);
@@ -151,7 +153,7 @@ function createTab(url, opts = {}) {
   tab.view = view;
 
   bindView(tab);
-  view.src = initial;
+  view.src = tab.url;
 
   if (opts.activate !== false) activateTab(id);
   if (opts.focusUrl) focusAddressBar();
@@ -219,12 +221,12 @@ function bindView(tab) {
   });
 
   v.addEventListener('did-finish-load', () => {
-    if (tab.id === activeId) { updateNavButtons(); updateAddressBar(); }
     if (tab.zoom !== 1) applyZoom(tab);
+    if (tab.id === activeId) { updateNavButtons(); updateAddressBar(); }
   });
 
   v.addEventListener('did-fail-load', (e) => {
-    if (e.errorCode === -3) return;              // navegação abortada pelo usuário
+    if (e.errorCode === -3) return;            // navegação abortada
     if (!e.isMainFrame) return;
     tab.error = { code: e.errorCode, description: e.errorDescription, url: e.validatedURL || tab.url };
     if (tab.id === activeId) { renderActiveView(); setStatus('Falha ao carregar'); }
@@ -234,16 +236,12 @@ function bindView(tab) {
     if (tab.id === activeId && e.url) setStatus(e.url);
   });
 
-  v.addEventListener('crashed', () => {
-    setStatus('A página travou — recarregue');
-  });
-
+  v.addEventListener('crashed', () => setStatus('A página travou — recarregue'));
   v.addEventListener('close', () => closeTab(tab.id));
 
   v.addEventListener('found-in-page', (e) => {
     const r = e.result;
-    if (!r) return;
-    if (r.requestId !== lastFindId) return;
+    if (!r || r.requestId !== lastFindId) return;
     if (r.matches === 0) {
       findCount.textContent = '0 resultados';
       findCount.classList.add('empty');
@@ -260,10 +258,8 @@ function activateTab(id) {
   activeId = id;
 
   tabs.forEach((t) => t.el.classList.toggle('active', t.id === id));
-
   renderActiveView();
 
-  // mantém a aba visível na faixa (scroll)
   if (tab.el.scrollIntoView) tab.el.scrollIntoView({ block: 'nearest', inline: 'nearest' });
 
   updateAddressBar();
@@ -277,15 +273,15 @@ function activateTab(id) {
   closeFind();
 }
 
-/** Mostra a webview ativa ou a página de erro (nunca sobrepõe as duas: no
- *  Windows o <webview> é uma janela nativa que cobre o DOM). */
+/** Mostra a webview ativa ou a página de erro — nunca as duas juntas
+ *  (no Windows o <webview> é uma janela nativa que cobre o DOM). */
 function renderActiveView() {
   const tab = getActive();
   const showErr = !!(tab && tab.error);
+
   errorPage.hidden = !showErr;
-  tabs.forEach((t) => {
-    t.view.style.display = (t.id === activeId && !showErr) ? 'block' : 'none';
-  });
+  tabs.forEach((t) => t.view.classList.toggle('visible', t.id === activeId && !showErr));
+
   if (showErr && tab) {
     errDesc.textContent = describeError(tab.error);
     errCode.textContent = `${tab.error.url}  ·  erro ${tab.error.code}`;
@@ -313,12 +309,7 @@ function closeTab(id) {
 function reopenClosedTab() {
   const last = closedTabs.pop();
   if (!last) { toast('Nenhuma aba fechada para reabrir'); return; }
-  const tab = createTab(last.url);
-  if (last.index > 0 && tab.el) {
-    // tenta recolocar a aba na posição original
-    const ref = tabstrip.children[Math.min(last.index, tabstrip.children.length - 1)];
-    if (ref && ref !== tab.el) tabstrip.insertBefore(tab.el, ref);
-  }
+  createTab(last.url);
 }
 
 function cycleTab(delta) {
@@ -332,19 +323,19 @@ function updateAddressBar() {
   const tab = getActive();
   if (!tab) return;
 
-  if (document.activeElement !== urlInput) {
-    urlInput.value = isHome(tab.url) ? '' : tab.url;
-  }
+  // Só NÃO sobrescreve enquanto o usuário está realmente digitando
+  // (antes isso travava o valor vazio porque o input ficava focado no boot).
+  if (!userTyping) urlInput.value = isHome(tab.url) ? '' : tab.url;
 
   if (isHome(tab.url)) { setSecurity('internal', ICON.home, 'Página interna do CALOPSIA'); return; }
   try {
     const p = new URL(tab.url).protocol;
-    if (p === 'https:')      setSecurity('secure', ICON.lock, 'Conexão segura (HTTPS)');
-    else if (p === 'http:')  setSecurity('insecure', ICON.unlock, 'Conexão não segura (HTTP)');
-    else if (p === 'file:')  setSecurity('internal', ICON.folder, 'Arquivo local');
-    else                     setSecurity('neutral', ICON.info, 'Outro protocolo');
+    if (p === 'https:')     setSecurity('secure', ICON.lock, 'Conexão segura (HTTPS)');
+    else if (p === 'http:') setSecurity('insecure', ICON.unlock, 'Conexão não segura (HTTP)');
+    else if (p === 'file:') setSecurity('internal', ICON.folder, 'Arquivo local');
+    else                    setSecurity('internal', ICON.info, 'Outro protocolo');
   } catch {
-    setSecurity('neutral', ICON.info, '');
+    setSecurity('internal', ICON.info, '');
   }
 }
 
@@ -364,14 +355,13 @@ function navigateFromInput() {
   if (!tab) return;
   const value = urlInput.value.trim();
   if (!value) return;
+  userTyping = false;
   tab.error = null;
-  try { tab.view.loadURL(toUrl(value)); } catch { /* webview ainda não pronto */ }
+  safe(() => tab.view.loadURL(toUrl(value)));
   urlInput.blur();
 }
 
 /* ============================ navegação ============================ */
-function safe(fn) { try { return fn(); } catch { return null; } }
-
 function updateNavButtons() {
   const tab = getActive();
   if (!tab || !tab.view) return;
@@ -386,8 +376,8 @@ function reloadActive() {
   const t = getActive();
   if (!t) return;
   t.error = null;
-  if (t.view.isLoading()) { t.view.stop(); }
-  else { safe(() => t.view.reload()); }
+  if (t.view.isLoading()) t.view.stop();
+  else safe(() => t.view.reload());
   renderActiveView();
 }
 
@@ -404,7 +394,9 @@ function showProgress(on) {
   if (on) progressBar.style.width = '0%';
   else {
     progressBar.style.width = '100%';
-    setTimeout(() => { if (activeId && !(getActive() || {}).loading) progress.classList.remove('visible'); }, 180);
+    setTimeout(() => {
+      if (activeId && !(getActive() || {}).loading) progress.classList.remove('visible');
+    }, 180);
   }
 }
 
@@ -412,18 +404,11 @@ function showProgress(on) {
 function zoomBy(delta) {
   const t = getActive();
   if (!t) return;
-  const next = Math.min(3, Math.max(0.25, Math.round((t.zoom + delta) * 100) / 100));
-  t.zoom = next;
+  t.zoom = Math.min(3, Math.max(0.25, Math.round((t.zoom + delta) * 100) / 100));
   applyZoom(t);
   zoomBadgeUpdate(t);
 }
-function zoomReset() {
-  const t = getActive();
-  if (!t) return;
-  t.zoom = 1;
-  applyZoom(t);
-  zoomBadgeUpdate(t);
-}
+function zoomReset() { const t = getActive(); if (!t) return; t.zoom = 1; applyZoom(t); zoomBadgeUpdate(t); }
 function applyZoom(tab) { safe(() => tab.view.setZoomFactor(tab.zoom)); }
 function zoomBadgeUpdate(tab) {
   if (!tab || tab.zoom === 1) { zoomBadge.hidden = true; return; }
@@ -432,8 +417,6 @@ function zoomBadgeUpdate(tab) {
 }
 
 /* ============================ localizar ============================ */
-let lastFindId = 0;
-
 function openFind() {
   const t = getActive();
   if (!t) return;
@@ -458,62 +441,78 @@ function runFind(forward) {
   lastFindId = safe(() => t.view.findInPage(text, { forward: forward !== false, findNext: true })) || 0;
 }
 
-/* ============================ menu ============================ */
-const MENU = [
-  { icon: ICON.plus, label: 'Nova aba', shortcut: `${MOD_LABEL}+T`, action: () => createTab(HOME_URL, { focusUrl: true }) },
-  { icon: ICON.search, label: 'Localizar', shortcut: `${MOD_LABEL}+F`, action: openFind },
-  { icon: ICON.folder, label: 'Abrir arquivo…', shortcut: `${MOD_LABEL}+O`, action: openFile },
-  { sep: true },
-  { icon: ICON.minus, label: '', title: 'Diminuir zoom', action: () => zoomBy(-0.1) },
-  { id: 'zoom', label: '100%', title: 'Restaurar zoom', center: true, action: zoomReset },
-  { icon: ICON.plus, label: '', title: 'Aumentar zoom', action: () => zoomBy(0.1) },
-  { sep: true },
-  { icon: ICON.reload, label: 'Recarregar', shortcut: `${MOD_LABEL}+R`, action: reloadActive },
-  { icon: ICON.print, label: 'Imprimir…', shortcut: `${MOD_LABEL}+P`, action: () => { const t = getActive(); if (t) safe(() => t.view.print()); } },
-  { spacer: true },
-  { icon: ICON.code, label: 'DevTools', shortcut: `${MOD_LABEL}+Shift+I`, action: () => { const t = getActive(); if (t) safe(() => t.view.openDevTools()); } },
-  { icon: ICON.expand, label: 'Tela cheia', shortcut: 'F11', action: () => window.calopsia && window.calopsia.toggleFullscreen() },
-  { icon: ICON.info, label: 'Sobre', action: openAbout }
-];
-
-function buildMenu() {
-  menuBar.innerHTML = '';
-  MENU.forEach((item) => {
-    if (item.sep) { const s = document.createElement('div'); s.className = 'menu-sep'; menuBar.appendChild(s); return; }
-    if (item.spacer) { const s = document.createElement('div'); s.className = 'menu-spacer'; menuBar.appendChild(s); return; }
-
-    const b = document.createElement('button');
-    b.className = 'mbtn';
-    b.dataset.id = item.id || '';
-    b.innerHTML = (item.icon ? `<span class="m-ico">${item.icon}</span>` : '') +
-                  (item.label ? `<span>${item.label}</span>` : '');
-    if (item.icon && !item.label) {
-      b.innerHTML = item.icon;
-      b.style.padding = '0 9px';
+/* ============================ menu (lista dropdown) ============================ */
+function menuItems() {
+  const t = getActive();
+  return [
+    { id: 'new-tab',    icon: ICON.plus,    label: 'Nova aba',             shortcut: `${MOD_LABEL}+T` },
+    { id: 'find',       icon: ICON.search,  label: 'Localizar na página',  shortcut: `${MOD_LABEL}+F` },
+    { id: 'open-file',  icon: ICON.folder,  label: 'Abrir arquivo…',       shortcut: `${MOD_LABEL}+O` },
+    { sep: true },
+    { id: 'reload',     icon: ICON.reload,  label: 'Recarregar',           shortcut: `${MOD_LABEL}+R` },
+    { id: 'print',      icon: ICON.print,   label: 'Imprimir…',            shortcut: `${MOD_LABEL}+P` },
+    { sep: true },
+    { id: 'zoom-out',   icon: ICON.zoomOut, label: 'Diminuir zoom',        shortcut: `${MOD_LABEL}+-` },
+    { id: 'zoom-reset', icon: ICON.zoomFit, label: 'Restaurar zoom (100%)', shortcut: `${MOD_LABEL}+0` },
+    { id: 'zoom-in',    icon: ICON.zoomIn,  label: 'Aumentar zoom',        shortcut: `${MOD_LABEL}++` },
+    { sep: true },
+    { id: 'devtools',   icon: ICON.code,    label: 'Ferramentas do desenvolvedor', shortcut: `${MOD_LABEL}+Shift+I` },
+    { id: 'fullscreen', icon: ICON.expand,  label: 'Tela cheia',           shortcut: 'F11' },
+    { sep: true },
+    { id: 'about',      icon: ICON.info,    label: 'Sobre o CALOPSIA' },
+    { sep: true },
+    { id: 'close-tab',  icon: ICON.close,   label: 'Fechar aba',           shortcut: `${MOD_LABEL}+W`, danger: true }
+  ].filter(Boolean).map((it) => {
+    if (it.id === 'reload' || it.id === 'print' || it.id === 'find') {
+      return { ...it, disabled: !t };
     }
-    if (item.title) b.title = item.title;
-    if (item.shortcut) b.title = (item.title ? item.title + '  ' : '') + `(${item.shortcut})`;
-    b.addEventListener('click', () => { item.action(); if (item.id !== 'zoom') closeMenu(); });
-    menuBar.appendChild(b);
+    return it;
   });
 }
 
-function toggleMenu() { menuBar.hidden ? openMenu() : closeMenu(); }
-function openMenu() {
+function toggleMenu() {
+  if (menuOpen) { closeMenu(); return; }
+  if (!window.calopsia) return;
   closeFind();
-  const t = getActive();
-  const zb = menuBar.querySelector('[data-id="zoom"]');
-  if (zb && t) zb.textContent = Math.round(t.zoom * 100) + '%';
-  menuBar.hidden = false;
-  menuBtn.style.color = '#fff';
-  menuBtn.style.background = 'rgba(255,255,255,.09)';
+
+  const r = menuBtn.getBoundingClientRect();
+  const width = 268;
+  window.calopsia.openMenu({
+    width,
+    x: Math.max(4, Math.round(r.right - width)),
+    y: Math.round(r.bottom + 6),
+    items: menuItems()
+  });
+  menuOpen = true;
+  menuBtn.classList.add('on');
 }
+
 function closeMenu() {
-  if (menuBar.hidden) return;
-  menuBar.hidden = true;
-  menuBtn.style.color = '';
-  menuBtn.style.background = '';
+  if (!menuOpen) return;
+  menuOpen = false;
+  menuBtn.classList.remove('on');
+  if (window.calopsia) window.calopsia.closeMenu();
 }
+
+function runMenuAction(id) {
+  const t = getActive();
+  switch (id) {
+    case 'new-tab':    createTab(HOME_URL, { focusUrl: true }); break;
+    case 'find':       openFind(); break;
+    case 'open-file':  openFile(); break;
+    case 'reload':     reloadActive(); break;
+    case 'print':      if (t) safe(() => t.view.print()); break;
+    case 'zoom-in':    zoomBy(0.1); break;
+    case 'zoom-out':   zoomBy(-0.1); break;
+    case 'zoom-reset': zoomReset(); break;
+    case 'devtools':   if (t) safe(() => t.view.openDevTools()); break;
+    case 'fullscreen': if (window.calopsia) window.calopsia.toggleFullscreen(); break;
+    case 'about':      openAbout(); break;
+    case 'close-tab':  closeTab(activeId); break;
+  }
+}
+
+if (window.calopsia) window.calopsia.onMenuAction((id) => { menuOpen = false; menuBtn.classList.remove('on'); runMenuAction(id); });
 
 /* ============================ extras ============================ */
 async function openFile() {
@@ -528,7 +527,6 @@ async function openFile() {
 }
 
 async function openAbout() {
-  closeMenu();
   let query = '';
   if (window.calopsia) {
     try {
@@ -562,7 +560,7 @@ function describeError(err) {
 function toast(text, opts = {}) {
   const el = document.createElement('div');
   el.className = 'toast' + (opts.ok ? ' ok' : '');
-  el.innerHTML = `<span class="t-dot"></span><span class="t-label"></span>`;
+  el.innerHTML = '<span class="t-dot"></span><span class="t-label"></span>';
   el.querySelector('.t-label').textContent = text;
   toasts.appendChild(el);
   setTimeout(() => el.remove(), opts.duration || (opts.ok ? 4200 : 60000));
@@ -577,15 +575,14 @@ if (window.calopsia) {
       el = document.createElement('div');
       el.className = 'toast';
       el.dataset.dl = info.name;
-      el.innerHTML = `<span class="t-dot"></span><span class="t-label"></span><span class="t-bar"><span></span></span>`;
+      el.innerHTML = '<span class="t-dot"></span><span class="t-label"></span><span class="t-bar"><span></span></span>';
       toasts.appendChild(el);
       dlCount++;
       updateDlBadge();
     }
     el.querySelector('.t-label').textContent = `Baixando ${info.name}`;
     const total = info.total || 0;
-    const pct = total ? Math.min(100, (info.received / total) * 100) : 0;
-    el.querySelector('.t-bar span').style.width = pct + '%';
+    el.querySelector('.t-bar span').style.width = (total ? Math.min(100, (info.received / total) * 100) : 0) + '%';
   });
 
   window.calopsia.onDownloadDone((info) => {
@@ -612,26 +609,33 @@ function updateDlBadge() {
   dlBadge.textContent = `↓ ${dlCount}`;
 }
 dlBadge.addEventListener('click', () => {
-  const folder = document.querySelector('.toast .t-label');
-  if (folder && window.calopsia) window.calopsia.showItemInFolder(folder.textContent.replace(/^Baixando /, ''));
+  const label = document.querySelector('.toast .t-label');
+  if (label && window.calopsia) window.calopsia.showItemInFolder(label.textContent.replace(/^Baixando /, ''));
 });
 
 /* ============================ eventos ============================ */
 backBtn.addEventListener('click', goBack);
 fwdBtn.addEventListener('click', goForward);
 reloadBtn.addEventListener('click', reloadActive);
-homeBtn.addEventListener('click', () => { closeMenu(); const t = getActive(); if (t) { t.error = null; safe(() => t.view.loadURL(HOME_URL)); renderActiveView(); } });
+homeBtn.addEventListener('click', () => {
+  const t = getActive();
+  if (!t) return;
+  t.error = null;
+  safe(() => t.view.loadURL(HOME_URL));
+  renderActiveView();
+});
 newTabBtn.addEventListener('click', () => createTab(HOME_URL, { focusUrl: true }));
 menuBtn.addEventListener('click', toggleMenu);
 findBtn.addEventListener('click', openFind);
 
+urlInput.addEventListener('input', () => { userTyping = true; });
+urlInput.addEventListener('blur', () => { userTyping = false; updateAddressBar(); });
 urlInput.addEventListener('keydown', (e) => {
   if (e.key === 'Enter') { e.preventDefault(); navigateFromInput(); }
-  else if (e.key === 'Escape') { e.preventDefault(); updateAddressBar(); urlInput.blur(); }
+  else if (e.key === 'Escape') { e.preventDefault(); userTyping = false; updateAddressBar(); urlInput.blur(); }
 });
 urlInput.addEventListener('focus', () => urlInput.select());
 
-/* localizar */
 findInput.addEventListener('input', () => runFind(true));
 findInput.addEventListener('keydown', (e) => {
   if (e.key === 'Enter') { e.preventDefault(); runFind(!e.shiftKey); }
@@ -641,11 +645,17 @@ $('find-prev').addEventListener('click', () => runFind(false));
 $('find-next').addEventListener('click', () => runFind(true));
 $('find-close').addEventListener('click', closeFind);
 
-/* página de erro */
-$('err-retry').addEventListener('click', () => { const t = getActive(); if (t) { t.error = null; safe(() => t.view.reload()); } renderActiveView(); });
-$('err-home').addEventListener('click', () => { const t = getActive(); if (t) { t.error = null; safe(() => t.view.loadURL(HOME_URL)); } renderActiveView(); });
+$('err-retry').addEventListener('click', () => {
+  const t = getActive();
+  if (t) { t.error = null; safe(() => t.view.reload()); }
+  renderActiveView();
+});
+$('err-home').addEventListener('click', () => {
+  const t = getActive();
+  if (t) { t.error = null; safe(() => t.view.loadURL(HOME_URL)); }
+  renderActiveView();
+});
 
-/* controles de janela */
 if (window.calopsia) {
   winMin.addEventListener('click', () => window.calopsia.minimize());
   winMax.addEventListener('click', () => window.calopsia.maximize());
@@ -654,25 +664,22 @@ if (window.calopsia) {
   window.calopsia.onMaximizeChange((max) => document.body.classList.toggle('maximized', !!max));
   window.calopsia.onFullscreenChange((fs) => {
     document.body.classList.toggle('fullscreen', !!fs);
-    document.getElementById('titlebar').style.display = fs ? 'none' : '';
-    document.getElementById('toolbar').style.display = fs ? 'none' : '';
-    document.getElementById('statusbar').style.display = fs ? 'none' : '';
+    $('titlebar').style.display = fs ? 'none' : '';
+    $('toolbar').style.display = fs ? 'none' : '';
+    $('statusbar').style.display = fs ? 'none' : '';
   });
 
-  /* comandos vindos do menu nativo (macOS/Windows) */
   window.calopsia.onNewTab((url) => createTab(url || HOME_URL, { focusUrl: !url }));
   window.calopsia.onCloseTab(() => closeTab(activeId));
 }
 
-/* duplo clique na titlebar maximiza */
-document.getElementById('titlebar').addEventListener('dblclick', (e) => {
+$('titlebar').addEventListener('dblclick', (e) => {
   if (e.target.closest('.tab, button')) return;
   if (window.calopsia) window.calopsia.maximize();
 });
 
-/* fecha menu ao clicar fora */
 document.addEventListener('mousedown', (e) => {
-  if (!menuBar.hidden && !e.target.closest('#menubar') && !e.target.closest('#menu')) closeMenu();
+  if (menuOpen && !e.target.closest('#menu')) closeMenu();
 });
 
 /* --------------------------- atalhos --------------------------- */
@@ -682,9 +689,9 @@ window.addEventListener('keydown', (e) => {
 
   if (e.key === 'Escape') {
     if (!findBar.hidden) { closeFind(); return; }
-    if (!menuBar.hidden) { closeMenu(); return; }
+    if (menuOpen) { closeMenu(); return; }
   }
-  if (e.key === 'F5') { e.preventDefault(); reloadActive(); return; }
+  if (e.key === 'F5')  { e.preventDefault(); reloadActive(); return; }
   if (e.key === 'F11') { e.preventDefault(); if (window.calopsia) window.calopsia.toggleFullscreen(); return; }
   if (e.key === 'F12' || (mod && e.shiftKey && key === 'i')) {
     e.preventDefault();
@@ -694,9 +701,9 @@ window.addEventListener('keydown', (e) => {
   }
 
   if (!mod) {
-    if (e.altKey && e.key === 'ArrowLeft')  { e.preventDefault(); goBack(); }
+    if (e.altKey && e.key === 'ArrowLeft')       { e.preventDefault(); goBack(); }
     else if (e.altKey && e.key === 'ArrowRight') { e.preventDefault(); goForward(); }
-    else if (e.altKey && e.key === 'Home')  { e.preventDefault(); homeBtn.click(); }
+    else if (e.altKey && e.key === 'Home')       { e.preventDefault(); homeBtn.click(); }
     return;
   }
 
@@ -712,24 +719,22 @@ window.addEventListener('keydown', (e) => {
     case 'f': e.preventDefault(); openFind(); break;
     case 'r': e.preventDefault(); reloadActive(); break;
     case 'o': e.preventDefault(); openFile(); break;
-    case 'p': e.preventDefault(); { const t = getActive(); if (t) safe(() => t.view.print()); break; }
-    case 'q': break; // deixa o SO / menu tratar
+    case 'p': e.preventDefault(); { const t2 = getActive(); if (t2) safe(() => t2.view.print()); break; }
+    case 'q': break;
     default:
       if (key === '=' || key === '+') { e.preventDefault(); zoomBy(0.1); }
       else if (key === '-')           { e.preventDefault(); zoomBy(-0.1); }
       else if (key === '0')           { e.preventDefault(); zoomReset(); }
-      else if (/^[1-8]$/.test(key))   { const t = tabs[Number(key) - 1]; if (t) activateTab(t.id); }
-      else if (key === '9')           { const t = tabs[tabs.length - 1]; if (t) activateTab(t.id); }
+      else if (/^[1-8]$/.test(key))   { const t3 = tabs[Number(key) - 1]; if (t3) activateTab(t3.id); }
+      else if (key === '9')           { const t4 = tabs[tabs.length - 1]; if (t4) activateTab(t4.id); }
   }
 });
 
 /* ============================ boot ============================ */
-buildMenu();
 createTab(HOME_URL, { focusUrl: true });
 
-/* expõe um pouco de estado para depuração */
 window.__calopsia = {
   get tabs() { return tabs; },
   get active() { return getActive(); },
-  createTab, activateTab, closeTab, toUrl, looksLikeUrl
+  createTab, activateTab, closeTab, toUrl, looksLikeUrl, toggleMenu, runMenuAction
 };

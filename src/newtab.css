@@ -1,22 +1,19 @@
 /* ============================================================
-   CALOPSIA — página de nova aba
+   CALOPSIA — página de nova aba (minimalista)
    ============================================================ */
 
 :root {
-  --bg: #0b0d13;
-  --text: #e9ecf5;
-  --muted: #8a93a8;
-  --border: #262e40;
-  --accent: #7c5cff;
-  --accent-2: #35cdf5;
+  --bg:      #0e1013;
+  --text:    #e7e9ee;
+  --text-2:  #b7bcc6;
+  --muted:   #6f757f;
+  --line:    #20242b;
+  --field:   #12151a;
+  --hover:   rgba(255, 255, 255, .055);
 }
 
 * { box-sizing: border-box; margin: 0; padding: 0; }
-
-html, body {
-  height: 100%;
-  overflow: hidden;
-}
+html, body { height: 100%; overflow: hidden; }
 
 body {
   position: relative;
@@ -29,24 +26,16 @@ body {
   cursor: default;
 }
 
-/* ---------- fundo com brilhos suaves ---------- */
+/* brilho bem discreto, sem cor */
 .glow {
   position: fixed;
+  top: -320px; left: 50%;
+  width: 760px; height: 620px;
+  margin-left: -380px;
   border-radius: 50%;
-  filter: blur(90px);
+  background: radial-gradient(circle, rgba(255, 255, 255, .045), transparent 68%);
   pointer-events: none;
   z-index: 0;
-}
-.glow-1 {
-  width: 620px; height: 620px;
-  top: -260px; left: 50%;
-  margin-left: -310px;
-  background: radial-gradient(circle, rgba(124, 92, 255, .30), transparent 68%);
-}
-.glow-2 {
-  width: 520px; height: 520px;
-  bottom: -280px; right: -120px;
-  background: radial-gradient(circle, rgba(53, 205, 245, .20), transparent 70%);
 }
 
 .stage {
@@ -57,90 +46,80 @@ body {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 36px 24px;
-  gap: 0;
+  padding: 32px 24px;
 }
 
 /* ---------- marca ---------- */
 .brand {
   display: flex;
   align-items: center;
-  gap: 12px;
-  margin-bottom: 34px;
-  opacity: .96;
+  gap: 10px;
+  margin-bottom: 30px;
+  opacity: .8;
 }
-.logo {
-  height: 62px;
-  width: auto;
-  filter: drop-shadow(0 8px 26px rgba(0, 0, 0, .5));
-}
+.logo { height: 34px; width: auto; }
 .wordmark {
-  font-size: 17px;
-  font-weight: 700;
+  font-size: 11px;
+  font-weight: 600;
   letter-spacing: 3.4px;
-  background: linear-gradient(96deg, #b9a6ff, #74dcff);
-  -webkit-background-clip: text;
-  background-clip: text;
-  -webkit-text-fill-color: transparent;
+  color: #9aa0ab;
 }
 
 /* ---------- relógio ---------- */
 .clock {
   display: flex;
   align-items: baseline;
-  gap: 2px;
-  font-size: 74px;
+  gap: 1px;
+  font-size: 82px;
   font-weight: 200;
-  letter-spacing: 1px;
+  letter-spacing: -1px;
   line-height: 1;
   font-variant-numeric: tabular-nums;
-  text-shadow: 0 6px 30px rgba(0, 0, 0, .45);
+  color: #f2f4f7;
 }
-.clock .blink { animation: blink 2s steps(1) infinite; color: var(--muted); }
-@keyframes blink { 50% { opacity: .28; } }
+.clock .blink { animation: blink 2s steps(1) infinite; color: #4a4f58; margin: 0 2px; }
+@keyframes blink { 50% { opacity: .25; } }
 .clock .sec {
-  font-size: 26px;
-  color: var(--accent-2);
-  margin-left: 8px;
-  font-weight: 400;
-  opacity: .85;
+  font-size: 22px;
+  font-weight: 300;
+  color: var(--muted);
+  margin-left: 10px;
+  align-self: flex-end;
+  padding-bottom: 12px;
 }
 
 .date {
-  margin-top: 12px;
-  font-size: 14.5px;
+  margin-top: 10px;
+  font-size: 13px;
   color: var(--muted);
 }
 .date::first-letter { text-transform: uppercase; }
 
 .greeting {
-  margin-top: 26px;
-  font-size: 19px;
-  font-weight: 500;
-  color: #cdd4e4;
+  margin-top: 22px;
+  font-size: 14px;
+  color: var(--text-2);
 }
 
 /* ---------- busca ---------- */
 .search {
-  margin-top: 32px;
-  width: min(600px, 94%);
+  margin-top: 30px;
+  width: min(560px, 94%);
   display: flex;
   align-items: center;
-  gap: 12px;
-  height: 52px;
-  padding: 0 8px 0 20px;
-  background: rgba(255, 255, 255, .045);
-  border: 1px solid var(--border);
-  border-radius: 26px;
-  backdrop-filter: blur(8px);
-  transition: border-color .18s ease, box-shadow .18s ease, background .18s ease;
+  gap: 10px;
+  height: 46px;
+  padding: 0 6px 0 16px;
+  background: var(--field);
+  border: 1px solid var(--line);
+  border-radius: 23px;
+  transition: border-color .15s ease, box-shadow .15s ease;
 }
 .search:focus-within {
-  border-color: rgba(124, 92, 255, .8);
-  box-shadow: 0 0 0 4px rgba(124, 92, 255, .16);
-  background: rgba(255, 255, 255, .07);
+  border-color: #3c424c;
+  box-shadow: 0 0 0 4px rgba(255, 255, 255, .05);
 }
-.s-ico { width: 19px; height: 19px; color: var(--muted); flex-shrink: 0; }
+.s-ico { width: 17px; height: 17px; color: var(--muted); flex-shrink: 0; }
 .search input {
   flex: 1;
   min-width: 0;
@@ -148,89 +127,85 @@ body {
   outline: none;
   background: transparent;
   color: var(--text);
-  font-size: 15px;
+  font-size: 14px;
 }
-.search input::placeholder { color: #737d95; }
+.search input::placeholder { color: #5f656f; }
 .s-go {
-  width: 36px; height: 36px;
+  width: 34px; height: 34px;
   display: grid; place-items: center;
   border: none;
   border-radius: 50%;
-  background: linear-gradient(135deg, var(--accent), #6a4bff);
-  color: #fff;
+  background: transparent;
+  color: var(--muted);
   cursor: pointer;
   flex-shrink: 0;
-  transition: filter .15s ease, transform .1s ease;
+  transition: background .13s ease, color .13s ease;
 }
-.s-go svg { width: 17px; height: 17px; }
-.s-go:hover { filter: brightness(1.12); }
-.s-go:active { transform: scale(.93); }
+.s-go svg { width: 16px; height: 16px; }
+.s-go:hover { background: rgba(255, 255, 255, .07); color: var(--text); }
 
-/* ---------- atalhos rápidos ---------- */
+/* ---------- atalhos ---------- */
 .quick {
-  margin-top: 40px;
+  margin-top: 38px;
   display: grid;
-  grid-template-columns: repeat(5, 96px);
-  gap: 10px;
+  grid-template-columns: repeat(5, 88px);
+  gap: 6px;
 }
 .quick a {
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 8px;
-  padding: 14px 6px 11px;
+  padding: 12px 4px 10px;
   text-decoration: none;
-  color: #a9b1c4;
-  font-size: 11.5px;
-  border-radius: 14px;
-  border: 1px solid transparent;
-  transition: background .15s ease, color .15s ease, transform .15s ease, border-color .15s ease;
+  color: #868d98;
+  font-size: 11px;
+  border-radius: 10px;
+  transition: background .13s ease, color .13s ease;
 }
-.quick a:hover {
-  background: rgba(255, 255, 255, .055);
-  border-color: var(--border);
-  color: #fff;
-  transform: translateY(-3px);
-}
+.quick a:hover { background: var(--hover); color: var(--text); }
+
 .tile {
-  width: 46px; height: 46px;
-  border-radius: 13px;
+  width: 40px; height: 40px;
+  border-radius: 50%;
   display: grid;
   place-items: center;
-  font-size: 16px;
-  font-weight: 700;
-  color: #fff;
-  background: rgba(255, 255, 255, .07);
-  box-shadow: 0 6px 18px rgba(0, 0, 0, .35);
+  font-size: 13px;
+  font-weight: 600;
+  color: #cfd4de;
+  background: #171a20;
+  border: 1px solid var(--line);
   overflow: hidden;
+  transition: border-color .13s ease, background .13s ease;
 }
-.tile img { width: 26px; height: 26px; border-radius: 5px; display: block; }
+.quick a:hover .tile { border-color: #333943; background: #1c2027; }
+.tile img { width: 20px; height: 20px; border-radius: 4px; display: block; }
 
 /* ---------- rodapé ---------- */
 .hint {
   position: absolute;
-  bottom: 18px;
+  bottom: 16px;
   display: flex;
-  gap: 20px;
-  font-size: 11.5px;
-  color: #6b7488;
+  gap: 18px;
+  font-size: 11px;
+  color: #545a64;
 }
 .hint kbd {
   display: inline-block;
-  padding: 2px 6px;
+  padding: 1px 5px;
   margin: 0 1px;
   font-family: inherit;
-  font-size: 10.5px;
-  color: #a2abc0;
-  background: rgba(255, 255, 255, .06);
-  border: 1px solid var(--border);
-  border-bottom-width: 2px;
-  border-radius: 5px;
+  font-size: 10px;
+  color: #7b818c;
+  background: rgba(255, 255, 255, .04);
+  border: 1px solid var(--line);
+  border-radius: 4px;
 }
 
-@media (max-height: 640px) {
-  .clock { font-size: 56px; }
-  .logo { height: 48px; }
-  .quick { margin-top: 24px; grid-template-columns: repeat(5, 84px); }
-  .brand { margin-bottom: 20px; }
+@media (max-height: 660px) {
+  .clock { font-size: 62px; }
+  .brand { margin-bottom: 18px; }
+  .logo { height: 28px; }
+  .quick { margin-top: 22px; grid-template-columns: repeat(5, 80px); }
+  .hint { display: none; }
 }

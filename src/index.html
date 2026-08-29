@@ -79,14 +79,13 @@
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
         <path d="M3.5 10.7 12 4l8.5 6.7"></path>
         <path d="M5.8 9.6V19.5h12.4V9.6"></path>
-        <path d="M9.8 19.5v-5.2h4.4v5.2"></path>
       </svg>
     </button>
 
     <div id="addressbar">
       <span id="security-icon" class="security" title="Segurança da página"></span>
       <input id="url-input" type="text" spellcheck="false" autocomplete="off"
-             placeholder="Pesquise no Google ou digite um endereço" aria-label="Barra de endereço" />
+             placeholder="Pesquise ou digite um endereço" aria-label="Barra de endereço" />
       <button id="btn-find" class="addr-action" title="Localizar na página (Ctrl+F)" aria-label="Localizar na página">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
           <circle cx="11" cy="11" r="6.8"></circle>
@@ -104,13 +103,9 @@
     </button>
   </nav>
 
-  <!-- barra de progresso (fica na borda inferior da toolbar) -->
   <div id="progress"><div id="progress-bar"></div></div>
 
-  <!-- ================= Painel do menu (empurra o conteúdo) ================= -->
-  <div id="menubar" hidden></div>
-
-  <!-- ================= Barra de localizar (empurra o conteúdo) ================= -->
+  <!-- ================= Barra de localizar ================= -->
   <div id="findbar" hidden>
     <div class="find-input">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
@@ -160,10 +155,8 @@
     </div>
   </main>
 
-  <!-- ================= Toasts (fora da área do webview) ================= -->
   <div id="toasts"></div>
 
-  <!-- ================= Barra de status ================= -->
   <footer id="statusbar">
     <span id="status-text">Pronto</span>
     <span class="spacer"></span>

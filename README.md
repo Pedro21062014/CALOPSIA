@@ -128,6 +128,7 @@ sha256sum CALOPSIA-0.2.0-linux-x64.AppImage
 calopsia/
 ├── main.js                     # Processo principal: janela, protocolo, menu, downloads
 ├── preload.js                  # Ponte segura entre main e interface (contextBridge)
+├── preload-menu.js             # Ponte da janelinha do menu ☰
 ├── src/
 │   ├── index.html              # Interface do navegador (shell)
 │   ├── styles.css              # Tema escuro
@@ -136,6 +137,7 @@ calopsia/
 │   ├── newtab.css
 │   ├── newtab.js
 │   ├── about.html / .css / .js # Tela "Sobre o CALOPSIA"
+│   └── menu.html / .css / .js  # Lista dropdown do botão ☰ (janela própria)
 ├── assets/logo.png             # Logo oficial
 ├── build/icon.png              # Ícone dos instaladores
 └── .github/workflows/build.yml # CI: compila nos 3 SOs e publica a Release
@@ -153,7 +155,23 @@ calopsia/
 
 ---
 
-## 🐛 Histórico de correções (v0.2.0)
+## 🐛 Histórico de correções
+
+### v0.2.1
+- **Corrigido:** a página inicial não carregava: `protocol.handle()` registra o
+  esquema só na sessão padrão, e as abas usam a partição `persist:calopsia`.
+  Agora o handler (e as permissões/downloads) é registrado nas duas sessões.
+- **Corrigido:** sites apareciam "cortados/ampliados" — o `<webview>` só
+  dimensiona o conteúdo corretamente com `display: flex` (antes era `block`).
+- **Corrigido:** a barra de endereço ficava sempre vazia porque o input mantinha
+  o foco do boot; agora só é preservada enquanto o usuário está digitando.
+- **Menu do ☰** virou uma lista dropdown de verdade (janela própria, para
+  aparecer sempre acima do webview — inclusive no Windows).
+- **Visual:** tema monocromático minimalista, sem os tons de roxo.
+- **Desempenho:** removida a compressão máxima do instalador e o dicionário de
+  soletragem, que atrasavam a abertura do app.
+
+### v0.2.0
 
 - **Corrigido:** `tabstrip.insertBefore(el, newTabBtn)` lançava `NotFoundError`
   (o botão `＋` é irmão da faixa de abas, não filho), o que fazia o renderer
