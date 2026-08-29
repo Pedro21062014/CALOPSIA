@@ -218,6 +218,23 @@ de usuário ou senha e escolha a conta na janelinha que abre.
 
 ## 🐛 Histórico de correções
 
+### v0.2.9
+- **Cloudflare (volta para a verificação):** o app enviava um User-Agent de
+  Chrome, mas os cabeçalhos de dicas de cliente (`sec-ch-ua`) gerados pelo
+  Electron diziam apenas "Chromium" — contradição que o Cloudflare trata
+  como bot: o desafio passava, o site redirecionava… e caía de novo na
+  verificação. Agora os cabeçalhos dizem exatamente o que o UA diz (a
+  mesma estratégia do Brave) e, quando o Cloudflare responde "challenge",
+  o cookie de liberação (`cf_clearance`) rejeitado é descartado na hora —
+  reenviar um cookie morto era o que mantinha o loop.
+- **DevTools ao lado da página:** as Ferramentas do Desenvolvedor
+  (`Ctrl+Shift+I`/`F12`, menu ☰ e "Inspecionar" no botão direito) agora
+  abrem **acopladas ao lado direito da página**, como painel, em vez de
+  janela solta.
+- **Logo maior:** a logo agora preenche mais o ícone do app (janela,
+  barra de tarefas, instalador e menus) em todos os sistemas — antes ela
+  ficava com uma margem transparenta grande.
+
 ### v0.2.8
 - **Título e ícone da aba ao voltar/avançar:** quando a pessoa voltava para
   uma página, a aba continuava mostrando o título e o favicon do site

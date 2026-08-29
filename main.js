@@ -168,6 +168,68 @@ function chromeUserAgent() {
 let mainWindow = null;
 
 /* ------------------------------------------------------------
+   Coerência da identidade na rede (Cloudflare e companhia)
+   ------------------------------------------------------------
+   Enviamos um User-Agent de Chrome, mas os cabeçalhos de dicas de
+   cliente (sec-ch-ua…) que o Electron gera dizem apenas "Chromium".
+   Essa contradição é um sinal clássico de bot para o Cloudflare: a
+   verificação parece passar, o site redireciona… e cai de novo na
+   tela de verificação, sem fim — porque o cookie de liberação
+   (cf_clearance) nasce amarrado a uma identidade considerada
+   suspeita.
+
+   Duas medidas, ambas na camada de REDE (nada de falsificar objetos
+   dentro da página, que era o que quebrava antes):
+   1. os cabeçalhos sec-ch-ua* passam a dizer exatamente o que o
+      User-Agent já diz (mesma estratégia do Brave);
+   2. quando o Cloudflare responde "challenge" (cabeçalho
+      cf-mitigated), o cf_clearance antigo já não vale nada: ele é
+      removido na hora para uma liberação nova ser emitida —
+      reenviar um cookie morto é o que cria o loop.
+   ------------------------------------------------------------ */
+function coerirCabecalhos(ses) {
+  const principal = (process.versions.chrome || '126.0.0.0').split('.')[0];
+  const plataforma = process.platform === 'win32' ? '"Windows"'
+    : process.platform === 'darwin' ? '"macOS"' : '"Linux"';
+  const marcas = `"Not)A;Brand";v="99", "Google Chrome";v="${principal}", "Chromium";v="${principal}"`;
+  const filtro = { urls: ['http://*/*', 'https://*/*'] };
+
+  ses.webRequest.onBeforeSendHeaders(filtro, (details, callback) => {
+    const h = details.requestHeaders || {};
+    let temUA = false;
+    for (const k of Object.keys(h)) {
+      if (k.toLowerCase() === 'user-agent') { temUA = true; break; }
+    }
+    if (temUA) {
+      h['sec-ch-ua'] = marcas;
+      h['sec-ch-ua-mobile'] = '?0';
+      h['sec-ch-ua-platform'] = plataforma;
+    }
+    callback({ requestHeaders: h });
+  });
+
+  ses.webRequest.onHeadersReceived(filtro, (details, callback) => {
+    try {
+      const headers = details.responseHeaders || {};
+      const mitigado = Object.keys(headers).some((k) => {
+        const v = headers[k];
+        return k.toLowerCase() === 'cf-mitigated' && String(Array.isArray(v) ? v[0] : v).toLowerCase() === 'challenge';
+      });
+      if (mitigado) {
+        // O cookie de liberação foi rejeitado: descarta para não ficar
+        // reenviando um morto (é isso que faz voltar para a verificação).
+        const u = new URL(details.url);
+        const alvos = [u.origin + '/', u.protocol + '//' + u.hostname + '/'];
+        for (const url of alvos) {
+          ses.cookies.remove(url, 'cf_clearance').catch(() => { /* ignora */ });
+        }
+      }
+    } catch { /* ignora */ }
+    callback({});
+  });
+}
+
+/* ------------------------------------------------------------
    Instância única
    ------------------------------------------------------------ */
 const gotLock = app.requestSingleInstanceLock();
@@ -390,6 +452,11 @@ app.whenReady().then(() => {
   tabSession.protocol.handle('calopsia', calopsiaHandler);
   tabSession.setUserAgent(ua);
 
+  /* Cloudflare: cabeçalhos coerentes com o UA + cookie de liberação
+     morto é descartado em vez de reenviado em loop. */
+  coerirCabecalhos(session.defaultSession);
+  coerirCabecalhos(tabSession);
+
   // Permissões: libera só o essencial para os sites dentro das abas.
   const permissionHandler = (webContents, permission, callback) => {
     if (webContents.getType() === 'webview' && permission === 'fullscreen') return callback(true);
@@ -494,7 +561,12 @@ app.on('web-contents-created', (_event, contents) => {
       {
         label: 'Inspecionar',
         accelerator: 'CmdOrCtrl+Shift+I',
-        click: () => { try { contents.inspectElement(Math.round(params.x), Math.round(params.y)); } catch { /* ignora */ } }
+        click: () => {
+          try {
+            if (!contents.isDevToolsOpened()) contents.openDevTools({ mode: 'right' });
+            contents.inspectElement(Math.round(params.x), Math.round(params.y));
+          } catch { /* ignora */ }
+        }
       }
     );
 
@@ -538,6 +610,20 @@ ipcMain.on('win:fullscreen', () => {
   mainWindow.setFullScreen(!mainWindow.isFullScreen());
 });
 ipcMain.on('win:toggle-devtools', () => cmdPagina('devtools')());
+
+/* DevTools da página da aba ativa, ABERTO ACOPLADO À DIREITA
+   (Elements, Console, Network…). Recebe o id do webContents da aba. */
+ipcMain.handle('tab:devtools', (_e, id) => {
+  let contents = null;
+  try { contents = webContents.fromId(Number(id)); } catch { /* ignora */ }
+  if (!contents || contents.isDestroyed()) return false;
+  try {
+    if (contents.isDevToolsOpened()) { contents.closeDevTools(); return false; }
+    contents.openDevTools({ mode: 'right' });
+    return true;
+  } catch { /* ignora */ }
+  return false;
+});
 
 ipcMain.handle('app:path', () => app.getAppPath());
 

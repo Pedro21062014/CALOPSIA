@@ -24,6 +24,9 @@ contextBridge.exposeInMainWorld('calopsia', {
   /* zoom por Ctrl+scroll, aplicado no processo principal */
   onTabZoom: (cb) => ipcRenderer.on('tab:zoom', (_e, info) => cb(info)),
 
+  /* DevTools da página (acoplado à direita) */
+  tabDevTools: (contentsId) => ipcRenderer.invoke('tab:devtools', contentsId),
+
   /* menu do ☰ (janela própria) */
   openMenu: (payload) => ipcRenderer.send('menu:open', payload),
   closeMenu: () => ipcRenderer.send('menu:close'),

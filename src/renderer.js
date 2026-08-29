@@ -652,17 +652,16 @@ function definirTema(fonte) {
 }
 
 /* DevTools: abre/fecha o inspetor completo (Elements, Console, Network,
-   Sources…) DA PÁGINA da aba ativa — nunca da interface do navegador. */
+   Sources…) DA PÁGINA da aba ativa — acoplado ao lado direito da página. */
 function toggleDevToolsAtiva() {
   const t = getActive();
   if (!t) return;
-  safe(() => {
-    if (typeof t.view.isDevToolsOpened === 'function' && t.view.isDevToolsOpened()) {
-      t.view.closeDevTools();
-    } else {
-      t.view.openDevTools();
-    }
-  });
+  const cid = safe(() => t.view.getWebContentsId());
+  if (cid && window.calopsia) {
+    window.calopsia.tabDevTools(cid).catch(() => safe(() => t.view.openDevTools()));
+    return;
+  }
+  safe(() => t.view.openDevTools());
 }
 
 function runMenuAction(id) {

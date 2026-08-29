@@ -32,10 +32,17 @@ from PIL import Image
 logo = Image.open(sys.argv[1]).convert('RGBA')
 out_dir = sys.argv[2]
 
-def canvas(size, scale=0.88):
+def fit(img, box):
+    # redimensiona PROPORCIONALMENTE para caber no box — aumentando
+    # se preciso (o thumbnail() do Pillow nunca amplia, o que deixava
+    # a logo pequena nos tamanhos grandes)
+    w, h = img.size
+    r = min(float(box) / w, float(box) / h)
+    return img.resize((max(1, int(round(w * r))), max(1, int(round(h * r)))), Image.LANCZOS)
+
+def canvas(size, scale=0.94):
     c = Image.new('RGBA', (size, size), (0, 0, 0, 0))
-    f = logo.copy()
-    f.thumbnail((int(size * scale), int(size * scale)), Image.LANCZOS)
+    f = fit(logo, int(size * scale))
     c.paste(f, ((size - f.width) // 2, (size - f.height) // 2), f)
     return c
 
@@ -43,7 +50,7 @@ import os
 icons = os.path.join(out_dir, 'assets', 'icons')
 os.makedirs(icons, exist_ok=True)
 for s in (16, 32, 64, 128, 256, 512):
-    canvas(s, 0.92 if s <= 32 else 0.88).save(os.path.join(icons, '%dx%d.png' % (s, s)), 'PNG', optimize=True)
+    canvas(s, 0.96 if s <= 32 else 0.94).save(os.path.join(icons, '%dx%d.png' % (s, s)), 'PNG', optimize=True)
 
 canvas(1024).save(os.path.join(out_dir, 'assets', 'icon-1024.png'), 'PNG', optimize=True)
 os.makedirs(os.path.join(out_dir, 'build'), exist_ok=True)
@@ -52,8 +59,7 @@ canvas(1024).save(os.path.join(out_dir, 'build', 'icon.png'), 'PNG', optimize=Tr
 sizes = [(256,256),(128,128),(64,64),(48,48),(32,32),(16,16)]
 imgs = []
 for s in sizes:
-    im = Image.new('RGBA', s, (0,0,0,0)); f = logo.copy()
-    f.thumbnail((int(s[0]*0.88),)*2, Image.LANCZOS)
+    im = Image.new('RGBA', s, (0,0,0,0)); f = fit(logo, int(s[0]*0.94))
     im.paste(f, ((s[0]-f.width)//2, (s[1]-f.height)//2), f); imgs.append(im)
 imgs[0].save(os.path.join(out_dir, 'assets', 'icon.ico'), 'ICO', sizes=sizes, append_images=imgs[1:])
 
