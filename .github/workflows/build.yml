@@ -59,7 +59,10 @@ jobs:
         run: npm ci
 
       - name: Mostrar versão
-        run: 'node -p "Versão: " + require("./package.json").version'
+        shell: bash
+        run: |
+          VERSION="$(node -p "require('./package.json').version")"
+          echo "CALOPSIA versão ${VERSION}"
 
       - name: Compilar com electron-builder
         run: npx electron-builder ${{ matrix.args }} --publish never
@@ -81,8 +84,8 @@ jobs:
               if command -v sha256sum >/dev/null 2>&1; then sha256sum "$f"
               else shasum -a 256 "$f"; fi
             done
-          done > SHA256SUMS.txt || true
-          cat SHA256SUMS.txt || true
+          done > "SHA256SUMS-${{ matrix.name }}.txt" || true
+          cat "SHA256SUMS-${{ matrix.name }}.txt" || true
 
       - name: Enviar artefatos
         uses: actions/upload-artifact@v4
@@ -94,7 +97,7 @@ jobs:
             release/*.AppImage
             release/*.deb
             release/*.exe
-            release/SHA256SUMS.txt
+            release/SHA256SUMS-*.txt
           if-no-files-found: error
           retention-days: 7
 
@@ -136,7 +139,8 @@ jobs:
       - name: Consolidar checksums
         run: |
           cd assets
-          cat SHA256SUMS.txt 2>/dev/null | sort -u > ALL-CHECKSUMS.txt || true
+          cat SHA256SUMS-*.txt 2>/dev/null | sort -u > ALL-CHECKSUMS.txt || true
+          rm -f SHA256SUMS-*.txt
           cat ALL-CHECKSUMS.txt || true
 
       - name: Criar Release e anexar os instaladores

@@ -76,15 +76,6 @@
       "createStartMenuShortcut": true,
       "artifactName": "${productName}-${version}-${os}-${arch}-instalador.${ext}"
     },
-    "deb": {
-      "depends": [
-        "libgtk-3-0",
-        "libnotify4",
-        "libnss3",
-        "libxss1",
-        "libasound2"
-      ]
-    },
     "portable": {
       "artifactName": "${productName}-${version}-${os}-${arch}-portatil.${ext}"
     },
