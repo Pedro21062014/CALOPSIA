@@ -90,11 +90,8 @@ let menuOpen = false;
 /* Estado do painel DevTools (declarado AQUI no topo porque activateTab,
    chamada durante o boot, já referencia — deixar depois causaria
    ReferenceError de zona morta temporal e nenhuma aba abriria). */
-/* (estado devtoolsHost/devtoolsTabId/devtoolsAbrindo: declarado no topo do arquivo) */
-let devtoolsHost = null;      // o <webview> que hospeda o DevTools
-let devtoolsTabId = null;     // aba sendo inspecionada
-let devtoolsAbrindo = false;
-let lastFindId = 0;
+/* aba cujo DevTools está aberto (o painel em si vive no processo principal) */
+let devtoolsTabId = null;
 
 const getTab = (id) => tabs.find((t) => t.id === id);
 const getActive = () => getTab(activeId);
@@ -168,180 +165,163 @@ function createTab(url, opts = {}) {
   if (newTabBtn && newTabBtn.parentNode === tabstrip) tabstrip.appendChild(newTabBtn);
   tab.el = el;
 
-  /* --- webview --- */
-  const view = document.createElement('webview');
-  view.setAttribute('partition', TAB_PARTITION);
-  view.setAttribute('allowpopups', 'on');
-  view.setAttribute('webpreferences', 'contextIsolation=yes,nodeIntegration=no,sandbox=yes');
-  if (APP_DIR) view.setAttribute('preload', pathToFileUrl(APP_DIR + '/webview-preload.js'));
-  view.dataset.tab = String(id);
-  views.appendChild(view);
-  tab.view = view;
-
-  bindView(tab);
-  view.src = tab.url;
+  /* --- aba = WebContentsView nativa (processo principal) --- */
+  tab.contentsId = null;
+  tab.podeVoltar = false;
+  tab.podeAvancar = false;
+  if (window.calopsia) {
+    window.calopsia.viewCreate(id, tab.url)
+      .then((r) => { tab.contentsId = r && r.contentsId; })
+      .catch(() => {});
+  }
 
   if (opts.activate !== false) activateTab(id);
   if (opts.focusUrl) focusAddressBar();
   return tab;
 }
 
-function bindView(tab) {
-  const v = tab.view;
-
-  /* Título e favicon da aba. Guardam uma "memória" por URL porque, quando
-     a pessoa volta/avança, o Chromium restaura a página do back-forward
-     cache SEM disparar page-title-updated / page-favicon-updated de novo —
-     sem isso a aba continuava mostrando o título e o ícone do site
-     anterior. */
-  function lembrar(url, info) {
-    if (!url || url === 'about:blank') return;
-    if (Object.keys(tab.memorias).length > 300) tab.memorias = {};
-    const m = tab.memorias[url] || (tab.memorias[url] = {});
-    Object.assign(m, info);
-  }
-
-  function aplicarTitulo(texto) {
-    tab.title = texto || 'Nova aba';
-    tab.el.querySelector('.tab-title').textContent = tab.title;
-    tab.el.title = tab.title;
-    if (tab.id === activeId) updateDocumentTitle();
-  }
-
-  function aplicarFavicon(fav) {
-    tab.favicon = fav || '';
-    const img = tab.el.querySelector('.favicon');
-    if (fav) img.src = fav;
-    else img.removeAttribute('src');
-  }
-
-  v.addEventListener('did-attach-webview', () => {
-    // Aplica sempre (inclusive 1): garante que nenhum zoom herdado da sessão
-    // ou da escala do SO deixe a página "ampliada".
-    applyZoom(tab);
-    relayoutViews();
-    if (tab.id === activeId) updateNavButtons();
-  });
-
-  v.addEventListener('page-title-updated', (e) => {
-    aplicarTitulo(e.title);
-    lembrar(tab.url, { titulo: tab.title });
-  });
-
-  v.addEventListener('page-favicon-updated', (e) => {
-    const fav = e.favicons && e.favicons.length ? e.favicons[0] : '';
-    if (!fav) return;
-    aplicarFavicon(fav);
-    lembrar(tab.url, { fav });
-  });
-
-  const onNavigated = (e) => {
-    tab.url = e.url;
-    tab.error = null;
-
-    /* Volta/avança: reaplica o que se conhece da página de destino. */
-    const memoria = tab.memorias[e.url];
-    aplicarTitulo((memoria && memoria.titulo) || safe(() => v.getTitle()) || 'Nova aba');
-    aplicarFavicon((memoria && memoria.fav) || '');
-
-    const cid = safe(() => v.getWebContentsId());
-    if (cid) window.calopsia.senhasNavegou({ contentsId: cid, url: e.url });
-    if (tab.id === activeId) {
-      updateAddressBar();
-      updateNavButtons();
-      updateDocumentTitle();
-      renderActiveView();
-      closeFind();
-    }
-  };
-  v.addEventListener('did-navigate', onNavigated);
-  v.addEventListener('did-navigate-in-page', onNavigated);
-
-  /* Páginas restauradas do cache podem não avisar o título de novo:
-     no dom-ready pega o título direto da página. */
-  v.addEventListener('dom-ready', () => {
-    const t = safe(() => v.getTitle());
-    if (t && t !== tab.title) aplicarTitulo(t);
-  });
-
-  v.addEventListener('did-start-loading', () => {
-    tab.loading = true;
-    tab.error = null;
-    tab.el.classList.add('loading');
-    if (tab.id === activeId) {
-      reloadBtn.classList.add('is-loading');
-      setStatus('Carregando…');
-      showProgress(true);
-      renderActiveView();
-    }
-  });
-
-  v.addEventListener('did-stop-loading', () => {
-    tab.loading = false;
-    tab.el.classList.remove('loading');
-    if (tab.id === activeId) {
-      reloadBtn.classList.remove('is-loading');
-      setStatus('Pronto');
-      showProgress(false);
-      updateNavButtons();
-      zoomBadgeUpdate(tab);
-    }
-  });
-
-  v.addEventListener('did-finish-load', () => {
-    if (tab.zoom !== 1) applyZoom(tab);
-    if (tab.id === activeId) { updateNavButtons(); updateAddressBar(); }
-  });
-
-  v.addEventListener('did-fail-load', (e) => {
-    if (e.errorCode === -3) return;            // navegação abortada
-    if (!e.isMainFrame) return;
-    tab.error = { code: e.errorCode, description: e.errorDescription, url: e.validatedURL || tab.url };
-    if (tab.id === activeId) { renderActiveView(); setStatus('Falha ao carregar'); }
-  });
-
-  v.addEventListener('update-target-url', (e) => {
-    if (tab.id === activeId && e.url) setStatus(e.url);
-  });
-
-  v.addEventListener('crashed', () => setStatus('A página travou — recarregue'));
-  v.addEventListener('close', () => closeTab(tab.id));
-
-  /* Se o DevTools desta aba for fechado (por nós ou por ele mesmo), limpa o painel. */
-  v.addEventListener('devtools-closed', () => {
-    if (devtoolsTabId === tab.id) limparDevtoolsUI();
-  });
-
-  v.addEventListener('found-in-page', (e) => {
-    const r = e.result;
-    if (!r || r.requestId !== lastFindId) return;
-    if (r.matches === 0) {
-      findCount.textContent = '0 resultados';
-      findCount.classList.add('empty');
-    } else {
-      findCount.classList.remove('empty');
-      findCount.textContent = `${r.activeMatchOrdinal} de ${r.matches}`;
-    }
-  });
+/* ------------------------------------------------------------
+   Eventos das abas — vindos do motor WebContentsView (main)
+   Um único canal ('view:event') alimenta tudo o que o antigo
+   bindView fazia escutando o elemento <webview>.
+   ------------------------------------------------------------ */
+function lembrar(tab, url, info) {
+  if (!url || url === 'about:blank') return;
+  if (Object.keys(tab.memorias).length > 300) tab.memorias = {};
+  const m = tab.memorias[url] || (tab.memorias[url] = {});
+  Object.assign(m, info);
 }
 
-/** Reafirma o tamanho dos webviews. O guest às vezes mantém um viewport
- *  antigo quando o elemento foi criado/escondido ou a janela mudou de tamanho
- *  (sintoma: página aparece cortada/ampliada). */
+function aplicarTitulo(tab, texto) {
+  tab.title = texto || 'Nova aba';
+  tab.el.querySelector('.tab-title').textContent = tab.title;
+  tab.el.title = tab.title;
+  if (tab.id === activeId) updateDocumentTitle();
+}
+
+function aplicarFavicon(tab, fav) {
+  tab.favicon = fav || '';
+  const img = tab.el.querySelector('.favicon');
+  if (fav) img.src = fav;
+  else img.removeAttribute('src');
+}
+
+function despacharEventoAba(ev) {
+  if (!ev) return;
+  const tab = getTab(ev.tabId);
+  if (!tab) return;
+
+  switch (ev.tipo) {
+    case 'titulo':
+      aplicarTitulo(tab, ev.titulo);
+      lembrar(tab, tab.url, { titulo: tab.title });
+      return;
+
+    case 'favicon':
+      if (ev.favicon) {
+        aplicarFavicon(tab, ev.favicon);
+        lembrar(tab, tab.url, { fav: ev.favicon });
+      }
+      return;
+
+    case 'navegou': {
+      tab.url = ev.url;
+      tab.error = null;
+      tab.podeVoltar = !!ev.podeVoltar;
+      tab.podeAvancar = !!ev.podeAvancar;
+
+      /* Volta/avança: reaplica o que se conhece da página de destino. */
+      const memoria = tab.memorias[ev.url];
+      aplicarTitulo(tab, (memoria && memoria.titulo) || ev.titulo || 'Nova aba');
+      aplicarFavicon(tab, (memoria && memoria.fav) || '');
+
+      if (tab.contentsId || ev.contentsId) {
+        window.calopsia.senhasNavegou({ contentsId: tab.contentsId || ev.contentsId, url: ev.url });
+      }
+      if (tab.id === activeId) {
+        updateAddressBar();
+        updateNavButtons();
+        updateDocumentTitle();
+        renderActiveView();
+        closeFind();
+      }
+      return;
+    }
+
+    case 'pronto':                       // dom-ready: reforça o título
+      if (ev.titulo && ev.titulo !== tab.title) {
+        aplicarTitulo(tab, ev.titulo);
+        lembrar(tab, tab.url, { titulo: tab.title });
+      }
+      if (tab.zoom !== 1) applyZoom(tab);
+      return;
+
+    case 'carregando':
+      tab.loading = !!ev.valor;
+      tab.el.classList.toggle('loading', tab.loading);
+      if (ev.podeVoltar != null) { tab.podeVoltar = !!ev.podeVoltar; tab.podeAvancar = !!ev.podeAvancar; }
+      if (tab.id === activeId) {
+        reloadBtn.classList.toggle('is-loading', tab.loading);
+        setStatus(tab.loading ? 'Carregando…' : 'Pronto');
+        showProgress(tab.loading);
+        if (!tab.loading) { updateNavButtons(); zoomBadgeUpdate(tab); }
+      }
+      return;
+
+    case 'falha':
+      tab.error = { code: ev.codigo, description: ev.descricao, url: ev.url || tab.url };
+      if (tab.id === activeId) { renderActiveView(); setStatus('Falha ao carregar'); }
+      return;
+
+    case 'url-alvo':
+      if (tab.id === activeId && ev.url) setStatus(ev.url);
+      return;
+
+    case 'travou':
+      if (tab.id === activeId) setStatus('A página travou — recarregue');
+      return;
+
+    case 'achou': {
+      const r = ev.resultado;
+      if (!r || tab.id !== activeId) return;
+      if (r.matches === 0) {
+        findCount.textContent = '0 resultados';
+        findCount.classList.add('empty');
+      } else {
+        findCount.classList.remove('empty');
+        findCount.textContent = `${r.activeMatchOrdinal} de ${r.matches}`;
+      }
+      return;
+    }
+
+    case 'devtools-fechado':
+      if (devtoolsTabId === ev.tabId) devtoolsTabId = null;
+      return;
+
+    case 'estado':
+      tab.podeVoltar = !!ev.podeVoltar;
+      tab.podeAvancar = !!ev.podeAvancar;
+      if (tab.id === activeId) updateNavButtons();
+      return;
+  }
+}
+
+if (window.calopsia) window.calopsia.onViewEvent(despacharEventoAba);
+
 function relayoutViews() {
-  const w = views.clientWidth;
-  const h = views.clientHeight;
-  if (!w || !h) return;
-  tabs.forEach((t) => {
-    t.view.style.width = w + 'px';
-    t.view.style.height = h + 'px';
-  });
+  /* A interface informa ao motor (main) o retângulo útil da página;
+     as WebContentsView são posicionadas lá dentro. */
+  const r = views.getBoundingClientRect();
+  if (!r.width || !r.height) return;
+  if (window.calopsia) window.calopsia.viewArea({ x: r.left, y: r.top, width: r.width, height: r.height });
 }
 
 function activateTab(id) {
   const tab = getTab(id);
   if (!tab) return;
-  if (devtoolsTabId != null && devtoolsTabId !== id) fecharDevtools();
+  if (devtoolsTabId != null && devtoolsTabId !== id && window.calopsia) {
+    window.calopsia.viewDevtools(devtoolsTabId);   // alterna: fecha o painel da outra aba
+  }
   activeId = id;
 
   tabs.forEach((t) => t.el.classList.toggle('active', t.id === id));
@@ -378,7 +358,8 @@ function renderActiveView() {
   const showErr = !!(tab && tab.error);
 
   errorPage.hidden = !showErr;
-  tabs.forEach((t) => t.view.classList.toggle('visible', t.id === activeId && !showErr));
+  /* A view nativa fica oculta quando a página de erro está à frente. */
+  if (tab && window.calopsia) window.calopsia.viewShow(tab.id, !showErr);
   requestAnimationFrame(relayoutViews);
 
   if (showErr && tab) {
@@ -393,7 +374,7 @@ function closeTab(id) {
   if (idx === -1) return;
   const tab = tabs[idx];
 
-  if (devtoolsTabId === id) fecharDevtools();
+  if (devtoolsTabId === id && window.calopsia) window.calopsia.viewDevtools(id);
 
   if (!isHome(tab.url)) {
     closedTabs.push({ url: tab.url, index: idx });
@@ -401,7 +382,7 @@ function closeTab(id) {
   }
 
   tab.el.remove();
-  tab.view.remove();
+  if (window.calopsia) window.calopsia.viewDestroy(tab.id);
   tabs.splice(idx, 1);
 
   if (tabs.length === 0) { createTab(HOME_URL); return; }
@@ -459,27 +440,26 @@ function navigateFromInput() {
   if (!value) return;
   userTyping = false;
   tab.error = null;
-  safe(() => tab.view.loadURL(toUrl(value)));
+  if (window.calopsia) window.calopsia.viewLoad(tab.id, toUrl(value));
   urlInput.blur();
 }
 
 /* ============================ navegação ============================ */
 function updateNavButtons() {
   const tab = getActive();
-  if (!tab || !tab.view) return;
-  backBtn.disabled = !safe(() => tab.view.canGoBack());
-  fwdBtn.disabled = !safe(() => tab.view.canGoForward());
+  if (!tab) return;
+  backBtn.disabled = !tab.podeVoltar;
+  fwdBtn.disabled = !tab.podeAvancar;
 }
 
-function goBack()    { const t = getActive(); if (t) safe(() => t.view.goBack()); }
-function goForward() { const t = getActive(); if (t) safe(() => t.view.goForward()); }
+function goBack()    { const t = getActive(); if (t && window.calopsia) window.calopsia.viewCmd(t.id, 'voltar'); }
+function goForward() { const t = getActive(); if (t && window.calopsia) window.calopsia.viewCmd(t.id, 'avancar'); }
 
 function reloadActive() {
   const t = getActive();
   if (!t) return;
   t.error = null;
-  if (t.view.isLoading()) t.view.stop();
-  else safe(() => t.view.reload());
+  if (window.calopsia) window.calopsia.viewCmd(t.id, t.loading ? 'parar' : 'recarregar');
   renderActiveView();
 }
 
@@ -511,13 +491,15 @@ function zoomBy(delta) {
   zoomBadgeUpdate(t);
 }
 function zoomReset() { const t = getActive(); if (!t) return; t.zoom = 1; applyZoom(t); zoomBadgeUpdate(t); }
-function applyZoom(tab) { safe(() => tab.view.setZoomFactor(tab.zoom)); }
+function applyZoom(tab) {
+  if (window.calopsia) window.calopsia.viewZoom(tab.id, tab.zoom);
+}
 
 /* Ctrl+scroll é capturado no processo principal (evento zoom-changed); aqui só
    espelhamos o valor para o indicador da interface. */
 if (window.calopsia) {
   window.calopsia.onTabZoom(({ id, zoom }) => {
-    const alvo = tabs.find((t) => safe(() => t.view.getWebContentsId()) === id);
+    const alvo = tabs.find((t) => t.contentsId === id);
     if (!alvo) return;
     alvo.zoom = zoom;
     if (alvo.id === activeId) zoomBadgeUpdate(alvo);
@@ -544,14 +526,14 @@ function closeFind() {
   findCount.textContent = '';
   findCount.classList.remove('empty');
   const t = getActive();
-  if (t) safe(() => t.view.stopFindInPage('clearSelection'));
+  if (t && window.calopsia) window.calopsia.viewFindStop(t.id);
 }
 function runFind(forward) {
   const t = getActive();
   if (!t) return;
   const text = findInput.value;
-  if (!text) { findCount.textContent = ''; safe(() => t.view.stopFindInPage('clearSelection')); return; }
-  lastFindId = safe(() => t.view.findInPage(text, { forward: forward !== false, findNext: true })) || 0;
+  if (!text) { findCount.textContent = ''; if (window.calopsia) window.calopsia.viewFindStop(t.id); return; }
+  if (window.calopsia) window.calopsia.viewFind(t.id, text, forward !== false);
 }
 
 /* ============================ menu (lista dropdown) ============================ */
@@ -674,71 +656,13 @@ function definirTema(fonte) {
    frontend do DevTools é hospedado num segundo webview, criado aqui,
    que ocupa o painel #devtools-pane ao lado da página.
    ------------------------------------------------------------ */
-function aguardarDevtoolsHost(host) {
-  return new Promise((resolve) => {
-    let dado = false;
-    const ok = () => { if (!dado) { dado = true; resolve(true); } };
-    host.addEventListener('dom-ready', ok, { once: true });
-    setTimeout(() => ok(), 2500);      // não trava se algo sair errado
-  });
-}
-
-function limparDevtoolsUI() {
-  if (devtoolsHost) { devtoolsHost.remove(); devtoolsHost = null; }
-  devtoolsTabId = null;
-  devtoolsAbrindo = false;
-  document.body.classList.remove('devtools-aberto');
-  requestAnimationFrame(relayoutViews);
-}
-
-function fecharDevtools() {
-  const t = devtoolsTabId != null ? getTab(devtoolsTabId) : null;
-  if (t) safe(() => t.view.closeDevTools && t.view.closeDevTools());
-  limparDevtoolsUI();   // idempotente: o evento 'devtools-closed' também limpa
-}
-
-async function abrirDevtools(inspecionar) {
+/* DevTools: painel nativo à direita, gerenciado pelo motor de abas
+   (src/tabs.js). F12/Ctrl+Shift+I/menu apenas pedem para alternar. */
+function toggleDevToolsAtiva() {
   const t = getActive();
   if (!t || !window.calopsia) return;
-
-  if (devtoolsTabId === t.id && !devtoolsAbrindo) { fecharDevtools(); return; }
-  fecharDevtools();
-
-  const cid = safe(() => t.view.getWebContentsId());
-  if (!cid) return;
-
-  devtoolsAbrindo = true;
-  const host = document.createElement('webview');
-  host.setAttribute('src', 'about:blank');   // sem src o webview nunca fica pronto
-  host.setAttribute('webpreferences', 'contextIsolation=yes,nodeIntegration=no,sandbox=yes');
-  document.getElementById('devtools-pane').appendChild(host);
-  devtoolsHost = host;
-  devtoolsTabId = t.id;
-
-  await aguardarDevtoolsHost(host);
-  const hid = safe(() => host.getWebContentsId());
-  if (!hid) { devtoolsAbrindo = false; fecharDevtools(); return; }
-
-  const ok = await window.calopsia.acoplarDevtools(cid, hid, inspecionar || null).catch(() => false);
-  devtoolsAbrindo = false;
-  if (!ok) { fecharDevtools(); toast('Não foi possível abrir as ferramentas do desenvolvedor.'); return; }
-
-  document.body.classList.add('devtools-aberto');
-  requestAnimationFrame(relayoutViews);
-}
-
-function toggleDevToolsAtiva() {
-  abrirDevtools(null);
-}
-
-/* "Inspecionar" no botão direito: abre o painel já parado no elemento. */
-if (window.calopsia) {
-  window.calopsia.onDevtoolsInspecionar(async ({ contentsId, x, y }) => {
-    const t = tabs.find((tb) => safe(() => tb.view.getWebContentsId()) === contentsId);
-    if (!t) return;
-    if (t.id !== activeId) activateTab(t.id);
-    if (devtoolsTabId !== t.id) await abrirDevtools({ x, y });
-  });
+  window.calopsia.viewDevtools(t.id);
+  devtoolsTabId = devtoolsTabId === t.id ? null : t.id;
 }
 
 function runMenuAction(id) {
@@ -748,8 +672,8 @@ function runMenuAction(id) {
     case 'find':       openFind(); break;
     case 'open-file':  openFile(); break;
     case 'reload':     reloadActive(); break;
-    case 'reload-hard': if (t) safe(() => t.view.reloadIgnoringCache()); break;
-    case 'print':      if (t) safe(() => t.view.print()); break;
+    case 'reload-hard': if (t && window.calopsia) window.calopsia.viewCmd(t.id, 'recarregar-forte'); break;
+    case 'print':      if (t && window.calopsia) window.calopsia.viewCmd(t.id, 'imprimir'); break;
     case 'zoom-in':    zoomBy(0.1); break;
     case 'zoom-out':   zoomBy(-0.1); break;
     case 'zoom-reset': zoomReset(); break;
@@ -780,13 +704,11 @@ if (window.calopsia) {
   window.calopsia.onCampoSenha(({ contentsId, tipo, rect }) => {
     const t = getActive();
     if (!t || !rect) return;
-    if (safe(() => t.view.getWebContentsId()) !== contentsId) return;   // aba em segundo plano
+    if (t.contentsId !== contentsId) return;   // aba em segundo plano
 
-    const caixa = t.view.getBoundingClientRect();
-    const z = t.zoom || 1;
+    const ponto = abs || { x: rect.x, y: rect.y };
     window.calopsia.senhasAbrirPopup({
-      x: Math.round(caixa.left + rect.x * z),
-      y: Math.round(caixa.top + rect.y * z),
+      x: ponto.x, y: ponto.y,
       contentsId, tipo, url: t.url
     });
   });
@@ -805,7 +727,7 @@ async function openFile() {
   const t = getActive();
   if (!t) return;
   t.error = null;
-  safe(() => t.view.loadURL(pathToFileUrl(p)));
+  if (window.calopsia) window.calopsia.viewLoad(t.id, pathToFileUrl(p));
   renderActiveView();
 }
 
@@ -904,7 +826,7 @@ homeBtn.addEventListener('click', () => {
   const t = getActive();
   if (!t) return;
   t.error = null;
-  safe(() => t.view.loadURL(HOME_URL));
+  if (window.calopsia) window.calopsia.viewLoad(t.id, HOME_URL);
   renderActiveView();
 });
 newTabBtn.addEventListener('click', () => createTab(HOME_URL, { focusUrl: true }));
@@ -930,12 +852,12 @@ $('find-close').addEventListener('click', closeFind);
 
 $('err-retry').addEventListener('click', () => {
   const t = getActive();
-  if (t) { t.error = null; safe(() => t.view.reload()); }
+  if (t) { t.error = null; if (window.calopsia) window.calopsia.viewCmd(t.id, 'recarregar'); }
   renderActiveView();
 });
 $('err-home').addEventListener('click', () => {
   const t = getActive();
-  if (t) { t.error = null; safe(() => t.view.loadURL(HOME_URL)); }
+  if (t) { t.error = null; if (window.calopsia) window.calopsia.viewLoad(t.id, HOME_URL); }
   renderActiveView();
 });
 
@@ -1004,7 +926,7 @@ window.addEventListener('keydown', (e) => {
     case 'f': e.preventDefault(); openFind(); break;
     case 'r': e.preventDefault(); reloadActive(); break;
     case 'o': e.preventDefault(); openFile(); break;
-    case 'p': e.preventDefault(); { const t2 = getActive(); if (t2) safe(() => t2.view.print()); break; }
+    case 'p': e.preventDefault(); { const t2 = getActive(); if (t2 && window.calopsia) window.calopsia.viewCmd(t2.id, 'imprimir'); break; }
     case 'q': break;
     default:
       if (key === '=' || key === '+') { e.preventDefault(); zoomBy(0.1); }

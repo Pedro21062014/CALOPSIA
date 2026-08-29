@@ -218,6 +218,31 @@ de usuário ou senha e escolha a conta na janelinha que abre.
 
 ## 🐛 Histórico de correções
 
+### v0.4.0
+- **Fim do `<webview>`: abas agora são `WebContentsView` nativas.** O Electron
+  desaconselha o `<webview>` ("mudanças arquitetônicas que afetam a
+  estabilidade de renderização, navegação e roteamento de eventos") e
+  recomenda a `WebContentsView`. Cada aba é agora uma view nativa presa
+  direto à janela — a mesma arquitetura de um navegador de verdade: os
+  eventos de entrada (clique, teclado, roda) vão diretos ao processo da
+  página, sem serem re-roteados pelo renderer da interface. Com isso, o
+  widget do Turnstile/Cloudflare renderiza de fato (checkbox visível) em
+  vez de ficar girando sem engagement.
+- **DevTools:** o painel à direita virou view nativa também, gerenciada pelo
+  motor de abas — abre/fecha/posiciona sem depender da interface.
+- **Menu de contexto, "Inspecionar", zoom por Ctrl+roda e permissões**
+  funcionando nativamente para as views.
+- Motor de abas isolado em `src/tabs.js`; a interface manda o retângulo
+  útil e recebe um único canal de eventos (`view:event`).
+- Testado de ponta a ponta com o app rodando: abas, navegação, títulos,
+  voltar/avançar, páginas internas, Sobre, painel DevTools e troca de abas
+  validada por screenshots (zero exceções no console).
+- *Nota honesta:* em IP de datacenter (como o deste ambiente de teste) o
+  Cloudflare mantém o desafio no máximo mesmo em Chrome genuíno — o
+  resultado final depende da reputação do SEU IP. A combinação atual
+  (motor Chromium 150 + views nativas + identidade coerente) é o melhor
+  cenário possível para um IP residencial.
+
 ### v0.3.0
 - **Atualização do motor: Electron 31 → 43 (Chromium 126 → 150).** Investigando
   o loop do Cloudflare a fundo (reproduzindo no app real e comparando com um

@@ -1,7 +1,7 @@
 {
   "name": "calopsia",
   "productName": "CALOPSIA",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "description": "CALOPSIA — navegador web moderno baseado em Chromium (Electron). Interface própria com abas, busca integrada, localizar na página, zoom e downloads.",
   "homepage": "https://github.com/Pedro21062014/CALOPSIA",
   "repository": {
@@ -24,7 +24,7 @@
     "dist:win": "electron-builder --win",
     "dist:mac": "electron-builder --mac",
     "dist:linux": "electron-builder --linux",
-    "lint": "node --check main.js && node --check preload.js && node --check preload-menu.js && node --check preload-popup.js && node --check webview-preload.js && node --check src/renderer.js && node --check src/newtab.js && node --check src/about.js && node --check src/updater.js && node --check src/menu.js && node --check src/popup.js && node --check src/senhas.js && node --check src/cofre.js",
+    "lint": "node --check main.js && node --check preload.js && node --check preload-menu.js && node --check preload-popup.js && node --check webview-preload.js && node --check src/renderer.js && node --check src/newtab.js && node --check src/about.js && node --check src/updater.js && node --check src/tabs.js && node --check src/menu.js && node --check src/popup.js && node --check src/senhas.js && node --check src/cofre.js",
     "release:linux": "npm run dist:linux -- --publish never",
     "icons": "node scripts/gen-icons.js",
     "predist": "npm run icons",

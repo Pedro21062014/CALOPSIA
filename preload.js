@@ -24,10 +24,21 @@ contextBridge.exposeInMainWorld('calopsia', {
   /* zoom por Ctrl+scroll, aplicado no processo principal */
   onTabZoom: (cb) => ipcRenderer.on('tab:zoom', (_e, info) => cb(info)),
 
-  /* DevTools em painel à direita (hospedado num webview da interface) */
-  acoplarDevtools: (guestId, hostId, inspecionar) =>
-    ipcRenderer.invoke('devtools:acoplar', { guestId, hostId, inspecionar }),
-  onDevtoolsInspecionar: (cb) => ipcRenderer.on('devtools:inspecionar', (_e, d) => cb(d)),
+  /* motor de abas — WebContentsView nativa (src/tabs.js) */
+  viewCreate: (tabId, url) => ipcRenderer.invoke('view:criar', { tabId, url }),
+  viewDestroy: (tabId) => ipcRenderer.send('view:destruir', { tabId }),
+  viewShow: (tabId, visivel, foco) => ipcRenderer.send('view:mostrar', { tabId, visivel, foco }),
+  viewLoad: (tabId, url) => ipcRenderer.send('view:carregar', { tabId, url }),
+  viewCmd: (tabId, cmd) => ipcRenderer.send('view:comando', { tabId, cmd }),
+  viewZoom: (tabId, fator) => ipcRenderer.send('view:zoom', { tabId, fator }),
+  viewState: (tabId) => ipcRenderer.invoke('view:estado', { tabId }),
+  viewArea: (ret) => ipcRenderer.send('view:area', ret),
+  viewFind: (tabId, texto, proximo) => ipcRenderer.send('view:localizar', { tabId, texto, proximo }),
+  viewFindStop: (tabId) => ipcRenderer.send('view:localizar-parar', { tabId }),
+  viewDevtools: (tabId) => ipcRenderer.send('view:devtools', { tabId }),
+
+  /* eventos do motor de abas (título, favicon, navegação, devtools…) */
+  onViewEvent: (cb) => ipcRenderer.on('view:event', (_e, ev) => cb(ev)),
 
   /* menu do ☰ (janela própria) */
   openMenu: (payload) => ipcRenderer.send('menu:open', payload),

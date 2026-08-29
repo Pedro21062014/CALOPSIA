@@ -10,6 +10,7 @@ const { app, BrowserWindow, shell, session, protocol, ipcMain, Menu, dialog,
 const path = require('path');
 const cofre = require('./src/cofre');
 const { initUpdater } = require('./src/updater');
+const abas = require('./src/tabs');
 const fs = require('fs');
 const os = require('os');
 
@@ -265,10 +266,9 @@ function createWindow() {
     icon: ICON_PATH,
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
-      webviewTag: true,           // obrigatório para <webview>
       contextIsolation: true,
       nodeIntegration: false,
-      sandbox: false,             // o shell confia no preload; webviews continuam isoladas
+      sandbox: false,             // o shell confia no preload; abas são views isoladas
       spellcheck: false,           // evita carregar o dicionário no boot
       backgroundThrottling: false
     }
@@ -459,6 +459,13 @@ app.whenReady().then(() => {
   tabSession.protocol.handle('calopsia', calopsiaHandler);
   tabSession.setUserAgent(ua);
 
+  /* Motor de abas: WebContentsView nativa por aba (substitui o <webview>). */
+  abas.init(() => mainWindow, {
+    sessao: tabSession,
+    preload: path.join(__dirname, 'webview-preload.js'),
+    fundoEscuro: () => nativeTheme.shouldUseDarkColors
+  });
+
   /* Cloudflare: cabeçalhos coerentes com o UA + cookie de liberação
      morto é descartado em vez de reenviado em loop. */
   coerirCabecalhos(session.defaultSession);
@@ -496,7 +503,8 @@ app.whenReady().then(() => {
    Webviews (abas): popups e downloads externos
    ------------------------------------------------------------ */
 app.on('web-contents-created', (_event, contents) => {
-  if (contents.getType() !== 'webview') return;
+  const tipo = contents.getType();
+  if ((tipo !== 'webview' && tipo !== 'browserView') || abas.ehHostDevtools(contents.id)) return;
 
   /* ------------------------------------------------------------
      Menu de contexto (botão direito) das páginas
@@ -568,10 +576,7 @@ app.on('web-contents-created', (_event, contents) => {
       {
         label: 'Inspecionar',
         accelerator: 'CmdOrCtrl+Shift+I',
-        click: () => {
-          try { janela.webContents.send('devtools:inspecionar', { contentsId: contents.id, x: params.x, y: params.y }); }
-          catch { /* ignora */ }
-        }
+        click: () => abas.inspecionarContents(contents.id, params.x, params.y)
       }
     );
 
@@ -615,28 +620,6 @@ ipcMain.on('win:fullscreen', () => {
   mainWindow.setFullScreen(!mainWindow.isFullScreen());
 });
 ipcMain.on('win:toggle-devtools', () => cmdPagina('devtools')());
-
-/* DevTools da página da aba ativa, em painel ACOPLADO À DIREITA na
-   própria interface. Para <webview> o Electron não suporta dock
-   (abriria solto); em vez disso, o frontend do DevTools é hospedado
-   num segundo webview criado pela interface (padrão setDevToolsWebContents)
-   — assim ele fica de verdade ao lado da página. */
-ipcMain.handle('devtools:acoplar', (_e, { guestId, hostId, inspecionar }) => {
-  const guest = webContents.fromId(Number(guestId));
-  const host = webContents.fromId(Number(hostId));
-  if (!guest || guest.isDestroyed() || !host || host.isDestroyed()) return false;
-  try {
-    guest.setDevToolsWebContents(host);
-    guest.openDevTools();
-    if (inspecionar && Number.isFinite(Number(inspecionar.x))) {
-      const x = Math.round(Number(inspecionar.x));
-      const y = Math.round(Number(inspecionar.y));
-      setTimeout(() => { try { guest.inspectElement(x, y); } catch { /* ignora */ } }, 350);
-    }
-    return true;
-  } catch { /* ignora */ }
-  return false;
-});
 
 ipcMain.handle('app:path', () => app.getAppPath());
 
@@ -682,7 +665,9 @@ function aplicarZoomPasso(contents, direction) {
 // Caminho 1: listener de wheel injetado nas páginas (webview-preload.js).
 ipcMain.on('tab:zoom-wheel', (event, { delta }) => {
   const contents = event.sender;
-  if (!contents || contents.isDestroyed() || contents.getType() !== 'webview') return;
+  if (!contents || contents.isDestroyed()) return;
+  const tipo = contents.getType();
+  if (tipo !== 'webview' && tipo !== 'browserView') return;
   ultimoZoomPorRoda.set(contents.id, Date.now());
   aplicarZoomPasso(contents, delta < 0 ? 'in' : 'out');
 });
@@ -838,10 +823,13 @@ function comCofreAberto(depois) {
 /* --- mensagens vindas das páginas (webview-preload) --- */
 
 // Foco num campo de login: a interface decide, pois só ela sabe a aba ativa.
+// O popup aparece logo abaixo do campo — as coordenadas vindas da página
+// são convertidas para posição absoluta na janela pelo motor de abas.
 ipcMain.on('senhas:campo-foco', (evento, info) => {
   if (!mainWindow || mainWindow.isDestroyed()) return;
+  const abs = abas.pontoAbsoluto(evento.sender.id, info.rect ? info.rect.x : 0, info.rect ? info.rect.y : 0);
   mainWindow.webContents.send('senhas:campo-foco', {
-    contentsId: evento.sender.id, tipo: info.tipo, rect: info.rect
+    contentsId: evento.sender.id, tipo: info.tipo, rect: info.rect, abs
   });
 });
 
