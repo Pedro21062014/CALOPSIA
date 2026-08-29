@@ -383,7 +383,28 @@ body.maximized #win-max .ico-restore { display: block; }
   position: relative;
   flex: 1;
   min-height: 0;
+  min-width: 0;
   overflow: hidden;
+  background: var(--page-bg);
+}
+
+/* ---------- painel DevTools (à direita da página) ---------- */
+#content { flex: 1; min-height: 0; display: flex; }
+#devtools-pane {
+  display: none;
+  position: relative;
+  width: 38%;
+  min-width: 280px;
+  border-left: 1px solid var(--border);
+  background: var(--page-bg);
+}
+body.devtools-aberto #devtools-pane { display: block; }
+#devtools-pane webview {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  border: none;
   background: var(--page-bg);
 }
 

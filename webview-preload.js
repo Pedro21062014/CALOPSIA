@@ -4,7 +4,7 @@
    - não expõe nada em sites da internet;
    - só entrega as pontes às páginas internas (calopsia://). */
 
-const { contextBridge, ipcRenderer } = require('electron');
+const { contextBridge, ipcRenderer, webFrame } = require('electron');
 const INTERNO = location.protocol === 'calopsia:';
 
 /* Ctrl/⌘ + roda do mouse -> zoom só desta aba.
@@ -47,23 +47,120 @@ if (INTERNO) {
 }
 
 /* ============================================================
-   Identidade do navegador — versão 0.2.7
+   Identidade do navegador — versão 0.2.10
    ------------------------------------------------------------
-   A versão anterior emulava aqui navigator.userAgentData,
-   window.chrome.runtime, chrome.csi, chrome.loadTimes e
-   permissions.query para "parecer" Chrome de verdade.
+   A regra continua: NADA de objetos falsos. Mas há dois pontos
+   em que o Electron se contradiz e o Cloudflare explora:
 
-   Era exatamente isso que quebrava a verificação do Cloudflare:
-   os objetos falsos não têm os protótipos nativos que o desafio
-   inspeciona, então o navegador parecia robô e a tela ficava
-   presa em "Verificando…".
+   1. navigator.userAgentData lista só a marca "Chromium", enquanto
+      o User-Agent e os cabeçalhos sec-ch-ua dizem "Chrome".
+   2. window.chrome não existe (todo Chrome de verdade o tem).
 
-   Agora a regra é simples: o User-Agent de Chrome já é definido
-   de forma coerente no processo principal (mesma versão do
-   Chromium real que roda aqui) e NADA é emulado dentro da
-   página. Navegador honesto passa no desafio; navegador
-   disfarçado, não.
+   O ajuste abaixo roda NO MUNDO PRINCIPAL da página e mexe nos
+   OBJETOS REAIS — os protótipos continuam nativos (instanceof,
+   Object.prototype.toString e cia. continuam passando, ao
+   contrário dos objetos falsos que quebravam a verificação).
+   É a mesma jogada do Brave: coerência, não disfarce.
    ============================================================ */
+function alinharMarcasChrome() {
+  const principal = (/Chrome\/(\d+)/.exec(navigator.userAgent) || [])[1];
+  if (!principal || !navigator.userAgentData) return;
+
+  /* Acrescenta "Google Chrome" à lista de marcas, logo após
+     "Chromium", mantendo versões e ordem originais. */
+  const comChrome = (lista) => {
+    const copia = [];
+    let inserido = false;
+    for (const b of (lista || [])) {
+      if (!b || !b.brand) continue;
+      if (b.brand === 'Google Chrome') { inserido = true; continue; }
+      copia.push({ brand: b.brand, version: b.version });
+      if (b.brand === 'Chromium' && !inserido) {
+        copia.push({ brand: 'Google Chrome', version: b.version });
+        inserido = true;
+      }
+    }
+    if (!inserido) copia.push({ brand: 'Google Chrome', version: principal });
+    return Object.freeze(copia.map((b) => Object.freeze(b)));
+  };
+
+  const nativo = (nome, fn) => {
+    try {
+      Object.defineProperty(fn, 'toString', {
+        value: () => `function ${nome}() { [native code] }`
+      });
+    } catch { /* ignora */ }
+    return fn;
+  };
+
+  try {
+    const uad = navigator.userAgentData;
+    const proto = Object.getPrototypeOf(uad);
+
+    const descBrands = Object.getOwnPropertyDescriptor(proto, 'brands');
+    if (descBrands && descBrands.get) {
+      const getterOriginal = descBrands.get;
+      Object.defineProperty(proto, 'brands', {
+        get() { return comChrome(getterOriginal.call(this)); },
+        configurable: true
+      });
+    }
+
+    if (typeof proto.getHighEntropyValues === 'function') {
+      const hevOriginal = proto.getHighEntropyValues;
+      proto.getHighEntropyValues = nativo('getHighEntropyValues', function (dicas) {
+        return hevOriginal.call(this, dicas).then((r) => {
+          if (r && r.brands) r.brands = comChrome(r.brands);
+          if (r && r.fullVersionList) r.fullVersionList = comChrome(r.fullVersionList);
+          return r;
+        });
+      });
+    }
+
+    if (typeof proto.toJSON === 'function') {
+      const toJSONOriginal = proto.toJSON;
+      proto.toJSON = nativo('toJSON', function () {
+        const r = toJSONOriginal.call(this);
+        if (r && r.brands) r.brands = comChrome(r.brands);
+        return r;
+      });
+    }
+  } catch { /* ignora */ }
+
+  /* window.chrome existe em todo Chrome real (csi/loadTimes). */
+  try {
+    if (!window.chrome) {
+      const csi = nativo('csi', () => ({
+        startE: Date.now(), onloadT: Date.now(), pageT: performance.now(), tran: 15
+      }));
+      const loadTimes = nativo('loadTimes', () => ({
+        requestTime: performance.timeOrigin / 1000,
+        startLoadTime: performance.timeOrigin / 1000,
+        commitLoadTime: performance.now() / 1000,
+        finishDocumentLoadTime: performance.now() / 1000,
+        finishLoadTime: performance.now() / 1000,
+        firstPaintTime: performance.now() / 1000,
+        firstPaintAfterLoadTime: 0,
+        navigationType: 'Other',
+        wasFetchedViaSpdy: true,
+        wasNpnNegotiated: true,
+        npnNegotiatedProtocol: 'h2',
+        wasAlternateProtocolAvailable: false,
+        connectionInfo: 'h2'
+      }));
+      Object.defineProperty(window, 'chrome', {
+        value: { app: {}, csi, loadTimes },
+        configurable: true
+      });
+    }
+  } catch { /* ignora */ }
+}
+
+if (!INTERNO) {
+  try {
+    webFrame.executeJavaScript(`(${alinharMarcasChrome.toString()})();`);
+  } catch { /* ambiente sem webFrame: segue sem o ajuste */ }
+}
 
 /* ============================================================
    Detecção de formulários de senha

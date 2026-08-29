@@ -24,8 +24,10 @@ contextBridge.exposeInMainWorld('calopsia', {
   /* zoom por Ctrl+scroll, aplicado no processo principal */
   onTabZoom: (cb) => ipcRenderer.on('tab:zoom', (_e, info) => cb(info)),
 
-  /* DevTools da página (acoplado à direita) */
-  tabDevTools: (contentsId) => ipcRenderer.invoke('tab:devtools', contentsId),
+  /* DevTools em painel à direita (hospedado num webview da interface) */
+  acoplarDevtools: (guestId, hostId, inspecionar) =>
+    ipcRenderer.invoke('devtools:acoplar', { guestId, hostId, inspecionar }),
+  onDevtoolsInspecionar: (cb) => ipcRenderer.on('devtools:inspecionar', (_e, d) => cb(d)),
 
   /* menu do ☰ (janela própria) */
   openMenu: (payload) => ipcRenderer.send('menu:open', payload),

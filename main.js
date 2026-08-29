@@ -188,23 +188,30 @@ let mainWindow = null;
       reenviar um cookie morto é o que cria o loop.
    ------------------------------------------------------------ */
 function coerirCabecalhos(ses) {
-  const principal = (process.versions.chrome || '126.0.0.0').split('.')[0];
-  const plataforma = process.platform === 'win32' ? '"Windows"'
-    : process.platform === 'darwin' ? '"macOS"' : '"Linux"';
-  const marcas = `"Not)A;Brand";v="99", "Google Chrome";v="${principal}", "Chromium";v="${principal}"`;
   const filtro = { urls: ['http://*/*', 'https://*/*'] };
 
   ses.webRequest.onBeforeSendHeaders(filtro, (details, callback) => {
     const h = details.requestHeaders || {};
-    let temUA = false;
-    for (const k of Object.keys(h)) {
-      if (k.toLowerCase() === 'user-agent') { temUA = true; break; }
+
+    /* sec-ch-ua: o Electron lista só "Chromium"; o UA diz "Chrome".
+       Preserva o "grease" REAL gerado pelo Chromium (cada versão usa o
+       seu — inventar um, como acontecia antes, é outro sinal de bot) e
+       apenas acrescenta a marca "Google Chrome" com o mesmo número. */
+    const scua = h['sec-ch-ua'];
+    if (typeof scua === 'string' && scua.includes('Chromium') && !scua.includes('Google Chrome')) {
+      const m = /"Chromium";v="(\d+)"/.exec(scua);
+      if (m) h['sec-ch-ua'] = scua.replace(m[0], `${m[0]}, "Google Chrome";v="${m[1]}"`);
     }
-    if (temUA) {
-      h['sec-ch-ua'] = marcas;
-      h['sec-ch-ua-mobile'] = '?0';
-      h['sec-ch-ua-platform'] = plataforma;
+
+    /* Dicas de versão completa (quando o servidor pede via Accept-CH):
+       a marca Google Chrome entra com a MESMA versão do Chromium local —
+       que é uma versão real de Chrome estável. */
+    const fvl = h['sec-ch-ua-full-version-list'];
+    if (typeof fvl === 'string' && fvl.includes('Chromium') && !fvl.includes('Google Chrome')) {
+      const m = /"Chromium";v="([^"]+)"/.exec(fvl);
+      if (m) h['sec-ch-ua-full-version-list'] = fvl.replace(m[0], `${m[0]}, "Google Chrome";v="${m[1]}"`);
     }
+
     callback({ requestHeaders: h });
   });
 
@@ -562,10 +569,8 @@ app.on('web-contents-created', (_event, contents) => {
         label: 'Inspecionar',
         accelerator: 'CmdOrCtrl+Shift+I',
         click: () => {
-          try {
-            if (!contents.isDevToolsOpened()) contents.openDevTools({ mode: 'right' });
-            contents.inspectElement(Math.round(params.x), Math.round(params.y));
-          } catch { /* ignora */ }
+          try { janela.webContents.send('devtools:inspecionar', { contentsId: contents.id, x: params.x, y: params.y }); }
+          catch { /* ignora */ }
         }
       }
     );
@@ -611,15 +616,23 @@ ipcMain.on('win:fullscreen', () => {
 });
 ipcMain.on('win:toggle-devtools', () => cmdPagina('devtools')());
 
-/* DevTools da página da aba ativa, ABERTO ACOPLADO À DIREITA
-   (Elements, Console, Network…). Recebe o id do webContents da aba. */
-ipcMain.handle('tab:devtools', (_e, id) => {
-  let contents = null;
-  try { contents = webContents.fromId(Number(id)); } catch { /* ignora */ }
-  if (!contents || contents.isDestroyed()) return false;
+/* DevTools da página da aba ativa, em painel ACOPLADO À DIREITA na
+   própria interface. Para <webview> o Electron não suporta dock
+   (abriria solto); em vez disso, o frontend do DevTools é hospedado
+   num segundo webview criado pela interface (padrão setDevToolsWebContents)
+   — assim ele fica de verdade ao lado da página. */
+ipcMain.handle('devtools:acoplar', (_e, { guestId, hostId, inspecionar }) => {
+  const guest = webContents.fromId(Number(guestId));
+  const host = webContents.fromId(Number(hostId));
+  if (!guest || guest.isDestroyed() || !host || host.isDestroyed()) return false;
   try {
-    if (contents.isDevToolsOpened()) { contents.closeDevTools(); return false; }
-    contents.openDevTools({ mode: 'right' });
+    guest.setDevToolsWebContents(host);
+    guest.openDevTools();
+    if (inspecionar && Number.isFinite(Number(inspecionar.x))) {
+      const x = Math.round(Number(inspecionar.x));
+      const y = Math.round(Number(inspecionar.y));
+      setTimeout(() => { try { guest.inspectElement(x, y); } catch { /* ignora */ } }, 350);
+    }
     return true;
   } catch { /* ignora */ }
   return false;

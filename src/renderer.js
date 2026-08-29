@@ -299,6 +299,11 @@ function bindView(tab) {
   v.addEventListener('crashed', () => setStatus('A página travou — recarregue'));
   v.addEventListener('close', () => closeTab(tab.id));
 
+  /* Se o DevTools desta aba for fechado (por nós ou por ele mesmo), limpa o painel. */
+  v.addEventListener('devtools-closed', () => {
+    if (devtoolsTabId === tab.id) limparDevtoolsUI();
+  });
+
   v.addEventListener('found-in-page', (e) => {
     const r = e.result;
     if (!r || r.requestId !== lastFindId) return;
@@ -328,6 +333,7 @@ function relayoutViews() {
 function activateTab(id) {
   const tab = getTab(id);
   if (!tab) return;
+  if (devtoolsTabId != null && devtoolsTabId !== id) fecharDevtools();
   activeId = id;
 
   tabs.forEach((t) => t.el.classList.toggle('active', t.id === id));
@@ -378,6 +384,8 @@ function closeTab(id) {
   const idx = tabs.findIndex((t) => t.id === id);
   if (idx === -1) return;
   const tab = tabs[idx];
+
+  if (devtoolsTabId === id) fecharDevtools();
 
   if (!isHome(tab.url)) {
     closedTabs.push({ url: tab.url, index: idx });

@@ -218,6 +218,25 @@ de usuário ou senha e escolha a conta na janelinha que abre.
 
 ## 🐛 Histórico de correções
 
+### v0.2.10
+- **Cloudflare (loop infinito, a fundo):** eram TRÊS contradições somadas.
+  (1) o cabeçalho `sec-ch-ua` usava um "grease" que não é o do Chromium 126 —
+  cada versão usa o seu, inventar um é sinal de bot; agora o grease real é
+  preservado e apenas a marca "Google Chrome" é acrescentada com o número
+  certo. (2) o `navigator.userAgentData` das páginas listava só "Chromium"
+  enquanto UA e cabeçalhos diziam "Chrome" — o Cloudflare cruza os dois;
+  agora a lista de marcas é ajustada **nos objetos reais** (protótipos
+  nativos intactos — nada de objetos falsos como na v0.2.6), a mesma
+  estratégia do Brave. (3) `window.chrome` não existia (todo Chrome o tem) —
+  agora existe, com `csi`/`loadTimes` de aparência nativa. Com a nota do
+  desafio em alta, o `cf_clearance` deixa de ser rejeitado e o loop acaba.
+- **DevTools realmente ao lado da página:** o Electron não sabe ancorar
+  DevTools de `<webview>` (abria solto ou não abria). Agora o frontend do
+  DevTools é hospedado num painel próprio da interface
+  (`setDevToolsWebContents`), fisicamente ao lado direito da página —
+  F12, Ctrl+Shift+I, menu ☰ e "Inspecionar" (botão direito) abrem esse
+  painel; ele fecha sozinho ao trocar/fechar a aba.
+
 ### v0.2.9
 - **Cloudflare (volta para a verificação):** o app enviava um User-Agent de
   Chrome, mas os cabeçalhos de dicas de cliente (`sec-ch-ua`) gerados pelo
