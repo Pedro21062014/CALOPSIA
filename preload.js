@@ -32,6 +32,7 @@ contextBridge.exposeInMainWorld('calopsia', {
   /* comandos vindos do menu nativo */
   onNewTab: (cb) => ipcRenderer.on('app:new-tab', (_e, url) => cb(url)),
   onCloseTab: (cb) => ipcRenderer.on('app:close-tab', () => cb()),
+  onAppCommand: (cb) => ipcRenderer.on('app:cmd', (_e, id) => cb(id)),
 
   /* senhas (cofre cifrado com senha mestre + chaveiro do sistema) */
   senhasSituacao: () => ipcRenderer.invoke('senhas:situacao'),

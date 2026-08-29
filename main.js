@@ -232,6 +232,24 @@ function createWindow() {
 }
 
 /* ------------------------------------------------------------
+   Comandos que agem na PÁGINA da aba ativa (não na interface):
+   recarregar, DevTools e zoom vêm do menu nativo até aqui e são
+   repassados para a janela em foco via 'app:cmd'.
+   ------------------------------------------------------------ */
+function cmdPagina(id) {
+  return () => {
+    let alvo = null;
+    try {
+      const foco = webContents.getFocusedWebContents();
+      const host = foco && foco.hostWebContents ? foco.hostWebContents : foco;
+      alvo = host ? BrowserWindow.fromWebContents(host) : null;
+    } catch { /* ignora */ }
+    if (!alvo || alvo.isDestroyed()) alvo = BrowserWindow.getFocusedWindow() || mainWindow;
+    if (alvo && !alvo.isDestroyed()) alvo.webContents.send('app:cmd', id);
+  };
+}
+
+/* ------------------------------------------------------------
    Menu da aplicação
    Removido o atalho padrão de "fechar janela" (Cmd/Ctrl+W) para
    que ele feche a ABA, como em qualquer navegador.
@@ -286,13 +304,14 @@ function buildMenu() {
     {
       label: 'Ver',
       submenu: [
-        { role: 'reload' },
-        { role: 'forceReload' },
-        { role: 'toggleDevTools' },
+        { label: 'Recarregar a página', accelerator: 'CmdOrCtrl+R', click: cmdPagina('reload') },
+        { label: 'Recarregar ignorando o cache', accelerator: 'CmdOrCtrl+Shift+R', click: cmdPagina('reload-hard') },
+        { label: 'Ferramentas do desenvolvedor', accelerator: 'CmdOrCtrl+Shift+I', click: cmdPagina('devtools') },
+        { label: 'Ferramentas do desenvolvedor (F12)', visible: false, accelerator: 'F12', click: cmdPagina('devtools') },
         { type: 'separator' },
-        { role: 'resetZoom' },
-        { role: 'zoomIn' },
-        { role: 'zoomOut' },
+        { label: 'Restaurar zoom', accelerator: 'CmdOrCtrl+0', click: cmdPagina('zoom-reset') },
+        { label: 'Ampliar', accelerator: 'CmdOrCtrl+Plus', click: cmdPagina('zoom-in') },
+        { label: 'Reduzir', accelerator: 'CmdOrCtrl+-', click: cmdPagina('zoom-out') },
         { type: 'separator' },
         {
           label: 'Tela cheia',
@@ -405,6 +424,85 @@ app.whenReady().then(() => {
 app.on('web-contents-created', (_event, contents) => {
   if (contents.getType() !== 'webview') return;
 
+  /* ------------------------------------------------------------
+     Menu de contexto (botão direito) das páginas
+     Como num navegador de verdade: navegação, área de transferência,
+     link/imagem e — o principal — "Inspecionar", que abre o DevTools
+     completo já parado no elemento sob o cursor.
+     ------------------------------------------------------------ */
+  contents.on('context-menu', (_e, params) => {
+    const janela = (() => {
+      try { return BrowserWindow.fromWebContents(contents.hostWebContents) || mainWindow; }
+      catch { return mainWindow; }
+    })();
+
+    const podeVoltar = (() => {
+      try { return contents.navigationHistory ? contents.navigationHistory.canGoBack() : contents.canGoBack(); }
+      catch { return false; }
+    })();
+    const podeAvancar = (() => {
+      try { return contents.navigationHistory ? contents.navigationHistory.canGoForward() : contents.canGoForward(); }
+      catch { return false; }
+    })();
+
+    const abrirAba = (url) => {
+      if (mainWindow && !mainWindow.isDestroyed()) mainWindow.webContents.send('app:new-tab', url);
+    };
+
+    const itens = [];
+
+    if (params.linkURL) {
+      itens.push(
+        { label: 'Abrir link em nova aba', click: () => abrirAba(params.linkURL) },
+        { label: 'Copiar endereço do link', click: () => clipboard.writeText(params.linkURL) },
+        { type: 'separator' }
+      );
+    }
+
+    if (params.mediaType === 'image' && params.srcURL) {
+      itens.push(
+        { label: 'Abrir imagem em nova aba', click: () => abrirAba(params.srcURL) },
+        { label: 'Salvar imagem como…', click: () => { try { contents.downloadURL(params.srcURL); } catch { /* ignora */ } } },
+        { label: 'Copiar imagem', click: () => { try { contents.copyImageAt(params.x, params.y); } catch { /* ignora */ } } },
+        { type: 'separator' }
+      );
+    }
+
+    if (params.isEditable) {
+      itens.push(
+        { label: 'Cortar', enabled: !!((params.editFlags || {}).canCut), click: () => contents.cut() },
+        { label: 'Copiar', enabled: !!((params.editFlags || {}).canCopy), click: () => contents.copy() },
+        { label: 'Colar', enabled: !!((params.editFlags || {}).canPaste), click: () => contents.paste() },
+        { label: 'Selecionar tudo', click: () => contents.selectAll() },
+        { type: 'separator' }
+      );
+    } else if (params.selectionText && params.selectionText.trim()) {
+      const texto = params.selectionText.trim();
+      const resumo = texto.length > 18 ? texto.slice(0, 18) + '…' : texto;
+      itens.push(
+        { label: 'Copiar', click: () => contents.copy() },
+        { label: `Pesquisar “${resumo}”`, click: () => abrirAba('https://www.google.com/search?q=' + encodeURIComponent(texto)) },
+        { type: 'separator' }
+      );
+    }
+
+    itens.push(
+      { label: 'Voltar', enabled: podeVoltar, click: () => contents.goBack() },
+      { label: 'Avançar', enabled: podeAvancar, click: () => contents.goForward() },
+      { label: 'Recarregar', click: () => contents.reload() },
+      { type: 'separator' },
+      {
+        label: 'Inspecionar',
+        accelerator: 'CmdOrCtrl+Shift+I',
+        click: () => { try { contents.inspectElement(Math.round(params.x), Math.round(params.y)); } catch { /* ignora */ } }
+      }
+    );
+
+    try {
+      Menu.buildFromTemplate(itens).popup({ window: janela, x: Math.round(params.x), y: Math.round(params.y) });
+    } catch { /* ignora */ }
+  });
+
   // Caminho 2 (fallback): o Chromium também emite zoom-changed para o
   // gesto de Ctrl+scroll. Se o listener da página já aplicou, ignora para
   // não zoomar duas vezes.
@@ -439,10 +537,7 @@ ipcMain.on('win:fullscreen', () => {
   if (!mainWindow) return;
   mainWindow.setFullScreen(!mainWindow.isFullScreen());
 });
-ipcMain.on('win:toggle-devtools', () => {
-  const win = BrowserWindow.getFocusedWindow() || mainWindow;
-  if (win) win.webContents.toggleDevTools();
-});
+ipcMain.on('win:toggle-devtools', () => cmdPagina('devtools')());
 
 ipcMain.handle('app:path', () => app.getAppPath());
 

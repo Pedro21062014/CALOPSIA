@@ -218,6 +218,23 @@ de usuário ou senha e escolha a conta na janelinha que abre.
 
 ## 🐛 Histórico de correções
 
+### v0.2.8
+- **Título e ícone da aba ao voltar/avançar:** quando a pessoa voltava para
+  uma página, a aba continuava mostrando o título e o favicon do site
+  anterior — o Chromium restaura páginas do back-forward cache sem avisar
+  de novo. Agora cada aba guarda uma memória por URL e o título/ícone
+  certos são reaplicados na hora (com um reforço no `dom-ready`).
+- **DevTools de verdade para a página:** `Ctrl+Shift+I`/`F12` e o menu
+  "Ver" agora abrem o inspetor completo (Elements, Console, Network,
+  Sources…) **da página aberta** — antes abriam o da interface do
+  navegador, que parecia um console "vazio".
+- **Menu de contexto (botão direito) nas páginas:** Voltar/Avançar/
+  Recarregar, Copiar/Colar em campos, abrir/copiar link, abrir/salvar/
+  copiar imagem, pesquisar seleção no Google e **Inspecionar** — que abre
+  o DevTools já parado no elemento sob o cursor.
+- **Recarregar e zoom do menu nativo** agora agem na página, não na
+  interface (incluindo "Recarregar ignorando o cache", `Ctrl+Shift+R`).
+
 ### v0.2.7
 - **Atualizador automático:** o CALOPSIA agora verifica sozinho, a cada
   30 minutos, se saiu versão nova nas Releases do GitHub. Quando há

@@ -128,7 +128,8 @@ function createTab(url, opts = {}) {
     favicon: '',
     loading: false,
     error: null,
-    zoom: 1
+    zoom: 1,
+    memorias: {}         // url -> {titulo, fav}: restaura título/favicon ao voltar
   };
   tabs.push(tab);
 
@@ -180,6 +181,32 @@ function createTab(url, opts = {}) {
 function bindView(tab) {
   const v = tab.view;
 
+  /* Título e favicon da aba. Guardam uma "memória" por URL porque, quando
+     a pessoa volta/avança, o Chromium restaura a página do back-forward
+     cache SEM disparar page-title-updated / page-favicon-updated de novo —
+     sem isso a aba continuava mostrando o título e o ícone do site
+     anterior. */
+  function lembrar(url, info) {
+    if (!url || url === 'about:blank') return;
+    if (Object.keys(tab.memorias).length > 300) tab.memorias = {};
+    const m = tab.memorias[url] || (tab.memorias[url] = {});
+    Object.assign(m, info);
+  }
+
+  function aplicarTitulo(texto) {
+    tab.title = texto || 'Nova aba';
+    tab.el.querySelector('.tab-title').textContent = tab.title;
+    tab.el.title = tab.title;
+    if (tab.id === activeId) updateDocumentTitle();
+  }
+
+  function aplicarFavicon(fav) {
+    tab.favicon = fav || '';
+    const img = tab.el.querySelector('.favicon');
+    if (fav) img.src = fav;
+    else img.removeAttribute('src');
+  }
+
   v.addEventListener('did-attach-webview', () => {
     // Aplica sempre (inclusive 1): garante que nenhum zoom herdado da sessão
     // ou da escala do SO deixe a página "ampliada".
@@ -189,22 +216,26 @@ function bindView(tab) {
   });
 
   v.addEventListener('page-title-updated', (e) => {
-    tab.title = e.title || 'Nova aba';
-    tab.el.querySelector('.tab-title').textContent = tab.title;
-    tab.el.title = tab.title;
-    if (tab.id === activeId) updateDocumentTitle();
+    aplicarTitulo(e.title);
+    lembrar(tab.url, { titulo: tab.title });
   });
 
   v.addEventListener('page-favicon-updated', (e) => {
     const fav = e.favicons && e.favicons.length ? e.favicons[0] : '';
     if (!fav) return;
-    tab.favicon = fav;
-    tab.el.querySelector('.favicon').src = fav;
+    aplicarFavicon(fav);
+    lembrar(tab.url, { fav });
   });
 
   const onNavigated = (e) => {
     tab.url = e.url;
     tab.error = null;
+
+    /* Volta/avança: reaplica o que se conhece da página de destino. */
+    const memoria = tab.memorias[e.url];
+    aplicarTitulo((memoria && memoria.titulo) || safe(() => v.getTitle()) || 'Nova aba');
+    aplicarFavicon((memoria && memoria.fav) || '');
+
     const cid = safe(() => v.getWebContentsId());
     if (cid) window.calopsia.senhasNavegou({ contentsId: cid, url: e.url });
     if (tab.id === activeId) {
@@ -217,6 +248,13 @@ function bindView(tab) {
   };
   v.addEventListener('did-navigate', onNavigated);
   v.addEventListener('did-navigate-in-page', onNavigated);
+
+  /* Páginas restauradas do cache podem não avisar o título de novo:
+     no dom-ready pega o título direto da página. */
+  v.addEventListener('dom-ready', () => {
+    const t = safe(() => v.getTitle());
+    if (t && t !== tab.title) aplicarTitulo(t);
+  });
 
   v.addEventListener('did-start-loading', () => {
     tab.loading = true;
@@ -613,6 +651,20 @@ function definirTema(fonte) {
   window.calopsia.setTheme(fonte).then((info) => { temaFonte = info.source; }).catch(() => {});
 }
 
+/* DevTools: abre/fecha o inspetor completo (Elements, Console, Network,
+   Sources…) DA PÁGINA da aba ativa — nunca da interface do navegador. */
+function toggleDevToolsAtiva() {
+  const t = getActive();
+  if (!t) return;
+  safe(() => {
+    if (typeof t.view.isDevToolsOpened === 'function' && t.view.isDevToolsOpened()) {
+      t.view.closeDevTools();
+    } else {
+      t.view.openDevTools();
+    }
+  });
+}
+
 function runMenuAction(id) {
   const t = getActive();
   switch (id) {
@@ -620,11 +672,12 @@ function runMenuAction(id) {
     case 'find':       openFind(); break;
     case 'open-file':  openFile(); break;
     case 'reload':     reloadActive(); break;
+    case 'reload-hard': if (t) safe(() => t.view.reloadIgnoringCache()); break;
     case 'print':      if (t) safe(() => t.view.print()); break;
     case 'zoom-in':    zoomBy(0.1); break;
     case 'zoom-out':   zoomBy(-0.1); break;
     case 'zoom-reset': zoomReset(); break;
-    case 'devtools':   if (t) safe(() => t.view.openDevTools()); break;
+    case 'devtools':   toggleDevToolsAtiva(); break;
     case 'fullscreen': if (window.calopsia) window.calopsia.toggleFullscreen(); break;
     case 'update':     if (window.calopsia) window.calopsia.updateAction(); break;
     case 'about':        openAbout(); break;
@@ -638,6 +691,10 @@ function runMenuAction(id) {
 }
 
 if (window.calopsia) window.calopsia.onMenuAction((id) => { menuOpen = false; menuBtn.classList.remove('on'); runMenuAction(id); });
+
+/* Comandos do menu nativo (Ver → recarregar/devtools/zoom): agem na
+   PÁGINA da aba ativa, não na interface do navegador. */
+if (window.calopsia) window.calopsia.onAppCommand(runMenuAction);
 
 /* ------------------------------------------------------------
    Senhas: quando um campo de login recebe o foco, a janelinha com as
@@ -797,7 +854,7 @@ $('find-close').addEventListener('click', closeFind);
 
 $('err-retry').addEventListener('click', () => {
   const t = getActive();
-  if (t) { t.navegacoes = []; t.error = null; safe(() => t.view.reload()); }
+  if (t) { t.error = null; safe(() => t.view.reload()); }
   renderActiveView();
 });
 $('err-home').addEventListener('click', () => {
@@ -848,8 +905,7 @@ window.addEventListener('keydown', (e) => {
   if (e.key === 'F11') { e.preventDefault(); if (window.calopsia) window.calopsia.toggleFullscreen(); return; }
   if (e.key === 'F12' || (mod && e.shiftKey && key === 'i')) {
     e.preventDefault();
-    const t = getActive();
-    if (t) safe(() => t.view.openDevTools());
+    toggleDevToolsAtiva();
     return;
   }
 
