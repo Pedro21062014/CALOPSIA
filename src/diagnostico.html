@@ -94,6 +94,19 @@
         add('Marcas (sec-ch-ua)', uad.brands.map(function (b) { return b.brand + ' ' + b.version; }).join(' · '));
       }
 
+      /* v0.5.7 — window.chrome: todo Chromium/Chrome genuíno o define com
+         loadTimes, csi e app. O Electron cria o objeto VAZIO — um veto
+         trivial para detectores de wrapper. Se aparecer incompleto aqui,
+         esta versão do CALOPSIA é anterior à 0.5.7. */
+      try {
+        var ck = window.chrome ? Object.keys(window.chrome) : [];
+        var esperados = ['app', 'csi', 'loadTimes'];
+        var faltando = esperados.filter(function (k) { return ck.indexOf(k) < 0; });
+        if (!faltando.length) add('window.chrome', 'completo (app · csi · loadTimes) — como um Chromium real', 'ok');
+        else if (!ck.length) add('window.chrome', 'VAZIO — sinal clássico de wrapper (atualize o CALOPSIA)', 'erro');
+        else add('window.chrome', 'incompleto: falta ' + faltando.join(', '), 'alerta');
+      } catch (e) { add('window.chrome', 'erro: ' + e.message, 'erro'); }
+
       /* cookies e storage */
       var cookiesOk = navigator.cookieEnabled;
       add('Cookies', cookiesOk ? 'habilitados' : 'DESABILITADOS', cookiesOk ? 'ok' : 'erro');

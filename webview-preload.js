@@ -4,8 +4,138 @@
    - não expõe nada em sites da internet;
    - só entrega as pontes às páginas internas (calopsia://). */
 
-const { contextBridge, ipcRenderer } = require('electron');
+const { contextBridge, ipcRenderer, webFrame } = require('electron');
 const INTERNO = location.protocol === 'calopsia:';
+
+/* ============================================================
+   v0.5.7 — Complemento do window.chrome (defeito do motor)
+   ------------------------------------------------------------
+   O Electron define window.chrome como um objeto VAZIO ({}).
+   TODO Chromium/Chrome genuíno o define com três membros nativos:
+   loadTimes, csi e app — presentes desde sempre. O diff de
+   identidade medido com os dois navegadores lado a lado mostrou
+   que esse objeto vazio é O ÚNICO sinal restante que separa o
+   CALOPSIA de um Chromium real (UA, marcas, plugins, mimeTypes,
+   codecs, pdfViewer, webdriver etc. já são idênticos).
+
+   Diagnóstico de campo (novacrm.com.br, reprodução em tempo real):
+   o desafio gerenciado do Cloudflare aceita o clique no checkbox,
+   mostra "Verifying you are human…" por ~12 s e depois RECUSA a
+   verificação e reapresenta o desafio em loop — ou seja, algo na
+   coleta de sinais reprova o cliente. Um objeto Chrome incompleto
+   é um veto trivial de detectar (chrome.csi ausente = wrapper).
+
+   ESCOPO MÍNIMO (a lição da v0.2.6/v0.5.0 continua de pé):
+   - completamos o objeto que o PRÓPRIO motor já cria e que o
+     Chromium genuíno preenche — não criamos nada que um
+     Chromium não tenha, nem mudamos nenhuma API da Web;
+   - NÃO tocamos em Function.prototype / Navigator.prototype
+     (nenhum patch de prototypes);
+   - as funções respondem ao próprio toString() como nativas,
+     mas Function.prototype.toString.call() permanece intocado;
+   - zero leitura de dados da página, zero listeners novos.
+   ============================================================ */
+(function complementaWindowChrome() {
+  const codigo = `
+  (function () {
+    try {
+      /* já preenchido? (não mexemos em nada) */
+      if (window.chrome && Object.keys(window.chrome).length) return;
+
+      var membros = {};
+
+      /* ---- chrome.app — assinatura do Chromium real ---- */
+      var app = {
+        isInstalled: false,
+        InstallState: { DISABLED: 'disabled', INSTALLED: 'installed', NOT_INSTALLED: 'not_installed' },
+        RunningState: { CANNOT_RUN: 'cannot_run', READY_TO_RUN: 'ready_to_run', RUNNING: 'running' }
+      };
+      app.getDetails = function getDetails() { return null; };
+      app.getIsInstalled = function getIsInstalled() { return false; };
+      app.installState = function installState() { return app.InstallState.NOT_INSTALLED; };
+      app.runningState = function runningState() { return app.RunningState.CANNOT_RUN; };
+      membros.app = app;
+
+      /* ---- chrome.csi() — forma do Chromium: {startE, onloadT, pageT, tran} ---- */
+      var csi = function csi() {
+        var nav = performance.getEntriesByType && performance.getEntriesByType('navigation')[0];
+        var inicio = nav ? nav.startTime : 0;
+        var agora = performance.now();
+        return {
+          startE: Math.round(performance.timeOrigin + inicio),
+          onloadT: Math.round(performance.timeOrigin + (nav ? (nav.loadEventStart || agora) : agora)),
+          pageT: Math.round(agora - inicio),
+          tran: 0
+        };
+      };
+
+      /* ---- chrome.loadTimes() — forma do Chromium ---- */
+      var loadTimes = function loadTimes() {
+        var nav = performance.getEntriesByType && performance.getEntriesByType('navigation')[0];
+        var origem = performance.timeOrigin || 0;
+        var seg = function (ms) { return ms ? Math.round((origem + ms)) / 1000 : 0; };
+        var protocolo = 'unknown';
+        try {
+          if (nav && nav.nextHopProtocol) protocolo = nav.nextHopProtocol === 'h2' ? 'h2' : nav.nextHopProtocol;
+        } catch (e) { /* mantém unknown */ }
+        return {
+          requestTime: seg(nav ? nav.startTime : 0),
+          startLoadTime: seg(nav ? nav.startTime : 0),
+          commitLoadTime: seg(nav ? nav.responseStart : 0),
+          finishDocumentLoadTime: seg(nav ? nav.domContentLoadedEventEnd : 0),
+          finishLoadTime: seg(nav ? nav.loadEventEnd : 0),
+          firstPaintTime: 0,
+          firstPaintAfterLoadTime: 0,
+          navigationType: nav && nav.type === 'navigate' ? 'Other' : 'Other',
+          wasFetchedViaSpdy: protocolo === 'h2' || protocolo === 'h3',
+          wasNpnNegotiated: protocolo !== 'unknown',
+          npnNegotiatedProtocol: protocolo,
+          wasAlternateProtocolAvailable: false,
+          connectionInfo: protocolo
+        };
+      };
+
+      /* funções respondem ao PRÓPRIO toString como nativas
+         (Function.prototype.toString não é tocado) */
+      var comToStringNativo = function (fn) {
+        try {
+          Object.defineProperty(fn, 'toString', {
+            value: function toString() { return 'function ' + (fn.name || '') + '() { [native code] }'; },
+            writable: true, enumerable: false, configurable: true
+          });
+        } catch (e) { /* segue */ }
+        return fn;
+      };
+      csi = comToStringNativo(csi);
+      loadTimes = comToStringNativo(loadTimes);
+      ['getDetails', 'getIsInstalled', 'installState', 'runningState'].forEach(function (m) {
+        if (app[m]) comToStringNativo(app[m]);
+      });
+
+      membros.csi = csi;
+      membros.loadTimes = loadTimes;
+
+      /* o Chromium define 'chrome' no Window.prototype; seguimos a forma
+         nativa quando possível, com fallback para propriedade própria */
+      var congelado = Object.freeze(membros);
+      try {
+        var proto = Object.getPrototypeOf(window);
+        if (proto && window.chrome === undefined) {
+          Object.defineProperty(proto, 'chrome', { get: function () { return congelado; }, configurable: true });
+          if (window.chrome === congelado) return;
+        }
+      } catch (e) { /* segue para o fallback */ }
+      try {
+        if (window.chrome !== congelado) {
+          var base = (window.chrome && typeof window.chrome === 'object') ? window.chrome : {};
+          Object.keys(congelado).forEach(function (k) { if (!(k in base)) { try { base[k] = congelado[k]; } catch (e) { /* */ } } });
+          try { Object.defineProperty(window, 'chrome', { value: congelado, writable: false, configurable: true }); } catch (e2) { /* mantém o base */ }
+        }
+      } catch (e) { /* desiste em silêncio */ }
+    } catch (e) { /* nunca quebra a página */ }
+  })();`;
+  try { webFrame.executeJavaScript(codigo, false); } catch { /* motor recusou: segue */ }
+})();
 
 /* Ctrl/⌘ + roda do mouse -> zoom só desta aba.
    O listener é de captura e não-passivo para vencer o handler de pinça
@@ -47,15 +177,21 @@ if (INTERNO) {
 }
 
 /* ============================================================
-   Identidade do navegador — NENHUMA interferência (v0.5.0)
+   Identidade do navegador — NENHUMA interferência (v0.5.0…v0.5.6)
    ------------------------------------------------------------
-    Desde a v0.5.0 o CALOPSIA não injeta JavaScript no mundo das
-    páginas nem patcheia nenhuma API: o User-Agent e as dicas de
-    cliente são as NATIVAS do Chromium (apenas sem os tokens do
-    wrapper). Um Chromium nativo é consistente consigo mesmo —
-    modifier prototypes (brands/getHighEntropyValues/toJSON) ou
-    criar window.chrome era exatamente o tipo de "comportamento
-    central modificado" que os desafios anti-bot detectam.
+    Desde a v0.5.0 o CALOPSIA não patcheia NENHUMA API da Web: o
+    User-Agent e as dicas de cliente são as NATIVAS do Chromium
+    (apenas sem os tokens do wrapper), e prototypes de
+    Function/Navigator continuam intocados. Um Chromium nativo é
+    consistente consigo mesmo.
+
+    v0.5.7 — exceção ÚNICA e documentada: o complemento do
+    window.chrome (logo acima). Diferente das tentativas da era
+    v0.2.6, não criamos objeto que o Chromium não tenha nem
+    patcheamos API alguma — completamos, com comportamento fiel,
+    o objeto que o PRÓPRIO Electron já cria e deixa vazio, e que
+    todo Chromium genuíno preenche. Ver "Complemento do
+    window.chrome (defeito do motor)" no topo deste arquivo.
    ============================================================ */
 
 /* ============================================================

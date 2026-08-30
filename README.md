@@ -218,6 +218,50 @@ de usuário ou senha e escolha a conta na janelinha que abre.
 
 ## 🐛 Histórico de correções
 
+### v0.5.7 — reprodução em tempo real em novacrm.com.br + o último tell de Electron
+- **Reprodução AO VIVO do relato** (com o app rodando, clique por clique):
+  novacrm.com.br → botão **Login** → `app.novacrm.com.br/login` exibe o
+  intersticial *"Performing security verification"* com o **checkbox
+  "Verify you are human"** (Turnstile `/new/normal`). Clicando o checkbox via
+  evento de mouse real: **o clique é ACEITO** (o texto muda para *"Verifying
+  you are human. This may take a few seconds."*), roda ~12 s, e então **a
+  verificação é RECUSADA** — novo desafio com outro `ray`, novo
+  `cf_clearance` emitido, e tudo recomeça: **o loop**. A tela
+  *"verificação bem-sucedida, redirecionando"* nunca chega.
+- **Experimento de controle:** o MESMO fluxo no **Chrome real** (Chrome for
+  Testing 151) no MESMO container/IP **também recusa em loop** — em IP de
+  datacenter, sem GPU real, NENHUM navegador passa (nota da v0.4.0 confirmada
+  de novo). Ou seja: o resultado final no SEU computador depende de GPU real
+  + IP residencial; o que o app pode fazer é eliminar TODA diferença de
+  identidade que denuncie o wrapper.
+- **Diff de identidade CALOPSIA × Chrome real (lado a lado, mesmo hardware):**
+  UA, marcas (`sec-ch-ua`/`userAgentData`), plugins, mimeTypes, codecs,
+  `pdfViewer`, `webdriver`, `languages`, `platform` — **todos idênticos**.
+  A única divergência restante e provável:
+  **`window.chrome` chegava VAZIO (`{}`).** Todo Chromium/Chrome genuíno o
+  define com três membros nativos (`loadTimes`, `csi`, `app`); o Electron cria
+  o objeto e não preenche — um veto trivial para qualquer detector de wrapper
+  (o desafio coleta esses sinais exatamente na fase *"Verifying you are
+  human…"* que estava sendo recusada).
+- **Fix:** `webview-preload.js` agora **completa o `window.chrome` no mundo
+  principal da página** (via `webFrame.executeJavaScript`, que roda ANTES dos
+  scripts do site — provado com página de captura no parse): `chrome.app`
+  (`isInstalled`/`InstallState`/`RunningState`/métodos), `chrome.csi()`
+  (`{startE, onloadT, pageT, tran}`) e `chrome.loadTimes()` (forma completa do
+  Chromium, com `connectionInfo` real do `PerformanceNavigationTiming`).
+  Funções respondem ao próprio `toString()` como nativas;
+  **`Function.prototype` e `Navigator.prototype` seguem INTOCATOS** — a
+  linha da v0.5.0 (nenhum patch de API da Web, nada além do que o Chromium
+  genuíno já tem) continua de pé. Validado: `keys = app|csi|loadTimes`,
+  `csi()` funcional, `connectionInfo: "h2"`, página **Diagnóstico** mostra
+  a nova linha **"window.chrome: completo"**.
+- **Electron:** conferido no npm — **44.0.0 (Chromium 152) já É a versão
+  estável mais recente** (a 45 existe só em alpha). Nada a atualizar.
+- Para quem continuar vendo loop: rodar **menu ☰ → Diagnóstico do navegador**
+  e verificar (1) `window.chrome` completo, (2) WebGL sem "GRAFICOS POR
+  SOFTWARE", (3) WebGPU com adapter. Graphics por software = driver de vídeo
+  desatualizado (o Cloudflare recusa SwiftShader como "gráficos falsos").
+
 ### v0.5.6
 - **Ferramenta oficial do Cloudflare denunciava o app como "gráficos falsos"** —
   reproduzido aqui com o app rodando: `debug.challenges.cloudflare.com` retorna
