@@ -810,6 +810,16 @@ if (window.calopsia) {
       toast(`Download cancelado: ${info.name}`, { duration: 5000 });
     }
   });
+
+  /* Válvula anti-loop do Cloudflare (v0.5.4): o processo principal detectou
+     a mesma página de verificação voltando várias vezes seguidas, limpou os
+     cookies do Cloudflare daquele site e recarregou. Avisa sem assustar. */
+  if (window.calopsia.onCfLoop) {
+    window.calopsia.onCfLoop((info) => {
+      const extras = info && info.removidos ? ` (${info.removidos} ${info.removidos === 1 ? 'cookie' : 'cookies'})` : '';
+      toast(`Verificação do Cloudflare travada — cookies do site limpos e recarregando${extras}`, { duration: 9000 });
+    });
+  }
 }
 
 function updateDlBadge() {

@@ -218,6 +218,32 @@ de usuário ou senha e escolha a conta na janelinha que abre.
 
 ## 🐛 Histórico de correções
 
+### v0.5.4
+- **"Vulkan" agora é só no Linux (provável regressão da v0.5.1 corrigida):** o switch
+  `enable-features=Vulkan` era aplicado em TODOS os sistemas, mas só o WebGPU do **Linux**
+  precisa dele. No **Windows**, forçar Vulkan faz o ANGLE/Dawn tentar um backend que a
+  máquina talvez não tenha driver para rodar — e sem isso o `navigator.gpu.requestAdapter()`
+  volta NULL ("No available adapters"), o desafio morre e a página recarrega em loop.
+  No Windows o caminho nativo do Chrome é D3D11/D3D12 (o Chrome real nunca força Vulkan)
+  e no macOS o motor usa Metal e ignora a flag de qualquer forma.
+- **Permissões de storage de iframe liberadas:** o widget do Turnstile roda num **iframe de
+  terceiros** (challenges.cloudflare.com) e, nos fluxos atuais, pede acesso a storage pela
+  **Storage Access API** (`storage-access` / `top-level-storage-access`). O handler de
+  permissões negava essas duas — o widget ficava girando para sempre mesmo com WebGPU e
+  cookies em ordem. Agora são concedidas como num Chrome real.
+- **Válvula anti-loop com limpeza pontual de cookies do Cloudflare:** o desafio recarrega a
+  página de propósito (isso NUNCA é interrompido), mas loop REAL — a mesma página voltando
+  dezenas de vezes — significa um `cf_clearance` morto sendo reenviado. A partir da **6ª volta
+  da mesma rota em 90 s** (sem contar a query, pois o token do desafio muda a cada tentativa),
+  o app limpa **apenas** os cookies do Cloudflare daquele domínio (`cf_clearance`, `__cf_bm`),
+  recarrega uma vez e avisa na interface ("Verificação do Cloudflare travada — cookies do site
+  limpos"). Mínimo de 60 s entre limpezas por aba; nada global; nada durante desafios
+  saudáveis. É o equivalente automático de apagar o cookie à mão, que era a única saída.
+- **Diagnóstico expandido:** a página "Diagnóstico do navegador" agora também mostra a
+  Storage Access API (disponibilidade e estado do documento) — o componente que faltava
+  para entender travamento de widget embutido.
+- Página de diagnóstico documenta a válvula anti-loop para quem precisa reportar problemas.
+
 ### v0.5.3
 - **CAUSA RAIZ DO LOOP ENCONTRADA COM PROVA (forense no app rodando):** o
   cookie de liberação `cf_clearance` era armazenado PARTICIONADO sob o site

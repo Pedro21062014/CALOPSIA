@@ -40,6 +40,9 @@ contextBridge.exposeInMainWorld('calopsia', {
   /* eventos do motor de abas (título, favicon, navegação, devtools…) */
   onViewEvent: (cb) => ipcRenderer.on('view:event', (_e, ev) => cb(ev)),
 
+  /* válvula anti-loop do Cloudflare (main limpa cookies do site e recarrega) */
+  onCfLoop: (cb) => ipcRenderer.on('cf:loop', (_e, info) => cb(info)),
+
   /* menu do ☰ (janela própria) */
   openMenu: (payload) => ipcRenderer.send('menu:open', payload),
   closeMenu: () => ipcRenderer.send('menu:close'),

@@ -49,6 +49,10 @@
       WebGPU com erro aqui é a causa clássica do loop na tela "Verificando…" do Cloudflare.
       Tente atualizar o driver de vídeo da sua placa (NVIDIA/AMD/Intel) e rode o diagnóstico de novo.
       A verificação oficial do Cloudflare abre fora do navegador, no site deles.
+      <br><br>
+      Desde a v0.5.4, se uma verificação ficar presa em loop (a mesma página voltando 6+ vezes
+      em 90 segundos), o CALOPSIA limpa sozinho os cookies do Cloudflare daquele site e recarrega
+      uma vez — o mesmo que apagar os cookies à mão. Você verá um aviso na barra inferior.
     </p>
   </div>
 
@@ -90,6 +94,27 @@
         add('DOM Storage', 'disponível', 'ok');
       } catch (e) {
         add('DOM Storage', 'INDISPONÍVEL', 'erro');
+      }
+
+      /* v0.5.4 — Storage Access API: iframes de terceiros (o widget do
+         Turnstile roda num iframe de challenges.cloudflare.com) usam
+         requestStorageAccess() para pedir cookies não-particionados.
+         Sem a API, o widget pode girar para sempre. É assíncrono: quando
+         responder, a lista inteira é redesenhada (finish() é idempotente). */
+      try {
+        if (typeof document.requestStorageAccess === 'function') {
+          add('Storage Access API', 'disponível', 'ok');
+          if (typeof document.hasStorageAccess === 'function') {
+            document.hasStorageAccess().then(function (tem) {
+              add('Acesso a storage deste documento', tem ? 'concedido' : 'ainda não pedido', '');
+              finish();
+            }).catch(function () { finish(); });
+          }
+        } else {
+          add('Storage Access API', 'INDISPONÍVEL — widget embutido pode travar', 'erro');
+        }
+      } catch (e) {
+        add('Storage Access API', 'erro: ' + e.message, 'erro');
       }
 
       /* WebGL */

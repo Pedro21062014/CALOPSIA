@@ -31,17 +31,27 @@ try {
 /* WebGPU — necessário para o Turnstile do Cloudflare.
    A verificação chama navigator.gpu.requestAdapter(); sem adapter
    ("No available adapters", capturado na máquina do usuário), o desafio
-   morre e recarrega em loop. enable-unsafe-webgpu (+Vulkan no Linux)
-   garante o caminho de fallback por software — o MESMO que um Chrome
-   real usa quando a GPU/driver está na blocklist.
+   morre e recarrega em loop. enable-unsafe-webgpu garante o caminho de
+   fallback por software — o MESMO que um Chrome real usa quando a
+   GPU/driver está na blocklist.
 
    IMPORTANTE: NÃO usar "ignore-gpu-blocklist". Forçar hardware que o
    Chromium bloqueou cria uma impressão de GPU que nenhum Chrome real
    teria na mesma máquina — a ferramenta oficial do Cloudflare
    (debug.challenges.cloudflare.com) classifica exatamente isso como
-   "Graphics Information Appears Fake", ou seja, fingerprint suspeito. */
+   "Graphics Information Appears Fake", ou seja, fingerprint suspeito.
+
+   v0.5.4 — "Vulkan" agora é SÓ no Linux (onde o WebGPU precisa dele).
+   Aplicar em TODOS os sistemas (como estava desde a v0.5.1) forçava o
+   backend Vulkan do ANGLE/Dawn no Windows; sem driver Vulkan instalado,
+   o adapter WebGPU desaparecia de novo — o mesmo "No available adapters"
+   que trava o Turnstile. No Windows o caminho nativo é D3D11/D3D12 e o
+   Chrome real nunca força Vulkan; no macOS o motor usa Metal e ignora
+   a flag de qualquer forma. */
 try {
-  app.commandLine.appendSwitch('enable-features', 'Vulkan');
+  if (process.platform === 'linux') {
+    app.commandLine.appendSwitch('enable-features', 'Vulkan');
+  }
   app.commandLine.appendSwitch('enable-unsafe-webgpu');
 } catch { /* ignora */ }
 const APP_ROOT = __dirname;
@@ -444,9 +454,16 @@ app.whenReady().then(() => {
 
 
   // Permissões: libera só o essencial para os sites dentro das abas.
+  // v0.5.4 — "storage-access" e "top-level-storage-access" entram na lista:
+  // são as permissões que iframes de terceiros (o widget do Turnstile roda
+  // num iframe de challenges.cloudflare.com) usam para pedir acesso ao
+  // storage do navegador. Negar aqui trava o widget girando para sempre,
+  // mesmo com WebGPU e cookies em ordem. Comportamento idêntico ao Chrome,
+  // que concede automaticamente nos contextos apropriados.
   const permissionHandler = (webContents, permission, callback) => {
     if (webContents.getType() === 'webview' && permission === 'fullscreen') return callback(true);
-    const allowed = ['fullscreen', 'clipboard-sanitized-write', 'notifications', 'media'];
+    const allowed = ['fullscreen', 'clipboard-sanitized-write', 'notifications', 'media',
+                     'storage-access', 'top-level-storage-access'];
     callback(allowed.includes(permission));
   };
   session.defaultSession.setPermissionRequestHandler(permissionHandler);
@@ -575,7 +592,90 @@ app.on('web-contents-created', (_event, contents) => {
     }
     return { action: 'deny' };
   });
+
+  ligarValvulaAntiLoop(contents);
 });
+
+/* ------------------------------------------------------------
+   Válvula anti-loop do Cloudflare (v0.5.4)
+   ------------------------------------------------------------
+   O desafio do Cloudflare recarrega a página algumas vezes DE
+   PROPÓSITO — isso é normal e nunca deve ser interrompido (a
+   tentativa de v0.2.6 quebrava o desafio no meio e foi removida).
+
+   Loop REAL é outra coisa: a MESMA página volta dezenas de vezes
+   sem nunca sair da verificação — em geral porque um cf_clearance
+   recusado continua sendo reenviado (cookie morto). Navegador
+   nenhum resolve isso sozinho; o usuário teria de apagar os cookies
+   do site à mão.
+
+   Esta válvula faz exatamente isso, e SÓ nesse estado:
+   - conta voltas à mesma origem+rota (sem query, pois o token do
+     desafio muda a cada tentativa) dentro de uma janela de 90 s;
+   - a partir da 6ª volta, limpa APENAS os cookies do Cloudflare
+     daquele domínio (cf_clearance, __cf_bm) — nada global;
+   - recarrega uma única vez e avisa na interface;
+   - no mínimo 60 s entre limpezas da mesma aba, para nunca virar
+     um "apagador" que brigue com o desafio.
+
+   Desafios saudáveis passam com 1–3 recarregamentos e nem chegam
+   perto do limite.
+   ------------------------------------------------------------ */
+const LOOP_JANELA_MS = 90 * 1000;      // janela de observação
+const LOOP_LIMITE = 6;                 // voltas até agir
+const LOOP_GAP_LIMPEZA_MS = 60 * 1000; // mínimo entre limpezas por aba
+const COOKIES_CF = ['cf_clearance', '__cf_bm'];
+const voltasDaUrl = new Map();         // contents.id -> estado da contagem
+
+function ligarValvulaAntiLoop(contents) {
+  contents.on('did-navigate', (_e, url) => {
+    try {
+      const u = new URL(url);
+      if (!/^https?:$/.test(u.protocol)) return;
+      const chave = u.origin + u.pathname;   // sem ?query (token muda sempre)
+
+      const agora = Date.now();
+      let reg = voltasDaUrl.get(contents.id);
+      if (!reg || reg.chave !== chave || agora - reg.primeiraEm > LOOP_JANELA_MS) {
+        reg = { chave, primeiraEm: agora, contagem: 0, ultimaLimpeza: 0 };
+        voltasDaUrl.set(contents.id, reg);
+      }
+      reg.contagem += 1;
+      if (reg.contagem < LOOP_LIMITE) return;
+      if (agora - reg.ultimaLimpeza < LOOP_GAP_LIMPEZA_MS) return;
+      reg.ultimaLimpeza = agora;
+      reg.contagem = 0;
+
+      limparCookiesCloudflare(contents, u);
+    } catch { /* URL estranha: ignora */ }
+  });
+
+  contents.once('destroyed', () => voltasDaUrl.delete(contents.id));
+}
+
+/* Limpa os cookies do Cloudflare de UM domínio e recarrega sem eles. */
+async function limparCookiesCloudflare(contents, u) {
+  try {
+    const ses = contents.session;
+    if (!ses) return;
+    const origem = u.origin;
+
+    let removidos = 0;
+    const cookies = await ses.cookies.get({ url: origem });
+    for (const c of cookies) {
+      if (!COOKIES_CF.includes(c.name)) continue;
+      const cookieUrl = `http${c.secure ? 's' : ''}://${c.domain.replace(/^\./, '')}${c.path || '/'}`;
+      try { await ses.cookies.remove(cookieUrl, c.name); removidos += 1; } catch { /* já ido */ }
+    }
+
+    if (mainWindow && !mainWindow.isDestroyed()) {
+      mainWindow.webContents.send('cf:loop', { url: origem + u.pathname, removidos });
+    }
+
+    /* Recarrega uma única vez, agora sem o cookie de liberação morto. */
+    try { contents.loadURL(origem + u.pathname); } catch { /* ignora */ }
+  } catch { /* ignora */ }
+}
 
 /* ------------------------------------------------------------
    IPC — controles de janela
