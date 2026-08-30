@@ -37,6 +37,17 @@
       background: var(--hover-2); border: 1px solid var(--border); border-radius: 10px;
     }
     .cf-tool:hover { background: var(--hover-3); color: var(--strong); }
+    .acoes { display: flex; gap: 10px; margin-top: 16px; flex-wrap: wrap; }
+    .acoes button {
+      flex: 1 1 240px; padding: 10px 14px; cursor: pointer;
+      font-size: 12.5px; font-family: inherit;
+      color: var(--text-dim); background: var(--hover-2);
+      border: 1px solid var(--border); border-radius: 10px;
+    }
+    .acoes button:hover { background: var(--hover-3); color: var(--strong); }
+    .diario-info { margin: 10px 0 0; font-size: 11.5px; color: var(--faint); word-break: break-all; }
+    .copiado { margin: 12px 0 0; font-size: 12.5px; color: var(--ok); font-weight: 600; }
+    .titulo-secao { margin: 26px 0 10px; font-size: 13px; font-weight: 600; color: var(--strong); }
   </style>
 </head>
 <body>
@@ -44,6 +55,15 @@
     <h1>Diagnóstico do navegador</h1>
     <p class="sub">Estado do ambiente na sua máquina — o que a verificação do Cloudflare enxerga.</p>
     <div id="lista"></div>
+
+    <p class="titulo-secao">Relatório para suporte</p>
+    <div class="acoes">
+      <button id="copiar" type="button">Copiar relatório para suporte</button>
+      <button id="pasta" type="button">Abrir arquivo de eventos (diário)</button>
+    </div>
+    <p id="copiado" class="copiado" hidden>Relatório copiado! Volte no chat e cole com Ctrl+V.</p>
+    <p id="diario-info" class="diario-info"></p>
+
     <a class="cf-tool" href="https://debug.challenges.cloudflare.com/" target="_blank" rel="noreferrer">
       Executar a verificação oficial do Cloudflare (Turnstile Troubleshooter)
     </a>
@@ -55,6 +75,16 @@
       Desde a v0.5.4, se uma verificação ficar presa em loop (a mesma página voltando 6+ vezes
       em 90 segundos), o CALOPSIA limpa sozinho os cookies do Cloudflare daquele site e recarrega
       uma vez — o mesmo que apagar os cookies à mão. Você verá um aviso na barra inferior.
+      <br><br>
+      <b>v0.5.8:</b> o navegador gravou um diário local com os últimos eventos
+      (navegações, erros de console das páginas, acionamentos da válvula anti-loop
+      e quedas de GPU). Se a verificação do Cloudflare travar de novo, reproduza
+      o problema e clique em <b>“Copiar relatório para suporte”</b> — o relatório
+      junta o estado do ambiente + os últimos eventos exatos para colar no chat.
+      <br><br>
+      <i>Privacidade:</i> o diário fica só no seu computador (pasta do perfil do
+      CALOPSIA) e o relatório inclui os endereços visitados recentemente — revise
+      antes de publicar em local aberto.
       <br><br>
       <b>v0.5.6:</b> o User-Agent agora sai com a versão reduzida do Chrome real
       ("Chrome/152.0.0.0") e, no Windows, a renderização fica fixada no mesmo caminho D3D11
@@ -69,9 +99,23 @@
     (function () {
       var lista = document.getElementById('lista');
       var itens = [];
+      var coleta = [];          /* linhas do relatório (nome: valor) */
+      var bridge = window.calopsiaTab || null;
 
-      function add(nome, valor, classe) {
-        itens.push({ nome: nome, valor: valor == null ? '—' : String(valor), classe: classe || '' });
+      function add(nome, valor, classe, noTopo) {
+        var v = valor == null ? '—' : String(valor);
+        var entrada = { nome: nome, valor: v, classe: classe || '' };
+        if (noTopo) itens.unshift(entrada); else itens.push(entrada);
+        coleta.push(nome + ': ' + v);
+      }
+
+      /* v0.5.8 — identificação do app no topo da lista */
+      if (bridge && typeof bridge.getAppInfo === 'function') {
+        bridge.getAppInfo().then(function (info) {
+          add('Versão do CALOPSIA', info.version + ' · Electron ' + info.electron
+            + ' · Chromium ' + info.chrome + ' · ' + info.platform + '-' + info.arch, '', true);
+          finish();
+        }).catch(function () { /* segue sem a linha */ });
       }
 
       function finish() {
@@ -186,6 +230,80 @@
         add('Adapter WebGPU', 'erro: ' + e.message, 'erro');
         finish();
       });
+
+      /* ----------------------------------------------------------
+         Relatório para suporte (v0.5.8)
+         junta: identificação do app + todas as verificações acima
+         + os últimos eventos do diário (navegações, erros, válvula).
+         ---------------------------------------------------------- */
+      var btnCopiar = document.getElementById('copiar');
+      var btnPasta = document.getElementById('pasta');
+      var aviso = document.getElementById('copiado');
+
+      function montarRelatorio() {
+        var partes = [];
+        partes.push('=== Relatório de diagnóstico do CALOPSIA ===');
+        partes.push('gerado em: ' + new Date().toLocaleString());
+        partes.push('');
+        partes = partes.concat(coleta);
+        var diario = bridge && typeof bridge.diarioCauda === 'function'
+          ? bridge.diarioCauda().catch(function () { return ''; })
+          : Promise.resolve('');
+        return diario.then(function (t) {
+          if (t) partes.push('', '=== Últimos eventos (diário) ===', t);
+          return partes.join('\n');
+        });
+      }
+
+      function avisarCopiado() {
+        aviso.hidden = false;
+        btnCopiar.textContent = 'Copiado ✓';
+        setTimeout(function () { btnCopiar.textContent = 'Copiar relatório para suporte'; }, 4000);
+      }
+
+      function viaTextarea(texto) {
+        try {
+          var ta = document.createElement('textarea');
+          ta.value = texto;
+          ta.style.position = 'fixed'; ta.style.opacity = '0';
+          document.body.appendChild(ta);
+          ta.select();
+          document.execCommand('copy');
+          document.body.removeChild(ta);
+          avisarCopiado();
+        } catch (e) { /* desiste em silêncio */ }
+      }
+
+      function copiarComFallback(texto) {
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard.writeText(texto).then(avisarCopiado).catch(function () { viaTextarea(texto); });
+        } else {
+          viaTextarea(texto);
+        }
+      }
+
+      btnCopiar.addEventListener('click', function () {
+        aviso.hidden = true;
+        montarRelatorio().then(function (texto) {
+          if (bridge && typeof bridge.copiarTexto === 'function') {
+            bridge.copiarTexto(texto).then(function (ok) {
+              if (ok) avisarCopiado(); else copiarComFallback(texto);
+            }).catch(function () { copiarComFallback(texto); });
+          } else {
+            copiarComFallback(texto);
+          }
+        });
+      });
+
+      btnPasta.addEventListener('click', function () {
+        if (bridge && typeof bridge.abrirDiario === 'function') bridge.abrirDiario();
+      });
+
+      if (bridge && typeof bridge.diarioLocal === 'function') {
+        bridge.diarioLocal().then(function (p) {
+          if (p) document.getElementById('diario-info').textContent = 'Eventos ao vivo gravados em: ' + p;
+        }).catch(function () { /* segue sem o caminho */ });
+      }
     })();
   </script>
 </body>

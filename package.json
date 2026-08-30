@@ -1,7 +1,7 @@
 {
   "name": "calopsia",
   "productName": "CALOPSIA",
-  "version": "0.5.7",
+  "version": "0.5.8",
   "description": "CALOPSIA — navegador web moderno baseado em Chromium (Electron). Interface própria com abas, busca integrada, localizar na página, zoom e downloads.",
   "homepage": "https://github.com/Pedro21062014/CALOPSIA",
   "repository": {

@@ -171,7 +171,16 @@ if (INTERNO) {
       estadoAtualizacao: () => ipcRenderer.invoke('update:state:get'),
       verificarAtualizacao: () => ipcRenderer.invoke('update:check'),
       atualizarAgora: () => ipcRenderer.send('update:action'),
-      onAtualizacao: (cb) => ipcRenderer.on('update:state', (_e, estado) => cb(estado))
+      onAtualizacao: (cb) => ipcRenderer.on('update:state', (_e, estado) => cb(estado)),
+
+      /* Diário do navegador (v0.5.8) — alimenta o botão "Copiar relatório
+         para suporte" da página de diagnóstico. Tudo fica no computador:
+         o relatório só sai se a pessoa copiar e colar onde quiser. */
+      getAppInfo: () => ipcRenderer.invoke('app:info'),
+      diarioCauda: () => ipcRenderer.invoke('diario:cauda'),
+      diarioLocal: () => ipcRenderer.invoke('diario:local'),
+      copiarTexto: (texto) => ipcRenderer.invoke('diario:copiar', texto),
+      abrirDiario: () => ipcRenderer.send('diario:abrir-pasta')
     });
   } catch { /* página não isolada: segue sem ponte */ }
 }

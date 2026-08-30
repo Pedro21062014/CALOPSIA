@@ -218,6 +218,35 @@ de usuário ou senha e escolha a conta na janelinha que abre.
 
 ## 🐛 Histórico de correções
 
+### v0.5.8 — diário de eventos + "Copiar relatório para suporte" + critério de aba corrigido
+- **Diário do navegador (o pedido "como eu te mando o erro exato?"):** o app agora
+  grava LOCALMENTE (nunca sai do computador) os eventos que diagnosticam o
+  Cloudflare e qualquer outro problema: navegações de cada aba, falhas de carga,
+  **avisos e erros de console das páginas**, acionamentos da válvula anti-loop,
+  quedas de processo (GPU/render) e o boot (versão, Electron/Chromium, UA em uso).
+  - Anel em memória (~800 linhas) + arquivo `diario.log` na pasta do perfil
+    (`%APPDATA%\CALOPSIA\diario.log` no Windows).
+  - **Menu ☰ → Diagnóstico do navegador** ganhou dois botões:
+    **"Copiar relatório para suporte"** (junta versão + todas as verificações +
+    os últimos eventos do diário, pronto para colar no chat) e
+    **"Abrir arquivo de eventos"** (mostra o `diario.log` na pasta).
+  - A página de diagnóstico também passou a exibir a linha **"Versão do
+    CALOPSIA"** (versão · Electron · Chromium · plataforma) no topo.
+- **BUG CRÍTICO CORRIGIDO — critério de "aba":** desde a migração do motor de
+  abas para **WebContentsView**, as abas chegam em `web-contents-created` com
+  `getType() === 'window'` (não mais `'webview'`/`'browserView'` como na era do
+  `<webview>`). O filtro antigo devolvia cedo e deixava **MUDO dentro de todas
+  as abas**: o menu de contexto (botão direito / "Inspecionar"), o zoom por
+  Ctrl+roda, a conversão de popups em novas abas, **a válvula anti-loop do
+  Cloudflare (nascida na v0.5.4 e morta na prática desde a migração)** e agora
+  o diário. O critério correto é a SESSÃO: toda aba roda em
+  `persist:calopsia`; janela principal, menu ☰ e popups internos rodam na
+  sessão padrão. Provado com o app rodando: 6 navegações à mesma URL acionam
+  `[cf-loop] válvula anti-loop acionada … recarregando uma vez` (antes: nada).
+- Validado com o app real no Xvfb: diário grava boot/navegações/console,
+  ponte `calopsiaTab` expõe `getAppInfo`/`diarioCauda`/`diarioLocal`/
+  `copiarTexto`/`abrirDiario`, botão copia o relatório, e a válvula dispara.
+
 ### v0.5.7 — reprodução em tempo real em novacrm.com.br + o último tell de Electron
 - **Reprodução AO VIVO do relato** (com o app rodando, clique por clique):
   novacrm.com.br → botão **Login** → `app.novacrm.com.br/login` exibe o

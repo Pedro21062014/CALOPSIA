@@ -92,6 +92,11 @@ const APP_ROOT = __dirname;
 
 /* Partição das abas — precisa ser a mesma string usada no renderer.js */
 const TAB_PARTITION = 'persist:calopsia';
+/* Sessão das abas, guardada no boot (v0.5.8): é o critério usado para
+   reconhecer webContents de ABA — as abas WebContentsView chegam em
+   'web-contents-created' com tipo 'window' (não 'webview'/'browserView'
+   como na era do <webview>), então a sessão é o identificador confiável. */
+let sessaoAbas = null;
 const SRC_DIR = path.join(APP_ROOT, 'src');
 const ASSETS_DIR = path.join(APP_ROOT, 'assets');
 
@@ -252,6 +257,38 @@ function chromeUserAgent() {
     : process.platform === 'darwin' ? 'Macintosh; Intel Mac OS X 10_15_7'
     : 'X11; Linux x86_64';
   return `Mozilla/5.0 (${plataforma}) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/${chrome}.0.0.0 Safari/537.36`;
+}
+
+/* ------------------------------------------------------------
+   Diário do navegador (v0.5.8)
+   ------------------------------------------------------------
+   Registro curto e LOCAL de tudo que ajuda a diagnosticar
+   problemas que só acontecem na máquina de quem usa — loop do
+   Cloudflare, falha de GPU, erros de console das páginas:
+   - anel em memória com as últimas ~800 linhas;
+   - espelhado em arquivo diario.log dentro da pasta do perfil
+     (no Windows: %APPDATA%\CALOPSIA\diario.log);
+   - NÃO sai do computador por conta própria — a página de
+     diagnóstico tem o botão "Copiar relatório", e quem decide
+     o que fazer com ele é a pessoa.
+   ------------------------------------------------------------ */
+const DIARIO_PATH = path.join(app.getPath('userData'), 'diario.log');
+const DIARIO_MAX = 800;
+const diario = [];
+let diarioEscritas = 0;
+
+function anotar(origem, msg) {
+  try {
+    const linha = `[${new Date().toISOString()}] [${origem}] ${String(msg).replace(/\s+/g, ' ').slice(0, 500)}`;
+    diario.push(linha);
+    if (diario.length > DIARIO_MAX) diario.splice(0, diario.length - DIARIO_MAX);
+    try { console.log(linha); } catch { /* sem console */ }
+    /* Roda o arquivo a cada 64 anotações, se passar de 1 MB. */
+    if ((diarioEscritas++ & 63) === 0) {
+      try { if (fs.statSync(DIARIO_PATH).size > 1024 * 1024) fs.writeFileSync(DIARIO_PATH, ''); } catch { /* novo */ }
+    }
+    fs.appendFile(DIARIO_PATH, linha + '\n', () => {});
+  } catch { /* diário é best-effort: nunca atrapalha o app */ }
 }
 
 let mainWindow = null;
@@ -481,9 +518,13 @@ app.whenReady().then(() => {
   nativeTheme.themeSource = settings.theme;   // antes de qualquer janela existir
   // Sessão padrão (janela principal) e sessão das abas (webviews).
   const ua = chromeUserAgent();
+  anotar('boot', `CALOPSIA ${app.getVersion()} · Electron ${process.versions.electron} · Chromium ${process.versions.chrome} · Node ${process.versions.node} · ${process.platform}-${process.arch}`);
+  anotar('boot', `UA em uso: ${ua}`);
+  anotar('boot', `diário gravado em: ${DIARIO_PATH}`);
   protocol.handle('calopsia', calopsiaHandler);
   session.defaultSession.setUserAgent(ua);
   const tabSession = session.fromPartition(TAB_PARTITION);
+  sessaoAbas = tabSession;
   tabSession.protocol.handle('calopsia', calopsiaHandler);
   tabSession.setUserAgent(ua);
 
@@ -503,7 +544,6 @@ app.whenReady().then(() => {
   // mesmo com WebGPU e cookies em ordem. Comportamento idêntico ao Chrome,
   // que concede automaticamente nos contextos apropriados.
   const permissionHandler = (webContents, permission, callback) => {
-    if (webContents.getType() === 'webview' && permission === 'fullscreen') return callback(true);
     const allowed = ['fullscreen', 'clipboard-sanitized-write', 'notifications', 'media',
                      'storage-access', 'top-level-storage-access'];
     callback(allowed.includes(permission));
@@ -535,7 +575,15 @@ app.whenReady().then(() => {
    ------------------------------------------------------------ */
 app.on('web-contents-created', (_event, contents) => {
   const tipo = contents.getType();
-  if ((tipo !== 'webview' && tipo !== 'browserView') || abas.ehHostDevtools(contents.id)) return;
+  anotar('contents', `criado: tipo=${tipo} url=${String(contents.getURL() || '').slice(0, 80)}`);
+  /* v0.5.8 — CRITÉRIO DE ABA CORRIGIDO: as abas WebContentsView chegam
+     aqui com tipo 'window' (não 'webview'/'browserView' como na era do
+     <webview>). O filtro antigo devolvia cedo e deixava MUDO, dentro das
+     abas: o menu de contexto, o zoom por roda, a conversão de popups em
+     abas, a válvula anti-loop e o diário de eventos. O critério estável
+     é a SESSÃO: toda aba roda na partição 'persist:calopsia'; a janela
+     principal, o menu ☰ e os popups internos rodam na sessão padrão. */
+  if (!sessaoAbas || contents.session !== sessaoAbas || abas.ehHostDevtools(contents.id)) return;
 
   /* ------------------------------------------------------------
      Menu de contexto (botão direito) das páginas
@@ -636,6 +684,7 @@ app.on('web-contents-created', (_event, contents) => {
   });
 
   ligarValvulaAntiLoop(contents);
+  ligarDiarioDaAba(contents);
 });
 
 /* ------------------------------------------------------------
@@ -714,10 +763,59 @@ async function limparCookiesCloudflare(contents, u) {
       mainWindow.webContents.send('cf:loop', { url: origem + u.pathname, removidos });
     }
 
+    anotar('cf-loop', `válvula anti-loop acionada para ${origem}${u.pathname} — ${removidos} cookie(s) do Cloudflare removido(s); recarregando uma vez`);
+
     /* Recarrega uma única vez, agora sem o cookie de liberação morto. */
     try { contents.loadURL(origem + u.pathname); } catch { /* ignora */ }
   } catch { /* ignora */ }
 }
+
+/* ------------------------------------------------------------
+   Diário da aba (v0.5.8): navegações, falhas de carga e mensagens
+   de console (só avisos/erros) de cada aba — a matéria-prima do
+   relatório de suporte. Volume baixo; nada é enviado para fora.
+   ------------------------------------------------------------ */
+function ligarDiarioDaAba(contents) {
+  const curto = (u) => String(u == null ? '' : u).slice(0, 300);
+
+  contents.on('did-navigate', (_e, url) => anotar('navegou', curto(url)));
+  contents.on('did-navigate-in-page', (_e, url) => anotar('navegou (mesma página)', curto(url)));
+
+  contents.on('did-fail-load', (_e, code, desc, url, isPrincipal) => {
+    if (code === -3) return;   // abortado: quem navega cancelou / trocou de página
+    if (isPrincipal) anotar('falha de carga', `${code} ${desc} — ${curto(url)}`);
+  });
+
+  /* 'console-message' mudou de assinatura entre versões do Electron:
+     formato antigo = (e, nivel, msg, linha, fonte); novo = um objeto
+     de detalhes no primeiro argumento. Tratamos os dois formatos. */
+  contents.on('console-message', (...args) => {
+    try {
+      let nivel, msg, fonte, linha;
+      if (typeof args[1] === 'number') {
+        nivel = args[1]; msg = args[2]; linha = args[3]; fonte = args[4];
+      } else {
+        const d = args[0] || {};
+        nivel = d.level; msg = d.message; linha = d.lineNumber; fonte = d.sourceId;
+      }
+      const n = typeof nivel === 'string'
+        ? ({ verbose: 0, info: 1, warning: 2, error: 3 }[String(nivel).toLowerCase()] ?? 1)
+        : Number(nivel);
+      if (n < 2) return;   // só avisos e erros — ruído de log comum não entra
+      anotar(n >= 3 ? 'console erro' : 'console aviso', `${String(msg == null ? '' : msg).slice(0, 300)} (${String(fonte || '').slice(0, 140)}:${linha == null ? '?' : linha})`);
+    } catch { /* ignora */ }
+  });
+
+  contents.on('render-process-gone', (_e, detalhes) => {
+    anotar('render morreu', `${detalhes.reason} exit=${detalhes.exitCode}`);
+  });
+}
+
+/* Quedas de processos auxiliares — GPU incluída (clássica causa de
+   loop: o driver de vídeo trava no meio da verificação). */
+app.on('child-process-gone', (_e, detalhes) => {
+  anotar('processo saiu', `${detalhes.type} ${detalhes.reason} exit=${detalhes.exitCode}`);
+});
 
 /* ------------------------------------------------------------
    IPC — controles de janela
@@ -751,6 +849,17 @@ ipcMain.handle('app:info', () => ({
   arch: process.arch
 }));
 
+/* Diário (v0.5.8) — usado pela página de diagnóstico para montar
+   o relatório de suporte e abrir a pasta do arquivo de eventos. */
+ipcMain.handle('diario:cauda', () => diario.join('\n'));
+ipcMain.handle('diario:local', () => DIARIO_PATH);
+ipcMain.handle('diario:copiar', (_e, texto) => {
+  try { clipboard.writeText(String(texto || '')); return true; } catch { return false; }
+});
+ipcMain.on('diario:abrir-pasta', () => {
+  try { shell.showItemInFolder(DIARIO_PATH); } catch { /* ignora */ }
+});
+
 ipcMain.handle('dialog:open-file', async () => {
   if (!mainWindow) return null;
   const res = await dialog.showOpenDialog(mainWindow, {
@@ -780,8 +889,9 @@ function aplicarZoomPasso(contents, direction) {
 ipcMain.on('tab:zoom-wheel', (event, { delta }) => {
   const contents = event.sender;
   if (!contents || contents.isDestroyed()) return;
-  const tipo = contents.getType();
-  if (tipo !== 'webview' && tipo !== 'browserView') return;
+  /* v0.5.8 — critério de aba pela sessão (as abas WebContentsView não
+     são mais do tipo 'webview'/'browserView'). */
+  if (!sessaoAbas || contents.session !== sessaoAbas) return;
   ultimoZoomPorRoda.set(contents.id, Date.now());
   aplicarZoomPasso(contents, delta < 0 ? 'in' : 'out');
 });
