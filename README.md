@@ -218,6 +218,31 @@ de usuário ou senha e escolha a conta na janelinha que abre.
 
 ## 🐛 Histórico de correções
 
+### v0.5.5
+- **CAUSA RAIZ RESTANTE PROVADA COM O APP RODANDO (forense local):** faltava
+  `enable-unsafe-swiftshader`. Desde o Chromium 128, o fallback por software
+  (SwiftShader) de WebGL/WebGPU é considerado "unsafe" e vem **desligado no
+  Chromium puro** — e o Electron é Chromium puro. Quando a inicialização de GPU
+  falha na máquina (driver antigo/corrompido, GPU em crash, VM, acesso remoto),
+  o motor caía para software e o resultado medido foi:
+  `ContextResult::kFatalFailure: WebGL1/WebGL2 blocklisted` + `navigator.gpu`
+  **ausente**. Sem nenhum sinal gráfico, o desafio do Cloudflare nunca coleta
+  o que precisa: a ferramenta oficial (debug.challenges.cloudflare.com) ficava
+  presa em *"Waiting for Turnstile to finish"* **para sempre** e a página
+  recarrega em loop — o sintoma exato relatado.
+- **O Chrome do Google tem esse fallback ligado por padrão** (build branding) —
+  por isso o "mesmo site" abre nele e trava no CALOPSIA. A flag
+  `enable-unsafe-swiftshader` coloca os dois no mesmo estado. Em máquinas com
+  GPU saudável a flag é **inerte** (a GPU real é usada; fingerprint intocado).
+- Validação com o app rodando: sem a flag → WebGL `null`/blocklisted e
+  diagnóstico oficial travado; com a flag → WebGL `ANGLE (Google, Vulkan
+  SwiftShader)` e diagnóstico oficial completa 4/4.
+- **Nova ferramenta de diagnóstico: `scripts/probe-cloudflare.js`** — probe
+  forense que replica os switches do app, mede WebGL/WebGPU/plugins, roda a
+  ferramenta oficial do Cloudflare e observa um site com managed challenge
+  (navegações/console/cookies). É assim que as causas do loop vêm sendo
+  provadas desde a v0.4.x.
+
 ### v0.5.4
 - **"Vulkan" agora é só no Linux (provável regressão da v0.5.1 corrigida):** o switch
   `enable-features=Vulkan` era aplicado em TODOS os sistemas, mas só o WebGPU do **Linux**

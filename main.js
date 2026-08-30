@@ -47,12 +47,30 @@ try {
    o adapter WebGPU desaparecia de novo — o mesmo "No available adapters"
    que trava o Turnstile. No Windows o caminho nativo é D3D11/D3D12 e o
    Chrome real nunca força Vulkan; no macOS o motor usa Metal e ignora
-   a flag de qualquer forma. */
+   a flag de qualquer forma.
+
+   v0.5.5 — CAUSA RAIZ RESTANTE, PROVADA COM FORENSE AQUI NO APP:
+   "enable-unsafe-swiftshader". Quando a inicialização de GPU falha
+   (driver antigo/corrompido, GPU em crash, VM, acesso remoto), o
+   Chromium cai para renderização por software (SwiftShader). Só que,
+   desde o Chromium 128+, o fallback por software de WebGL/WebGPU é
+   considerado "unsafe" e vem DESLIGADO no Chromium puro (o Electron):
+   sem a flag, o resultado medido com o app rodando foi
+   "ContextResult::kFatalFailure: WebGL1/WebGL2 blocklisted" +
+   navigator.gpu AUSENTE — e a ferramenta oficial do Cloudflare
+   (debug.challenges.cloudflare.com) ficava presa em "Waiting for
+   Turnstile to finish" PARA SEMPRE: o desafio não tem nenhum sinal
+   gráfico para coletar, nunca conclui e a página recarrega em loop.
+   O Chrome do Google (branding) tem esse fallback LIGADO por padrão —
+   por isso o "mesmo site" funciona nele. A flag deixa o CALOPSIA no
+   mesmo estado. Em máquinas com GPU saudável ela é inerte: a GPU real
+   é usada e o fingerprint não muda em nada. */
 try {
   if (process.platform === 'linux') {
     app.commandLine.appendSwitch('enable-features', 'Vulkan');
   }
   app.commandLine.appendSwitch('enable-unsafe-webgpu');
+  app.commandLine.appendSwitch('enable-unsafe-swiftshader');
 } catch { /* ignora */ }
 const APP_ROOT = __dirname;
 
