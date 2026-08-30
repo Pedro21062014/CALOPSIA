@@ -69,6 +69,22 @@ try {
   if (process.platform === 'linux') {
     app.commandLine.appendSwitch('enable-features', 'Vulkan');
   }
+  /* v0.5.6 — WINDOWS: fixar o caminho gráfico do ANGLE em D3D11, o MESMO
+     que o Chrome do Google usa. Com "enable-unsafe-swiftshader" (v0.5.5),
+     quando o driver falhava o ANGLE podia escolher o backend Vulkan sobre
+     SwiftShader — cuja assinatura "SwiftShader Device (Subzero)" é EXATAMENTE
+     o que a ferramenta oficial do Cloudflare classifica como "Graphics
+     Information Appears Fake / WebGL renderer info is spoofed" (provado
+     com probe: a mesma tool dá SUCCESS num Chromium real no mesmo hardware).
+     Fixado em D3D11, o fallback de driver problemático passa a ser o WARP
+     da Microsoft ("Microsoft Basic Render Driver") — o MESMO renderer crível
+     que um Chrome real mostra na mesma máquina — e a verificação para de
+     ser rejeitada por gráficos "falsos". Em máquinas com driver saudável a
+     flag é inerte: D3D11 já era o caminho nativo. */
+  if (process.platform === 'win32') {
+    app.commandLine.appendSwitch('use-gl', 'angle');
+    app.commandLine.appendSwitch('use-angle', 'd3d11');
+  }
   app.commandLine.appendSwitch('enable-unsafe-webgpu');
   app.commandLine.appendSwitch('enable-unsafe-swiftshader');
 } catch { /* ignora */ }
@@ -215,19 +231,27 @@ function chromeUserAgent() {
      esses tokens: o resultado é exatamente o UA de um Chromium puro — que
      é o que somos — e as dicas de cliente (sec-ch-ua, userAgentData) ficam
      nativas e coerentes com ele, sem nenhum patch. Um Chromium nativo é
-     consistente consigo mesmo; quanto menos mexido, melhor. */
+     consistente consigo mesmo; quanto menos mexido, melhor.
+
+     v0.5.6 — REDUÇÃO DE VERSÃO DO UA: todo Chrome/Chromium REAL envia o UA
+     com versão REDUZIDA ("Chrome/152.0.0.0") desde a redução de UA de 2023;
+     o Electron nativo envia a versão CHEIA ("Chrome/152.0.7977.54") — que
+     nenhum Chrome real envia, assinatura direta de cliente forjado que a
+     ferramenta oficial do Cloudflare cruza com o resto do fingerprint.
+     A versão é reduzida para o formato nativo de um Chrome de verdade. */
   const padrao = app.userAgent || '';
   const limpo = padrao
     .replace(new RegExp('\\s+Electron/[\\d.]+', 'gi'), '')
     .replace(new RegExp('\\s+' + String(app.name || 'calopsia').replace(/[^a-z0-9]/gi, '') + '/[\\d.]+', 'i'), '')
+    .replace(/(Chrome\/\d+)\.\d+\.\d+\.\d+/i, '$1.0.0.0')
     .replace(/\s{2,}/g, ' ')
     .trim();
   if (/Chrome\/[\d.]+/.test(limpo)) return limpo;
-  const chrome = process.versions.chrome || '126.0.0.0';
+  const chrome = (process.versions.chrome || '126.0.0.0').split('.')[0];
   const plataforma = process.platform === 'win32' ? 'Windows NT 10.0; Win64; x64'
     : process.platform === 'darwin' ? 'Macintosh; Intel Mac OS X 10_15_7'
     : 'X11; Linux x86_64';
-  return `Mozilla/5.0 (${plataforma}) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/${chrome} Safari/537.36`;
+  return `Mozilla/5.0 (${plataforma}) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/${chrome}.0.0.0 Safari/537.36`;
 }
 
 let mainWindow = null;

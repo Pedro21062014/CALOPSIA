@@ -28,6 +28,10 @@ const fs = require('fs');
 try {
   app.commandLine.appendSwitch('disable-features', 'MediaRouter,ThirdPartyStoragePartitioning,PartitionedCookies');
   if (process.platform === 'linux') app.commandLine.appendSwitch('enable-features', 'Vulkan');
+  if (process.platform === 'win32') {
+    app.commandLine.appendSwitch('use-gl', 'angle');
+    app.commandLine.appendSwitch('use-angle', 'd3d11');
+  }
   app.commandLine.appendSwitch('enable-unsafe-webgpu');
   app.commandLine.appendSwitch('enable-unsafe-swiftshader');
 } catch { /* ignora */ }
@@ -44,10 +48,17 @@ let win = null;
 
 const uaLimpo = () => {
   const padrao = app.userAgent || '';
-  return padrao
+  const limpo = padrao
     .replace(new RegExp('\\s+Electron/[\\d.]+', 'gi'), '')
     .replace(new RegExp('\\s+' + String(app.name || 'calopsia').replace(/[^a-z0-9]/gi, '') + '/[\\d.]+', 'i'), '')
+    .replace(/(Chrome\/\d+)\.\d+\.\d+\.\d+/i, '$1.0.0.0')
     .replace(/\s{2,}/g, ' ').trim();
+  if (/Chrome\/[\d.]+/.test(limpo)) return limpo;
+  const maior = String(process.versions.chrome || '152').split('.')[0];
+  const plataforma = process.platform === 'win32' ? 'Windows NT 10.0; Win64; x64'
+    : process.platform === 'darwin' ? 'Macintosh; Intel Mac OS X 10_15_7'
+    : 'X11; Linux x86_64';
+  return `Mozilla/5.0 (${plataforma}) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/${maior}.0.0.0 Safari/537.36`;
 };
 
 async function main() {
@@ -75,7 +86,12 @@ async function main() {
   await win.loadURL('about:blank');
   const gpu = await wc.executeJavaScript(`(async () => {
     const r = { hasGPU: !!navigator.gpu, plugins: navigator.plugins.length,
-                brands: navigator.userAgentData ? navigator.userAgentData.brands : null };
+                brands: navigator.userAgentData ? navigator.userAgentData.brands : null,
+                webdriver: navigator.webdriver,
+                idiomas: (navigator.languages || []).join(','),
+                cores: navigator.hardwareConcurrency,
+                memoria: navigator.deviceMemory || null,
+                temWindowChrome: typeof window.chrome !== 'undefined' };
     if (navigator.gpu) {
       try {
         const a = await navigator.gpu.requestAdapter();
@@ -102,6 +118,11 @@ async function main() {
     'document.body ? document.body.innerText.replace(/\\n{2,}/g, "\\n").slice(0, 3500) : ""', true
   ).catch(() => '(erro ao ler)');
   logev('tool-resultado', { texto: toolText });
+  try {
+    const img = await wc.capturePage();
+    fs.writeFileSync('/home/z/my-project/probe-tool.png', img.toPNG());
+    logev('screenshot', 'probe-tool.png salvo');
+  } catch (e) { logev('screenshot-erro', { msg: e.message }); }
 
   const cookiesAteAqui = await ses.cookies.get({});
   logev('cookies', {
@@ -136,6 +157,11 @@ async function main() {
   const cfFim = cookiesFim.filter((c) => /^cf|^__cf/i.test(c.name))
     .map((c) => ({ name: c.name, domain: c.domain, part: c.partitionKey ? JSON.stringify(c.partitionKey) : null }));
   logev('fim-challenge', { segundos: Math.round((Date.now() - inicio) / 1000), voltas, cookies: cfFim, pagina: estadoFinal });
+  try {
+    const img2 = await wc.capturePage();
+    fs.writeFileSync('/home/z/my-project/probe-challenge.png', img2.toPNG());
+    logev('screenshot', 'probe-challenge.png salvo');
+  } catch (e) { logev('screenshot-erro', { msg: e.message }); }
 
   fs.writeFileSync(OUT, JSON.stringify({ gpu, toolText, voltas, cfFim, estadoFinal, log }, null, 2));
   console.log('=== RELATÓRIO COMPLETO EM', OUT, '===');

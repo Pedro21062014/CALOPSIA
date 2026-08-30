@@ -218,6 +218,37 @@ de usuário ou senha e escolha a conta na janelinha que abre.
 
 ## 🐛 Histórico de correções
 
+### v0.5.6
+- **Ferramenta oficial do Cloudflare denunciava o app como "gráficos falsos"** —
+  reproduzido aqui com o app rodando: `debug.challenges.cloudflare.com` retorna
+  **"ISSUE FOUND — Privacy Tool Interference Detected — Graphics Information
+  Appears Fake / WebGL renderer info is spoofed"**. Com esse veredito, o desafio
+  é rejeitado silenciosamente, a mensagem *"verificação feita com sucesso"*
+  NUNCA aparece e a página recarrega em loop — o sintoma exato relatado.
+- **Grupo de controle (prova):** o MESMO teste num Chromium real no MESMO
+  hardware dá **gráficos OK**. Duas violações do CALOPSIA foram isoladas:
+  1. **User-Agent com versão cheia.** Todo Chrome/Chromium real envia o UA com
+     versão reduzida (`Chrome/152.0.0.0`) desde a redução de UA de 2023; o
+     Electron nativo envia a versão cheia (`Chrome/152.0.7977.54`) — assinatura
+     direta de cliente forjado. **Fix:** a versão do UA agora é reduzida para
+     o formato nativo (`Chrome/152.0.0.0`), provado com captura do header HTTP.
+  2. **Fallback gráfico com assinatura de bot.** Com `enable-unsafe-swiftshader`
+     (v0.5.5), quando o driver de vídeo falhava o ANGLE podia cair no backend
+     Vulkan sobre **SwiftShader** — cuja assinatura
+     `ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero)…))` é a mesma de
+     bots em Docker/CI e está na blocklist da Cloudflare. **Fix (Windows):** o
+     caminho gráfico fica fixado em **D3D11** (`use-gl=angle` +
+     `use-angle=d3d11`), o MESMO do Chrome do Google: driver saudável → GPU
+     real; driver falhando → **WARP da Microsoft** ("Microsoft Basic Render
+     Driver"), o renderer crível que um Chrome real mostra na mesma máquina.
+- **Diagnóstico:** a página de diagnóstico agora marca WebGL por software
+  (SwiftShader/llvmpipe) como **alerta âmbar** com instrução de atualizar o
+  driver, e documenta o novo comportamento. `scripts/probe-cloudflare.js`
+  (ferramenta forense) sincronizada com os switches/UA novos; adicionado
+  `scripts/probe-flags.js` (matriz A/B de flags contra a tool oficial).
+- **Electron 44.0.0** (Chromium 152) — já é a versão estável mais recente do
+  Electron; travada no lockfile usada pelo workflow de build.
+
 ### v0.5.5
 - **CAUSA RAIZ RESTANTE PROVADA COM O APP RODANDO (forense local):** faltava
   `enable-unsafe-swiftshader`. Desde o Chromium 128, o fallback por software

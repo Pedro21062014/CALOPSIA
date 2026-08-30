@@ -24,6 +24,8 @@
     .bolinha { width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; background: var(--muted); }
     .ok   .bolinha { background: var(--ok); }
     .erro .bolinha { background: var(--danger); }
+    .alerta .bolinha { background: #d97706; }
+    .alerta .valor { color: #d97706; }
     .nome { color: var(--text-dim); width: 190px; flex-shrink: 0; }
     .valor { color: var(--muted); word-break: break-all; font-variant-numeric: tabular-nums; }
     .erro .valor { color: var(--danger-text); }
@@ -53,6 +55,12 @@
       Desde a v0.5.4, se uma verificação ficar presa em loop (a mesma página voltando 6+ vezes
       em 90 segundos), o CALOPSIA limpa sozinho os cookies do Cloudflare daquele site e recarrega
       uma vez — o mesmo que apagar os cookies à mão. Você verá um aviso na barra inferior.
+      <br><br>
+      <b>v0.5.6:</b> o User-Agent agora sai com a versão reduzida do Chrome real
+      ("Chrome/152.0.0.0") e, no Windows, a renderização fica fixada no mesmo caminho D3D11
+      do Chrome — se o driver falhar, a GPU por software usada é a do Windows (WARP),
+      a mesma que um Chrome de verdade mostra, em vez da assinatura "SwiftShader" que o
+      Cloudflare rejeita como gráficos falsos.
     </p>
   </div>
 
@@ -117,15 +125,19 @@
         add('Storage Access API', 'erro: ' + e.message, 'erro');
       }
 
-      /* WebGL */
+      /* WebGL — v0.5.6: renderer por software (SwiftShader) é classificado
+         pela ferramenta oficial do Cloudflare como "Graphics Information
+         Appears Fake" (prova: a mesma tool aceita um Chromium real no
+         mesmo hardware). Exibir como ALERTA, não como ok. */
       try {
         var c = document.createElement('canvas');
         var gl = c.getContext('webgl') || c.getContext('experimental-webgl');
-        if (!gl) { add('WebGL', 'indisponível', 'erro'); }
+        if (!gl) { add('WebGL', 'indisponível (o Cloudflare aceita mesmo assim)', ''); }
         else {
           var dbg = gl.getExtension('WEBGL_debug_renderer_info');
           var gpu = dbg ? gl.getParameter(dbg.UNMASKED_RENDERER_WEBGL) : 'presente';
-          add('WebGL', gpu, 'ok');
+          var porSoftware = /SwiftShader|llvmpipe|Software/i.test(String(gpu));
+          add('WebGL', gpu + (porSoftware ? ' — GRAFICOS POR SOFTWARE: a verificação do Cloudflare pode rejeitar (atualize o driver de vídeo)' : ''), porSoftware ? 'alerta' : 'ok');
         }
       } catch (e) { add('WebGL', 'erro: ' + e.message, 'erro'); }
 
