@@ -7,11 +7,11 @@ on:
   workflow_dispatch:
     inputs:
       tag:
-        description: 'Tag da release (ex.: v0.2.0). Vazio = usa a versão do package.json'
+        description: 'Tag da release (ex.: v0.6.0). Vazio = usa a versao do package.json'
         required: false
         default: ''
       prerelease:
-        description: 'Marcar como pré-release'
+        description: 'Marcar como pre-release'
         type: boolean
         required: false
         default: false
@@ -22,6 +22,9 @@ permissions:
 jobs:
   # ------------------------------------------------------------------
   # 1) Compila os instaladores nos 3 sistemas (e 2 arquiteturas no mac)
+  #    - Linux : AppImage + deb
+  #    - macOS : dmg + zip  (x64 e arm64/Apple Silicon)
+  #    - Win   : NSIS (instalador) + portable
   # ------------------------------------------------------------------
   build:
     name: Compilar ${{ matrix.name }}
@@ -43,8 +46,10 @@ jobs:
             args: --win
             exts: exe
     env:
-      CSC_IDENTITY_AUTO_DISCOVERY: "false"   # não assina no macOS (evita falha sem certificado)
+      CSC_IDENTITY_AUTO_DISCOVERY: "false"   # nao assina no macOS (evita falha sem certificado)
       USE_HARD_LINKS: "false"
+      ELECTRON_CACHE: ${{ github.workspace }}/.cache/electron
+      ELECTRON_BUILDER_CACHE: ${{ github.workspace }}/.cache/electron-builder
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -55,47 +60,73 @@ jobs:
           node-version: 20
           cache: npm
 
-      - name: Instalar dependências
+      - name: Cache do Electron
+        uses: actions/cache@v4
+        with:
+          path: |
+            ${{ github.workspace }}/.cache/electron
+            ${{ github.workspace }}/.cache/electron-builder
+          key: electron-${{ matrix.os }}-${{ hashFiles('package-lock.json') }}
+          restore-keys: |
+            electron-${{ matrix.os }}-
+
+      - name: Instalar dependencias
         run: npm ci
 
-      - name: Mostrar versão
+      - name: Gerar icones
+        run: npm run icons
+
+      - name: Verificar sintaxe (lint rapido)
+        shell: bash
+        run: |
+          for f in main.js preload.js preload-menu.js preload-popup.js webview-preload.js \
+                   src/renderer.js src/newtab.js src/about.js src/updater.js src/tabs.js \
+                   src/menu.js src/popup.js src/senhas.js src/cofre.js; do
+            [ -f "$f" ] && node --check "$f"
+          done
+
+      - name: Mostrar versao
         shell: bash
         run: |
           VERSION="$(node -p "require('./package.json').version")"
-          echo "CALOPSIA versão ${VERSION}"
+          echo "CALOPSIA versao ${VERSION}"
+          echo "## CALOPSIA ${VERSION} — ${{ matrix.name }}" >> "$GITHUB_STEP_SUMMARY"
 
       - name: Compilar com electron-builder
         run: npx electron-builder ${{ matrix.args }} --publish never
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          ELECTRON_CACHE: ${{ github.workspace }}/.cache/electron
 
       - name: Listar artefatos gerados
         shell: bash
         run: ls -lh release/ || true
 
-      - name: Gerar checksums (SHA-256)
+      - name: Gerar checksums SHA-256
         shell: bash
         run: |
           cd release
-          for ext in ${{ join(matrix.exts, ' ') }}; do
-            for f in *."$ext"; do
-              [ -e "$f" ] || continue
-              if command -v sha256sum >/dev/null 2>&1; then sha256sum "$f"
-              else shasum -a 256 "$f"; fi
-            done
-          done > "SHA256SUMS-${{ matrix.name }}.txt" || true
+          case "${{ matrix.name }}" in
+            Linux)   pat="*.AppImage *.deb" ;;
+            macOS)   pat="*.dmg *.zip" ;;
+            Windows) pat="*.exe" ;;
+          esac
+          shopt -s nullglob
+          sha256sum $pat > "SHA256SUMS-${{ matrix.name }}.txt" 2>/dev/null || true
           cat "SHA256SUMS-${{ matrix.name }}.txt" || true
+          echo "### Checksums ${{ matrix.name }}" >> "$GITHUB_STEP_SUMMARY"
+          echo '```' >> "$GITHUB_STEP_SUMMARY"
+          cat "SHA256SUMS-${{ matrix.name }}.txt" >> "$GITHUB_STEP_SUMMARY"
+          echo '```' >> "$GITHUB_STEP_SUMMARY"
 
       - name: Enviar artefatos
         uses: actions/upload-artifact@v4
         with:
-          name: CALOPSIA-${{ matrix.name }}
+          name: calopsia-${{ matrix.name }}
           path: |
-            release/*.dmg
-            release/*.zip
             release/*.AppImage
             release/*.deb
+            release/*.dmg
+            release/*.zip
             release/*.exe
             release/SHA256SUMS-*.txt
           if-no-files-found: error
@@ -108,6 +139,7 @@ jobs:
     name: Publicar Release
     needs: build
     runs-on: ubuntu-latest
+    if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
     permissions:
       contents: write
     steps:
@@ -118,6 +150,7 @@ jobs:
 
       - name: Descobrir a tag
         id: meta
+        shell: bash
         run: |
           set -euo pipefail
           if [ -n "${{ github.event.inputs.tag }}" ]; then
@@ -137,10 +170,12 @@ jobs:
           merge-multiple: true
 
       - name: Consolidar checksums
+        shell: bash
         run: |
           cd assets
           cat SHA256SUMS-*.txt 2>/dev/null | sort -u > ALL-CHECKSUMS.txt || true
           rm -f SHA256SUMS-*.txt
+          echo "Checksums consolidados:"
           cat ALL-CHECKSUMS.txt || true
 
       - name: Criar Release e anexar os instaladores
@@ -164,11 +199,15 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Resumo
+        shell: bash
         run: |
-          echo "### 🚀 Release ${{ steps.meta.outputs.tag }} publicada" >> "$GITHUB_STEP_SUMMARY"
+          echo "### Release ${{ steps.meta.outputs.tag }} publicada" >> "$GITHUB_STEP_SUMMARY"
           echo "" >> "$GITHUB_STEP_SUMMARY"
           echo "Arquivos anexados:" >> "$GITHUB_STEP_SUMMARY"
-          for f in assets/*.dmg assets/*.zip assets/*.AppImage assets/*.deb assets/*.exe; do
+          for f in assets/*.dmg assets/*.zip assets/*.AppImage assets/*.deb assets/*.exe assets/ALL-CHECKSUMS.txt; do
             [ -e "$f" ] || continue
-            echo "- \`$(basename "$f")\` ($(du -h "$f" | cut -f1))" >> "$GITHUB_STEP_SUMMARY"
+            size=$(ls -lh "$f" | awk '{print $5}')
+            echo "- \`${f##*/}\` — ${size}" >> "$GITHUB_STEP_SUMMARY"
           done
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "Plataformas: Linux (AppImage/deb), macOS (dmg/zip x64+arm64), Windows (NSIS + portable)" >> "$GITHUB_STEP_SUMMARY"

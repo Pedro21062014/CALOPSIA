@@ -36,6 +36,13 @@
   --shadow: rgba(0, 0, 0, .55);
   --shadow-soft: rgba(0, 0, 0, .45);
   --page-bg: #ffffff;
+  /* Acento profissional: azul-petroleo sobrio (nao neon).
+     Usado em foco, aba ativa e estados de acao primaria. */
+  --accent: #6ea8d7;
+  --accent-2: #4f8fc7;
+  --accent-soft: rgba(110, 168, 215, .16);
+  --accent-glow: rgba(110, 168, 215, .28);
+  --ring: 0 0 0 2px var(--accent-glow);
   --ok: #3fb27f;
   --warn: #dfa23c;
   --danger: #ef5f6b;
@@ -120,6 +127,11 @@
   --shadow: rgba(0, 0, 0, .16);
   --shadow-soft: rgba(0, 0, 0, .10);
   --page-bg: #ffffff;
+  --accent: #2f6fb0;
+  --accent-2: #25609b;
+  --accent-soft: rgba(47, 111, 176, .12);
+  --accent-glow: rgba(47, 111, 176, .30);
+  --ring: 0 0 0 2px var(--accent-glow);
   --ok: #17855a;
   --warn: #a2741c;
   --danger: #d33a48;
@@ -160,6 +172,11 @@
   --shadow: rgba(0, 0, 0, .55);
   --shadow-soft: rgba(0, 0, 0, .45);
   --page-bg: #ffffff;
+  --accent: #6ea8d7;
+  --accent-2: #4f8fc7;
+  --accent-soft: rgba(110, 168, 215, .16);
+  --accent-glow: rgba(110, 168, 215, .28);
+  --ring: 0 0 0 2px var(--accent-glow);
   --ok: #3fb27f;
   --warn: #dfa23c;
   --danger: #ef5f6b;

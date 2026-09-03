@@ -1,0 +1,76 @@
+name: CI
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # ------------------------------------------------------------------
+  # Verificacao de sintaxe + lint em todos os arquivos JS do projeto.
+  # Roda em todos os sistemas suportados para garantir portabilidade.
+  # ------------------------------------------------------------------
+  lint:
+    name: Lint & Sintaxe (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ ubuntu-latest, macos-latest, windows-latest ]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Configurar Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Instalar dependencias
+        run: npm ci
+
+      - name: Verificar sintaxe de todos os arquivos JS
+        shell: bash
+        run: |
+          set -e
+          echo "Verificando sintaxe com node --check ..."
+          fail=0
+          for f in main.js preload.js preload-menu.js preload-popup.js webview-preload.js \
+                   src/renderer.js src/newtab.js src/about.js src/updater.js src/tabs.js \
+                   src/menu.js src/popup.js src/senhas.js src/cofre.js scripts/gen-icons.js; do
+            if [ -f "$f" ]; then
+              node --check "$f" && echo "ok  $f" || { echo "FALHA: $f"; fail=1; }
+            fi
+          done
+          exit $fail
+
+      - name: Lint do projeto (npm run lint)
+        run: npm run lint
+
+      - name: Validar package.json
+        shell: bash
+        run: |
+          node -e "const p=require('./package.json'); \
+            console.log('pacote:', p.name, 'v' + p.version); \
+            if(!p.main) throw new Error('campo main ausente'); \
+            if(!p.build) throw new Error('bloco build ausente'); \
+            console.log('build.targets:', Object.keys(p.build).join(', '));"
+
+      - name: Resumo do CI
+        if: always()
+        shell: bash
+        run: |
+          echo "### CI @ ${{ matrix.os }}" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Sintaxe JS: ${{ job.status }}" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Versao: $(node -p "require('./package.json').version")" >> "$GITHUB_STEP_SUMMARY"

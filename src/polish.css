@@ -1,0 +1,136 @@
+/* ============================================================
+   CALOPSIA — camada de refinamento profissional (polish)
+   Carregada APOS theme.css e styles.css, apenas refina:
+   aba ativa com acento, aneis de foco nítidos, transicoes
+   suaves, profundidade de sombra e micro-interacoes.
+   100% aditivo — nao sobrescreve a logica existente.
+   ============================================================ */
+
+/* ---- transicoes globais suaves ---- */
+.icon-btn, .tab, button, input, .nav-btn, .addr-action,
+.tile, .shortcut, .menu-item {
+  transition: background-color .14s ease, color .14s ease,
+              border-color .14s ease, box-shadow .14s ease,
+              opacity .14s ease, transform .1s ease !important;
+}
+
+/* ---- aba ativa: acento + topo mais nítido ---- */
+.tab.active {
+  background: var(--surface);
+  color: var(--text-strong);
+  box-shadow: 0 1px 0 rgba(0, 0, 0, .25), inset 0 1px 0 rgba(255, 255, 255, .03);
+}
+.tab.active::after {
+  background: var(--accent) !important;
+  height: 2px;
+  box-shadow: 0 0 8px var(--accent-glow);
+}
+.tab:hover:not(.active) {
+  background: var(--hover-2);
+}
+
+/* ---- botoes de acao: leve compressao ao clicar ---- */
+.icon-btn:active, .nav-btn:active, .addr-action:active,
+.window-controls button:active, #newtab:active {
+  transform: scale(.93);
+}
+
+/* ---- aneis de foco acessíveis e elegantes ---- */
+:focus-visible {
+  outline: none;
+  box-shadow: var(--ring);
+  border-radius: 7px;
+}
+#url-input:focus,
+input[type="text"]:focus,
+input[type="password"]:focus,
+input[type="search"]:focus {
+  border-color: var(--accent) !important;
+  box-shadow: 0 0 0 3px var(--accent-soft) !important;
+}
+
+/* ---- barra de endereço: profundidade sutil quando em foco ---- */
+#addressbar.focused,
+#addressbar:focus-within {
+  background: var(--field);
+  box-shadow: 0 0 0 1px var(--accent), 0 2px 8px rgba(0, 0, 0, .25);
+}
+
+/* ---- botao/menu primario com acento ---- */
+.icon-btn.round:hover, .nav:hover {
+  color: var(--accent);
+}
+
+/* ---- barra de ferramentas: separacao mais limpa ---- */
+#toolbar {
+  box-shadow: 0 1px 0 var(--border-soft), 0 1px 2px rgba(0, 0, 0, .18);
+}
+
+/* ---- barra de status: estados com cor semantica ---- */
+#statusbar .secure  { color: var(--ok); }
+#statusbar .warning { color: var(--warn); }
+#statusbar .danger  { color: var(--danger-text); }
+
+/* ---- spinner de carregamento com acento ---- */
+.tab.loading .spin {
+  border-top-color: var(--accent) !important;
+}
+
+/* ---- tiles da nova aba: elevacao ao passar o mouse ---- */
+.tile, .shortcut {
+  box-shadow: 0 1px 2px rgba(0, 0, 0, .18);
+}
+.tile:hover, .shortcut:hover {
+  background: var(--tile-bg-hover);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, .28);
+  transform: translateY(-1px);
+}
+
+/* ---- marca na barra de título: logotipo com brilho discreto ---- */
+.brand-logo {
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, .4));
+  transition: filter .2s ease;
+}
+.brand:hover .brand-logo {
+  filter: drop-shadow(0 2px 6px var(--accent-glow));
+}
+
+/* ---- scrollbar discreta e profissional ---- */
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb {
+  background: var(--border-hi);
+  border-radius: 8px;
+  border: 2px solid transparent;
+  background-clip: content-box;
+}
+::-webkit-scrollbar-thumb:hover { background: var(--muted); background-clip: content-box; }
+
+/* ---- janela: suavizacao de renderizacao de texto ---- */
+body { -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility; }
+
+/* ---- botoes de janela (mac/win): estados mais claros ---- */
+.window-controls button:hover { background: var(--hover-2); color: var(--strong); }
+.window-controls button#win-close:hover,
+.window-controls button.close:hover {
+  background: var(--danger); color: #fff;
+}
+
+/* ---- menu/popup: sombras mais profundas, borda mais nítida ---- */
+.menu, .popup, [role="menu"], .context-menu {
+  box-shadow: 0 8px 28px rgba(0, 0, 0, .4), 0 2px 6px rgba(0, 0, 0, .25);
+  border: 1px solid var(--border);
+  backdrop-filter: blur(12px);
+}
+
+/* ---- links/acoes de acao primaria ---- */
+.btn-primary, .primary-btn {
+  background: var(--accent);
+  color: var(--on-strong);
+  border: none;
+  border-radius: 8px;
+}
+.btn-primary:hover, .primary-btn:hover {
+  background: var(--accent-2);
+  box-shadow: 0 4px 14px var(--accent-glow);
+}
