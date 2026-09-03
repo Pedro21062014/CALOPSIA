@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta http-equiv="Content-Security-Policy"
+        content="default-src 'none'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https: http:; font-src 'self'; connect-src 'self'" />
+  <title>Calopsia</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+
+<!-- ───────────────────────── Sprite de ícones ───────────────────────── -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <symbol id="i-back" viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <symbol id="i-forward" viewBox="0 0 24 24"><path d="M9 5l7 7-7 7" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <symbol id="i-reload" viewBox="0 0 24 24"><path d="M20 11a8 8 0 10-1.6 5.6M20 5v6h-6" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <symbol id="i-stop" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></symbol>
+    <symbol id="i-home" viewBox="0 0 24 24"><path d="M4 11l8-6.5 8 6.5v8a1.5 1.5 0 01-1.5 1.5h-13A1.5 1.5 0 014 19z" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/></symbol>
+    <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></symbol>
+    <symbol id="i-close" viewBox="0 0 24 24"><path d="M6.5 6.5l11 11M17.5 6.5l-11 11" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></symbol>
+    <symbol id="i-star" viewBox="0 0 24 24"><path d="M12 4.2l2.4 4.9 5.4.8-3.9 3.8.9 5.3-4.8-2.5-4.8 2.5.9-5.3L4.2 9.9l5.4-.8z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></symbol>
+    <symbol id="i-star-fill" viewBox="0 0 24 24"><path d="M12 4.2l2.4 4.9 5.4.8-3.9 3.8.9 5.3-4.8-2.5-4.8 2.5.9-5.3L4.2 9.9l5.4-.8z" fill="currentColor" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></symbol>
+    <symbol id="i-shield" viewBox="0 0 24 24"><path d="M12 3.5l7 2.6v5.4c0 4.3-2.9 7.6-7 9-4.1-1.4-7-4.7-7-9V6.1z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></symbol>
+    <symbol id="i-lock" viewBox="0 0 24 24"><rect x="5.5" y="10.5" width="13" height="9" rx="2" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M8.5 10.5V8a3.5 3.5 0 017 0v2.5" fill="none" stroke="currentColor" stroke-width="1.6"/></symbol>
+    <symbol id="i-unlock" viewBox="0 0 24 24"><path d="M12 3a5 5 0 00-5 5v1.5M6 20h12M8 9.5h8" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><circle cx="12" cy="14" r="6.5" fill="none" stroke="currentColor" stroke-width="1.6"/></symbol>
+    <symbol id="i-globe" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.2" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M3.8 12h16.4M12 3.8c2.2 2.3 3.3 5.1 3.3 8.2S14.2 17.9 12 20.2c-2.2-2.3-3.3-5.1-3.3-8.2S9.8 6.1 12 3.8z" fill="none" stroke="currentColor" stroke-width="1.5"/></symbol>
+    <symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="6.5" fill="none" stroke="currentColor" stroke-width="1.7"/><path d="M15.8 15.8L20 20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></symbol>
+    <symbol id="i-download" viewBox="0 0 24 24"><path d="M12 4v10m0 0l-4-4m4 4l4-4M5 19h14" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <symbol id="i-menu" viewBox="0 0 24 24"><circle cx="12" cy="5.5" r="1.7" fill="currentColor"/><circle cx="12" cy="12" r="1.7" fill="currentColor"/><circle cx="12" cy="18.5" r="1.7" fill="currentColor"/></symbol>
+    <symbol id="i-history" viewBox="0 0 24 24"><path d="M3.5 12a8.5 8.5 0 108.5-8.5A8.4 8.4 0 005.4 6.6M12 7.5V12l3 2" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/><path d="M3.5 4v3h3" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <symbol id="i-settings" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3" fill="none" stroke="currentColor" stroke-width="1.7"/><path d="M19.4 15a1.7 1.7 0 00.3 1.9l.1.1a2 2 0 11-2.8 2.8l-.1-.1a1.7 1.7 0 00-2.9 1.2v.2a2 2 0 01-4 0V21a1.7 1.7 0 00-2.9-1.2l-.1.1a2 2 0 11-2.8-2.8l.1-.1A1.7 1.7 0 003 15H2.8a2 2 0 010-4H3a1.7 1.7 0 001.2-2.9l-.1-.1a2 2 0 112.8-2.8l.1.1A1.7 1.7 0 0010 4.2V4a2 2 0 014 0v.2a1.7 1.7 0 002.9 1.2l.1-.1a2 2 0 112.8 2.8l-.1.1A1.7 1.7 0 0021 11h.2a2 2 0 010 4H21a1.7 1.7 0 00-1.6 1z" fill="none" stroke="currentColor" stroke-width="1.4"/></symbol>
+    <symbol id="i-incognito" viewBox="0 0 24 24"><path d="M5 12l1.8-5.2A2 2 0 018.7 5.5h6.6a2 2 0 011.9 1.3L19 12M3 12h18" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/><circle cx="7.8" cy="15.6" r="2.8" fill="none" stroke="currentColor" stroke-width="1.6"/><circle cx="16.2" cy="15.6" r="2.8" fill="none" stroke="currentColor" stroke-width="1.6"/></symbol>
+    <symbol id="i-window" viewBox="0 0 24 24"><rect x="4" y="5" width="16" height="14" rx="2" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M4 9h16" stroke="currentColor" stroke-width="1.6"/></symbol>
+    <symbol id="i-print" viewBox="0 0 24 24"><path d="M7 9V4h10v5M7 18H5.5A1.5 1.5 0 014 16.5v-5A1.5 1.5 0 015.5 10h13a1.5 1.5 0 011.5 1.5v5a1.5 1.5 0 01-1.5 1.5H17" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><rect x="7" y="14" width="10" height="6" rx="1" fill="none" stroke="currentColor" stroke-width="1.6"/></symbol>
+    <symbol id="i-code" viewBox="0 0 24 24"><path d="M9 7l-5 5 5 5M15 7l5 5-5 5" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <symbol id="i-zoom-in" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></symbol>
+    <symbol id="i-zoom-out" viewBox="0 0 24 24"><path d="M5 12h14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></symbol>
+    <symbol id="i-fullscreen" viewBox="0 0 24 24"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <symbol id="i-volume" viewBox="0 0 24 24"><path d="M5 9.5h3l4-3.5v12l-4-3.5H5z" fill="currentColor"/><path d="M16 9.2a4 4 0 010 5.6" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></symbol>
+    <symbol id="i-mute" viewBox="0 0 24 24"><path d="M5 9.5h3l4-3.5v12l-4-3.5H5z" fill="currentColor"/><path d="M16 10l4 4m0-4l-4 4" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></symbol>
+    <symbol id="i-pin" viewBox="0 0 24 24"><path d="M15 3l6 6-3 1-4 4-1 5-7-7 5-1 4-4z" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/><path d="M6 18l-2 2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></symbol>
+    <symbol id="i-trash" viewBox="0 0 24 24"><path d="M5 7h14M10 7V5h4v2M6.5 7l.8 12a1.5 1.5 0 001.5 1.4h6.4a1.5 1.5 0 001.5-1.4L17.5 7" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <symbol id="i-folder" viewBox="0 0 24 24"><path d="M3.5 7.5A1.5 1.5 0 015 6h4l2 2.5h8a1.5 1.5 0 011.5 1.5v7A1.5 1.5 0 0119 18.5H5A1.5 1.5 0 013.5 17z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></symbol>
+    <symbol id="i-chevron-down" viewBox="0 0 24 24"><path d="M7 10l5 5 5-5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <symbol id="i-chevron-up" viewBox="0 0 24 24"><path d="M7 14l5-5 5 5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <symbol id="i-arrow-up" viewBox="0 0 24 24"><path d="M12 19V5m0 0l-6 6m6-6l6 6" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <symbol id="i-win-min" viewBox="0 0 12 12"><path d="M2 6h8" stroke="currentColor" stroke-width="1.1" stroke-linecap="round"/></symbol>
+    <symbol id="i-win-max" viewBox="0 0 12 12"><rect x="2.4" y="2.4" width="7.2" height="7.2" rx="1.1" fill="none" stroke="currentColor" stroke-width="1.1"/></symbol>
+    <symbol id="i-win-restore" viewBox="0 0 12 12"><rect x="2" y="4" width="6" height="6" rx="1" fill="none" stroke="currentColor" stroke-width="1.1"/><path d="M4.4 4V3a1 1 0 011-1H9a1 1 0 011 1v3.6a1 1 0 01-1 1H8" fill="none" stroke="currentColor" stroke-width="1.1"/></symbol>
+    <symbol id="i-win-close" viewBox="0 0 12 12"><path d="M3 3l6 6M9 3L3 9" stroke="currentColor" stroke-width="1.1" stroke-linecap="round"/></symbol>
+  </defs>
+</svg>
+
+<!-- ───────────────────────────── Chrome ───────────────────────────── -->
+<div id="chrome" class="chrome">
+
+  <!-- Barra de abas -->
+  <div id="tabstrip" class="tabstrip">
+    <div class="drag-pad" id="drag-left"></div>
+    <div class="tabs-scroll" id="tabs-scroll">
+      <div class="tabs" id="tabs"></div>
+      <button class="tab-new" id="btn-new-tab" title="Nova aba (Ctrl+T)" aria-label="Nova aba">
+        <svg class="icon"><use href="#i-plus"/></svg>
+      </button>
+    </div>
+    <div class="drag-pad grow"></div>
+    <div class="window-controls" id="window-controls">
+      <button class="wc" id="wc-min" title="Minimizar" aria-label="Minimizar"><svg class="icon-xs"><use href="#i-win-min"/></svg></button>
+      <button class="wc" id="wc-max" title="Maximizar" aria-label="Maximizar"><svg class="icon-xs"><use href="#i-win-max"/></svg></button>
+      <button class="wc wc-close" id="wc-close" title="Fechar" aria-label="Fechar"><svg class="icon-xs"><use href="#i-win-close"/></svg></button>
+    </div>
+  </div>
+
+  <!-- Barra de ferramentas -->
+  <div id="toolbar" class="toolbar">
+    <div class="nav-group">
+      <button class="tb-btn" id="btn-back" title="Voltar (Alt+←)" aria-label="Voltar"><svg class="icon"><use href="#i-back"/></svg></button>
+      <button class="tb-btn" id="btn-forward" title="Avançar (Alt+→)" aria-label="Avançar"><svg class="icon"><use href="#i-forward"/></svg></button>
+      <button class="tb-btn" id="btn-reload" title="Recarregar (Ctrl+R)" aria-label="Recarregar"><svg class="icon"><use href="#i-reload"/></svg></button>
+      <button class="tb-btn" id="btn-home" title="Página inicial" aria-label="Página inicial"><svg class="icon"><use href="#i-home"/></svg></button>
+    </div>
+
+    <div class="omnibox-wrap">
+      <div class="omnibox" id="omnibox">
+        <button class="site-info" id="site-info" title="Informações do site">
+          <svg class="icon-sm" id="site-icon"><use href="#i-search"/></svg>
+        </button>
+        <input id="url-input" class="url-input" type="text" spellcheck="false" autocomplete="off"
+               placeholder="Pesquise ou digite um endereço" aria-label="Barra de endereço" />
+        <div class="omnibox-actions">
+          <button class="om-btn shield" id="btn-shield" title="Proteções de privacidade">
+            <svg class="icon-sm"><use href="#i-shield"/></svg>
+            <span class="badge" id="shield-count">0</span>
+          </button>
+          <button class="om-btn" id="btn-bookmark" title="Adicionar aos favoritos (Ctrl+D)">
+            <svg class="icon-sm" id="bookmark-icon"><use href="#i-star"/></svg>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div class="action-group">
+      <button class="tb-btn" id="btn-downloads" title="Downloads (Ctrl+J)">
+        <svg class="icon"><use href="#i-download"/></svg>
+        <span class="dot" id="download-dot" hidden></span>
+      </button>
+      <button class="tb-btn" id="btn-menu" title="Menu do Calopsia"><svg class="icon"><use href="#i-menu"/></svg></button>
+    </div>
+  </div>
+
+  <!-- Barra de favoritos -->
+  <div id="bookmarks-bar" class="bookmarks-bar">
+    <div class="bm-items" id="bm-items"></div>
+    <button class="bm-overflow" id="bm-overflow" hidden title="Mais favoritos"><svg class="icon-sm"><use href="#i-chevron-down"/></svg></button>
+  </div>
+
+  <!-- Barra de localizar na página -->
+  <div id="findbar" class="findbar" hidden>
+    <div class="find-inner">
+      <svg class="icon-sm find-lead"><use href="#i-search"/></svg>
+      <input id="find-input" type="text" placeholder="Localizar na página" spellcheck="false" />
+      <span class="find-count" id="find-count">0/0</span>
+      <button class="find-btn" id="find-prev" title="Anterior (Shift+Enter)"><svg class="icon-sm"><use href="#i-chevron-up"/></svg></button>
+      <button class="find-btn" id="find-next" title="Próximo (Enter)"><svg class="icon-sm"><use href="#i-chevron-down"/></svg></button>
+      <button class="find-btn" id="find-close" title="Fechar (Esc)"><svg class="icon-sm"><use href="#i-close"/></svg></button>
+    </div>
+  </div>
+
+  <div class="progress" id="progress" hidden><div class="progress-bar"></div></div>
+</div>
+
+<!-- ───────────────────── Camada de sobreposição ───────────────────── -->
+<div id="overlay" class="overlay" hidden>
+  <div class="scrim" id="scrim"></div>
+
+  <!-- Sugestões da omnibox -->
+  <div class="popover suggestions" id="suggestions" hidden role="listbox"></div>
+
+  <!-- Menu principal -->
+  <div class="popover menu" id="main-menu" hidden role="menu">
+    <div class="menu-row">
+      <button class="menu-item" data-act="new-tab"><svg class="icon-sm"><use href="#i-plus"/></svg><span>Nova aba</span><kbd>Ctrl T</kbd></button>
+      <button class="menu-item" data-act="new-window"><svg class="icon-sm"><use href="#i-window"/></svg><span>Nova janela</span><kbd>Ctrl N</kbd></button>
+      <button class="menu-item" data-act="new-private"><svg class="icon-sm"><use href="#i-incognito"/></svg><span>Janela anônima</span><kbd>Ctrl ⇧ N</kbd></button>
+    </div>
+    <div class="menu-sep"></div>
+    <div class="menu-zoom">
+      <span class="mz-label">Zoom</span>
+      <button class="mz-btn" data-act="zoom-out" title="Diminuir"><svg class="icon-sm"><use href="#i-zoom-out"/></svg></button>
+      <button class="mz-value" data-act="zoom-reset" id="zoom-value">100%</button>
+      <button class="mz-btn" data-act="zoom-in" title="Aumentar"><svg class="icon-sm"><use href="#i-zoom-in"/></svg></button>
+      <button class="mz-btn" data-act="fullscreen" title="Tela cheia"><svg class="icon-sm"><use href="#i-fullscreen"/></svg></button>
+    </div>
+    <div class="menu-sep"></div>
+    <div class="menu-row">
+      <button class="menu-item" data-act="bookmarks"><svg class="icon-sm"><use href="#i-star"/></svg><span>Favoritos</span><kbd>Ctrl ⇧ O</kbd></button>
+      <button class="menu-item" data-act="history"><svg class="icon-sm"><use href="#i-history"/></svg><span>Histórico</span><kbd>Ctrl H</kbd></button>
+      <button class="menu-item" data-act="downloads"><svg class="icon-sm"><use href="#i-download"/></svg><span>Downloads</span><kbd>Ctrl J</kbd></button>
+    </div>
+    <div class="menu-sep"></div>
+    <div class="menu-row">
+      <button class="menu-item" data-act="find"><svg class="icon-sm"><use href="#i-search"/></svg><span>Localizar…</span><kbd>Ctrl F</kbd></button>
+      <button class="menu-item" data-act="print"><svg class="icon-sm"><use href="#i-print"/></svg><span>Imprimir…</span><kbd>Ctrl P</kbd></button>
+      <button class="menu-item" data-act="devtools"><svg class="icon-sm"><use href="#i-code"/></svg><span>Ferramentas do dev</span><kbd>F12</kbd></button>
+    </div>
+    <div class="menu-sep"></div>
+    <div class="menu-row">
+      <button class="menu-item" data-act="settings"><svg class="icon-sm"><use href="#i-settings"/></svg><span>Configurações</span><kbd>Ctrl ,</kbd></button>
+      <button class="menu-item" data-act="about"><svg class="icon-sm"><use href="#i-globe"/></svg><span>Sobre o Calopsia</span></button>
+    </div>
+  </div>
+
+  <!-- Painel de downloads -->
+  <div class="popover downloads-panel" id="downloads-panel" hidden>
+    <header class="pop-head">
+      <h3>Downloads</h3>
+      <button class="link-btn" id="dl-clear">Limpar</button>
+    </header>
+    <div class="dl-list" id="dl-list"></div>
+    <footer class="pop-foot">
+      <button class="link-btn" data-act="downloads">Ver todos os downloads</button>
+    </footer>
+  </div>
+
+  <!-- Painel de escudo / privacidade -->
+  <div class="popover shield-panel" id="shield-panel" hidden>
+    <header class="pop-head">
+      <h3>Proteções</h3>
+      <span class="pop-host" id="shield-host">—</span>
+    </header>
+    <div class="shield-stat">
+      <strong id="shield-blocked">0</strong>
+      <span>elementos bloqueados nesta página</span>
+    </div>
+    <label class="switch-row">
+      <span>Bloquear anúncios</span>
+      <input type="checkbox" id="sw-adblock" class="switch" />
+    </label>
+    <label class="switch-row">
+      <span>Bloquear rastreadores</span>
+      <input type="checkbox" id="sw-trackers" class="switch" />
+    </label>
+    <label class="switch-row">
+      <span>Forçar HTTPS</span>
+      <input type="checkbox" id="sw-https" class="switch" />
+    </label>
+    <footer class="pop-foot">
+      <button class="link-btn" data-act="settings">Configurações de privacidade</button>
+    </footer>
+  </div>
+
+  <!-- Informações do site -->
+  <div class="popover site-panel" id="site-panel" hidden>
+    <div class="site-head">
+      <svg class="icon" id="site-panel-icon"><use href="#i-lock"/></svg>
+      <div>
+        <strong id="site-panel-title">Conexão segura</strong>
+        <span id="site-panel-host">—</span>
+      </div>
+    </div>
+    <p class="site-desc" id="site-panel-desc">Suas informações são criptografadas antes de serem enviadas.</p>
+    <div class="menu-sep"></div>
+    <button class="menu-item" id="site-copy"><svg class="icon-sm"><use href="#i-code"/></svg><span>Copiar endereço</span></button>
+    <button class="menu-item" id="site-settings"><svg class="icon-sm"><use href="#i-settings"/></svg><span>Configurações do site</span></button>
+  </div>
+
+  <!-- Lista de abas (overflow) -->
+  <div class="popover tablist" id="tablist" hidden></div>
+</div>
+
+<div class="status-bubble" id="status-bubble" hidden></div>
+
+<script src="renderer.js" type="module"></script>
+</body>
+</html>

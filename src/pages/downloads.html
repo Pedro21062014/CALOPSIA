@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta http-equiv="Content-Security-Policy"
+        content="default-src 'none'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self'" />
+  <title>Downloads — Calopsia</title>
+  <link rel="stylesheet" href="page.css" />
+</head>
+<body>
+  <div class="page">
+    <div class="page-head">
+      <h1>Downloads</h1>
+      <p id="subtitle">Arquivos baixados neste dispositivo.</p>
+    </div>
+
+    <div class="toolbar-row">
+      <label class="search-field">
+        <span id="search-ico"></span>
+        <input id="search" type="search" placeholder="Buscar downloads" spellcheck="false" />
+      </label>
+      <button class="btn btn-danger" id="clear-all">Limpar lista</button>
+    </div>
+
+    <div id="list"></div>
+  </div>
+  <script type="module" src="downloads.js"></script>
+</body>
+</html>

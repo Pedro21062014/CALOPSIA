@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta http-equiv="Content-Security-Policy"
+        content="default-src 'none'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https: http:; connect-src 'self'" />
+  <title>Histórico — Calopsia</title>
+  <link rel="stylesheet" href="page.css" />
+</head>
+<body>
+  <div class="page">
+    <div class="page-head">
+      <h1>Histórico</h1>
+      <p id="subtitle">Tudo o que você visitou neste dispositivo.</p>
+    </div>
+
+    <div class="toolbar-row">
+      <label class="search-field">
+        <span id="search-ico"></span>
+        <input id="search" type="search" placeholder="Buscar no histórico" spellcheck="false" />
+      </label>
+      <button class="btn btn-danger" id="clear-all">Limpar histórico</button>
+    </div>
+
+    <div id="list"></div>
+  </div>
+  <script type="module" src="history.js"></script>
+</body>
+</html>

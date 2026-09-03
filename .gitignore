@@ -1,0 +1,36 @@
+# Dependências
+node_modules/
+.pnp.*
+.yarn/
+
+# Saída de build
+release/
+dist/
+out/
+build/icon.png
+build/icon.ico
+build/icon.icns
+*.asar
+
+# Logs
+npm-debug.log*
+yarn-error.log*
+*.log
+
+# Sistema operacional
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Editores
+.vscode/*
+!.vscode/extensions.json
+.idea/
+*.swp
+
+# Ambiente
+.env
+.env.local
+*.pem
+*.p12
+*.mobileprovision

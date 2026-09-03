@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta http-equiv="Content-Security-Policy"
+        content="default-src 'none'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self'" />
+  <title>Sobre o Calopsia</title>
+  <link rel="stylesheet" href="page.css" />
+  <style>
+    .hero { text-align: center; padding: 70px 20px 40px; }
+    .hero img { width: 104px; height: 104px; filter: drop-shadow(0 12px 34px rgba(247,179,43,.3)); }
+    .hero h1 {
+      margin: 20px 0 6px; font-size: 40px; font-weight: 700; letter-spacing: -.04em;
+      background: linear-gradient(100deg, var(--text) 25%, var(--accent) 115%);
+      -webkit-background-clip: text; background-clip: text; color: transparent;
+    }
+    .hero .ver { color: var(--text-dim); font-size: 13.5px; }
+    .hero .tagline { margin: 18px auto 0; max-width: 470px; color: var(--text-dim); line-height: 1.65; font-size: 14px; }
+    .chips { display: flex; justify-content: center; gap: 8px; flex-wrap: wrap; margin-top: 24px; }
+    .feature-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 14px; margin: 40px 0; }
+    .feature {
+      padding: 20px; border-radius: var(--radius-lg);
+      background: var(--surface); border: 1px solid var(--border);
+    }
+    .feature svg { color: var(--accent); margin-bottom: 10px; }
+    .feature h3 { margin: 0 0 6px; font-size: 14px; font-weight: 600; }
+    .feature p { margin: 0; font-size: 12.5px; color: var(--text-dim); line-height: 1.55; }
+    .credits { text-align: center; color: var(--text-faint); font-size: 12px; padding: 20px 0 60px; line-height: 1.8; }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <div class="hero">
+      <img src="calopsia://assets/logo.svg" alt="Calopsia" />
+      <h1>Calopsia</h1>
+      <div class="ver" id="version">—</div>
+      <p class="tagline">Um navegador de código aberto construído sobre o Chromium, com foco em velocidade, privacidade e uma interface que sai da frente.</p>
+      <div class="chips" id="chips"></div>
+    </div>
+
+    <div class="feature-grid" id="features"></div>
+
+    <div class="section">
+      <div class="section-title" id="sys-title">Componentes</div>
+      <div id="components"></div>
+    </div>
+
+    <p class="credits">
+      Feito com Electron e Chromium.<br />
+      Distribuído sob a licença MIT.
+    </p>
+  </div>
+  <script type="module" src="about.js"></script>
+</body>
+</html>

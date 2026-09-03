@@ -1,0 +1,196 @@
+/* Nova aba — layout de destaque */
+
+body { overflow-x: hidden; }
+
+.nt-bg { position: fixed; inset: 0; overflow: hidden; pointer-events: none; z-index: 0; }
+.blob {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(90px);
+  opacity: .30;
+}
+.b1 {
+  width: 520px; height: 520px;
+  top: -180px; left: -120px;
+  background: radial-gradient(circle, #f7b32b, transparent 70%);
+}
+.b2 {
+  width: 620px; height: 620px;
+  bottom: -280px; right: -160px;
+  background: radial-gradient(circle, #ff7a45, transparent 70%);
+  opacity: .22;
+}
+[data-theme="light"] .blob { opacity: .22; }
+
+.nt {
+  position: relative;
+  z-index: 1;
+  max-width: 760px;
+  margin: 0 auto;
+  padding: clamp(48px, 11vh, 110px) 24px 60px;
+  text-align: center;
+}
+
+.nt-brand { margin-bottom: 30px; }
+.nt-logo {
+  width: 76px; height: 76px;
+  filter: drop-shadow(0 8px 26px rgba(247, 179, 43, .28));
+  animation: rise .5s cubic-bezier(.22,.61,.36,1) both;
+}
+.nt-word {
+  margin: 14px 0 4px;
+  font-size: 34px;
+  font-weight: 700;
+  letter-spacing: -.035em;
+  background: linear-gradient(100deg, var(--text) 20%, var(--accent) 120%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  animation: rise .5s .05s cubic-bezier(.22,.61,.36,1) both;
+}
+.nt-tag {
+  margin: 0;
+  color: var(--text-dim);
+  font-size: 13.5px;
+  animation: rise .5s .1s cubic-bezier(.22,.61,.36,1) both;
+}
+
+@keyframes rise {
+  from { opacity: 0; transform: translateY(14px); }
+  to   { opacity: 1; transform: none; }
+}
+
+/* -------------------------------- busca ---------------------------------- */
+
+.nt-search {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  height: 54px;
+  padding: 0 8px 0 18px;
+  border-radius: 27px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow);
+  transition: border-color .18s, box-shadow .18s, transform .18s;
+  animation: rise .5s .15s cubic-bezier(.22,.61,.36,1) both;
+}
+.nt-search:focus-within {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 4px var(--accent-soft), var(--shadow);
+  transform: translateY(-1px);
+}
+.nt-search-ico { display: grid; place-items: center; color: var(--text-faint); flex: none; }
+.nt-search-ico svg { width: 19px; height: 19px; }
+.nt-search input {
+  flex: 1 1 auto;
+  min-width: 0;
+  border: 0; outline: 0; background: none;
+  font-size: 15px;
+}
+.nt-search input::placeholder { color: var(--text-faint); }
+
+.nt-go {
+  height: 38px;
+  padding: 0 20px;
+  border-radius: 19px;
+  background: var(--accent);
+  color: #17171b;
+  font-size: 13.5px;
+  font-weight: 650;
+  flex: none;
+  transition: filter .14s, transform .08s;
+}
+.nt-go:hover { filter: brightness(1.08); }
+.nt-go:active { transform: scale(.96); }
+
+/* -------------------------------- atalhos --------------------------------- */
+
+.nt-tiles {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(94px, 1fr));
+  gap: 12px;
+  margin-top: 38px;
+  animation: rise .5s .2s cubic-bezier(.22,.61,.36,1) both;
+}
+
+.tile {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 9px;
+  padding: 16px 8px 13px;
+  border-radius: 16px;
+  border: 1px solid transparent;
+  background: transparent;
+  transition: background .15s, border-color .15s, transform .12s;
+}
+.tile:hover {
+  background: var(--surface);
+  border-color: var(--border);
+  transform: translateY(-2px);
+}
+.tile-ico {
+  width: 44px; height: 44px;
+  display: grid; place-items: center;
+  border-radius: 14px;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  overflow: hidden;
+  font-size: 17px;
+  font-weight: 700;
+  color: var(--accent);
+}
+.tile-ico img { width: 24px; height: 24px; }
+.tile-name {
+  font-size: 11.5px;
+  color: var(--text-dim);
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.tile:hover .tile-name { color: var(--text); }
+
+.tile.add .tile-ico { border-style: dashed; color: var(--text-faint); }
+
+/* --------------------------------- stats ---------------------------------- */
+
+.nt-stats {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  margin-top: 44px;
+  flex-wrap: wrap;
+  animation: rise .5s .25s cubic-bezier(.22,.61,.36,1) both;
+}
+.stat {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 150px;
+  padding: 14px 18px;
+  border-radius: 14px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+}
+.stat strong { font-size: 20px; font-weight: 700; color: var(--accent); font-variant-numeric: tabular-nums; }
+.stat span { font-size: 11.5px; color: var(--text-faint); }
+
+/* --------------------------------- rodapé --------------------------------- */
+
+.nt-foot {
+  display: flex;
+  justify-content: center;
+  gap: 4px;
+  margin-top: 40px;
+  flex-wrap: wrap;
+}
+.nt-link {
+  padding: 7px 14px;
+  border-radius: 9px;
+  color: var(--text-faint);
+  font-size: 12.5px;
+  transition: background .12s, color .12s;
+}
+.nt-link:hover { background: var(--surface); color: var(--text); }

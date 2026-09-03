@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta http-equiv="Content-Security-Policy"
+        content="default-src 'none'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self'" />
+  <title>Página indisponível</title>
+  <link rel="stylesheet" href="page.css" />
+  <style>
+    body { display: grid; place-items: center; min-height: 100vh; }
+    .err { max-width: 520px; padding: 40px 28px; text-align: center; }
+    .err-ico {
+      width: 72px; height: 72px; margin: 0 auto 24px;
+      display: grid; place-items: center;
+      border-radius: 22px;
+      background: var(--surface); border: 1px solid var(--border);
+      color: var(--accent);
+    }
+    .err-ico svg { width: 34px; height: 34px; }
+    .err h1 { margin: 0 0 10px; font-size: 22px; font-weight: 650; letter-spacing: -.02em; }
+    .err p { margin: 0 0 8px; color: var(--text-dim); line-height: 1.65; font-size: 13.5px; }
+    .err-url {
+      display: inline-block; margin: 14px 0 26px; padding: 7px 14px;
+      border-radius: 9px; background: var(--surface-2);
+      font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+      font-size: 12px; color: var(--text-dim);
+      max-width: 100%; overflow-wrap: anywhere;
+    }
+    .err-actions { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
+    .err-code { margin-top: 28px; font-size: 11.5px; color: var(--text-faint); font-family: ui-monospace, Menlo, monospace; }
+    .tips { text-align: left; margin: 26px auto 0; max-width: 380px; color: var(--text-dim); font-size: 13px; line-height: 1.9; }
+    .tips li::marker { color: var(--accent); }
+  </style>
+</head>
+<body>
+  <div class="err">
+    <div class="err-ico" id="ico"></div>
+    <h1 id="title">Não foi possível abrir esta página</h1>
+    <p id="desc">Verifique sua conexão e tente novamente.</p>
+    <div class="err-url" id="url"></div>
+    <div class="err-actions">
+      <button class="btn btn-primary" id="retry">Tentar novamente</button>
+      <button class="btn" id="home">Ir para a página inicial</button>
+    </div>
+    <ul class="tips" id="tips"></ul>
+    <div class="err-code" id="code"></div>
+  </div>
+  <script type="module" src="error.js"></script>
+</body>
+</html>

@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta http-equiv="Content-Security-Policy"
+        content="default-src 'none'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https: http:; connect-src 'self'" />
+  <title>Nova aba</title>
+  <link rel="stylesheet" href="page.css" />
+  <link rel="stylesheet" href="newtab.css" />
+</head>
+<body>
+  <div class="nt-bg" aria-hidden="true"><span class="blob b1"></span><span class="blob b2"></span></div>
+
+  <main class="nt">
+    <header class="nt-brand">
+      <img class="nt-logo" src="calopsia://assets/logo.svg" alt="" width="76" height="76" />
+      <h1 class="nt-word">Calopsia</h1>
+      <p class="nt-tag" id="greeting">Rápido, privado e do seu jeito.</p>
+    </header>
+
+    <form class="nt-search" id="search-form" autocomplete="off">
+      <span class="nt-search-ico" id="search-ico"></span>
+      <input id="q" type="text" placeholder="Pesquise na web ou digite um endereço" aria-label="Pesquisar" spellcheck="false" />
+      <button type="submit" class="nt-go" aria-label="Pesquisar">Ir</button>
+    </form>
+
+    <section class="nt-tiles" id="tiles" aria-label="Sites mais visitados"></section>
+
+    <section class="nt-stats" id="stats">
+      <div class="stat"><strong id="st-blocked">—</strong><span>rastreadores bloqueados</span></div>
+      <div class="stat"><strong id="st-sites">—</strong><span>sites no histórico</span></div>
+      <div class="stat"><strong id="st-marks">—</strong><span>favoritos salvos</span></div>
+    </section>
+
+    <footer class="nt-foot">
+      <button class="nt-link" data-go="calopsia://bookmarks">Favoritos</button>
+      <button class="nt-link" data-go="calopsia://history">Histórico</button>
+      <button class="nt-link" data-go="calopsia://downloads">Downloads</button>
+      <button class="nt-link" data-go="calopsia://settings">Configurações</button>
+    </footer>
+  </main>
+
+  <script type="module" src="newtab.js"></script>
+</body>
+</html>

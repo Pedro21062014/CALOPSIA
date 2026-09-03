@@ -1,0 +1,208 @@
+name: Build
+
+# Compila o Calopsia para macOS, Linux e Windows.
+#  • push/PR   → apenas valida que a build passa nas três plataformas
+#  • tag v*    → publica os instaladores em um GitHub Release
+#  • manual    → workflow_dispatch
+
+on:
+  push:
+    branches: [main]
+    tags: ['v*']
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      release:
+        description: 'Criar um rascunho de release com os artefatos'
+        type: boolean
+        default: false
+
+permissions:
+  contents: write
+
+concurrency:
+  group: build-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # ───────────────────────────── Verificações ─────────────────────────────
+  lint:
+    name: Verificação de sintaxe
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Validar sintaxe de todos os módulos
+        run: |
+          set -e
+          find src scripts -name '*.js' -print0 | while IFS= read -r -d '' f; do
+            node --check "$f"
+          done
+          echo "Todos os arquivos JavaScript compilam."
+
+      - name: Validar package.json
+        run: node -e "JSON.parse(require('fs').readFileSync('package.json','utf8')); console.log('package.json OK')"
+
+  # ──────────────────────────────── Smoke test ─────────────────────────────
+  smoke:
+    name: Teste de inicialização
+    needs: lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Dependências gráficas
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            xvfb libgtk-3-0 libnss3 libatk1.0-0 libatk-bridge2.0-0 libcups2 \
+            libdrm2 libxkbcommon0 libxcomposite1 libxdamage1 libxfixes3 \
+            libxrandr2 libgbm1 libpango-1.0-0 libcairo2 libasound2t64
+
+      - name: Instalar dependências
+        run: npm ci --no-audit --no-fund
+
+      - name: Iniciar o navegador e verificar invariantes
+        run: xvfb-run -a --server-args="-screen 0 1440x950x24" npm run smoke -- --no-sandbox --disable-gpu
+
+  # ─────────────────────────────── Compilação ──────────────────────────────
+  build:
+    name: ${{ matrix.name }}
+    needs: [lint, smoke]
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: macos-latest
+            name: macOS (Intel + Apple Silicon)
+            command: npm run dist:mac -- --publish never
+            artifact: calopsia-macos
+            pattern: |
+              release/*.dmg
+              release/*.zip
+
+          - os: ubuntu-latest
+            name: Linux (AppImage, deb, rpm)
+            command: npm run dist:linux -- --publish never
+            artifact: calopsia-linux
+            pattern: |
+              release/*.AppImage
+              release/*.deb
+              release/*.rpm
+              release/*.tar.gz
+
+          - os: windows-latest
+            name: Windows (NSIS + portátil)
+            command: npm run dist:win -- --publish never
+            artifact: calopsia-windows
+            pattern: |
+              release/*.exe
+              release/*.msi
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Dependências de empacotamento (Linux)
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends rpm libarchive-tools fakeroot
+
+      - name: Instalar dependências
+        run: npm ci --no-audit --no-fund
+        env:
+          ELECTRON_SKIP_BINARY_DOWNLOAD: 0
+
+      - name: Gerar ícone da aplicação
+        run: npm run icons
+
+      - name: Compilar e empacotar
+        run: ${{ matrix.command }}
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # Assinatura desativada: builds públicas não assinadas.
+          # Para assinar no macOS, adicione os secrets CSC_LINK e CSC_KEY_PASSWORD.
+          CSC_IDENTITY_AUTO_DISCOVERY: false
+          USE_HARD_LINKS: false
+
+      - name: Listar artefatos gerados
+        shell: bash
+        run: ls -lh release/ || dir release
+
+      - name: Enviar artefatos
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.artifact }}
+          path: ${{ matrix.pattern }}
+          if-no-files-found: warn
+          retention-days: 14
+
+  # ──────────────────────────────── Release ────────────────────────────────
+  release:
+    name: Publicar release
+    needs: build
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/v') || inputs.release
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Baixar todos os artefatos
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+
+      - name: Organizar arquivos
+        run: |
+          mkdir -p dist
+          find artifacts -type f \
+            \( -name '*.dmg' -o -name '*.zip' -o -name '*.exe' -o -name '*.msi' \
+               -o -name '*.AppImage' -o -name '*.deb' -o -name '*.rpm' -o -name '*.tar.gz' \) \
+            -exec cp {} dist/ \;
+          ls -lh dist
+
+      - name: Gerar checksums
+        run: cd dist && sha256sum * > SHA256SUMS.txt && cat SHA256SUMS.txt
+
+      - name: Criar release
+        uses: softprops/action-gh-release@v2
+        with:
+          draft: ${{ !startsWith(github.ref, 'refs/tags/v') }}
+          generate_release_notes: true
+          name: Calopsia ${{ github.ref_name }}
+          files: dist/*
+          body: |
+            ## Calopsia ${{ github.ref_name }}
+
+            Navegador multiplataforma baseado em Chromium.
+
+            ### Downloads
+
+            | Plataforma | Arquivo |
+            |---|---|
+            | **Windows** | `Calopsia-Setup-*.exe` (instalador) ou `Calopsia-Portable-*.exe` |
+            | **macOS** | `Calopsia-*-arm64.dmg` (Apple Silicon) ou `Calopsia-*-x64.dmg` (Intel) |
+            | **Linux** | `Calopsia-*.AppImage`, `.deb` ou `.rpm` |
+
+            Verifique a integridade dos arquivos com `SHA256SUMS.txt`.
+
+            > As builds não são assinadas digitalmente. No macOS, execute
+            > `xattr -cr /Applications/Calopsia.app` na primeira abertura.
+            > No Windows, escolha "Mais informações → Executar assim mesmo".
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

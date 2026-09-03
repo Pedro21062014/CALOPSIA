@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta http-equiv="Content-Security-Policy"
+        content="default-src 'none'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self'" />
+  <title>Configurações — Calopsia</title>
+  <link rel="stylesheet" href="page.css" />
+  <style>
+    body { display: flex; min-height: 100vh; }
+
+    .sidebar {
+      position: sticky; top: 0;
+      width: 244px; flex: none;
+      height: 100vh;
+      padding: 34px 14px;
+      border-right: 1px solid var(--border);
+      background: var(--bg-2);
+      overflow-y: auto;
+    }
+    .sb-brand {
+      display: flex; align-items: center; gap: 11px;
+      padding: 0 10px 22px;
+      font-size: 16px; font-weight: 650; letter-spacing: -.02em;
+    }
+    .sb-brand img { width: 26px; height: 26px; }
+    .sb-item {
+      display: flex; align-items: center; gap: 11px;
+      width: 100%; height: 38px;
+      padding: 0 12px;
+      margin-bottom: 2px;
+      border-radius: 10px;
+      color: var(--text-dim);
+      font-size: 13.5px;
+      text-align: left;
+      transition: background .12s, color .12s;
+    }
+    .sb-item:hover { background: var(--surface-2); color: var(--text); }
+    .sb-item.active { background: var(--accent-soft); color: var(--accent); font-weight: 550; }
+    .sb-item svg { flex: none; width: 18px; height: 18px; }
+
+    .content { flex: 1 1 auto; min-width: 0; }
+    .page { max-width: 780px; padding-top: 44px; }
+
+    .accent-picks { display: flex; gap: 8px; }
+    .accent-dot {
+      width: 26px; height: 26px;
+      border-radius: 50%;
+      border: 2px solid transparent;
+      transition: transform .12s, border-color .12s;
+    }
+    .accent-dot:hover { transform: scale(1.12); }
+    .accent-dot.sel { border-color: var(--text); }
+
+    .theme-picks { display: flex; gap: 8px; }
+    .theme-card {
+      width: 92px; padding: 10px 8px;
+      border-radius: 12px;
+      border: 1px solid var(--border-strong);
+      background: var(--surface-2);
+      font-size: 12px;
+      transition: border-color .14s, background .14s;
+    }
+    .theme-card.sel { border-color: var(--accent); background: var(--accent-soft); color: var(--accent); }
+    .theme-swatch { height: 34px; border-radius: 7px; margin-bottom: 7px; border: 1px solid var(--border); }
+    .sw-dark  { background: linear-gradient(135deg, #1d1d23, #26262e); }
+    .sw-light { background: linear-gradient(135deg, #fff, #e6e8ec); }
+    .sw-sys   { background: linear-gradient(110deg, #1d1d23 50%, #eceef2 50%); }
+
+    .about-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 1px; background: var(--border); }
+    .about-cell { background: var(--surface); padding: 15px 20px; }
+    .about-cell dt { font-size: 11px; text-transform: uppercase; letter-spacing: .05em; color: var(--text-faint); margin-bottom: 5px; }
+    .about-cell dd { margin: 0; font-size: 13px; font-variant-numeric: tabular-nums; word-break: break-all; }
+
+    .danger-note {
+      display: flex; gap: 12px; align-items: flex-start;
+      padding: 14px 20px;
+      background: rgba(255,93,93,.07);
+      border-top: 1px solid var(--border);
+      font-size: 12.5px; color: var(--text-dim);
+    }
+    .danger-note svg { color: var(--danger); flex: none; }
+
+    .toast {
+      position: fixed; bottom: 26px; left: 50%;
+      transform: translateX(-50%) translateY(20px);
+      padding: 11px 20px;
+      border-radius: 12px;
+      background: var(--surface);
+      border: 1px solid var(--border-strong);
+      box-shadow: var(--shadow);
+      font-size: 13px;
+      opacity: 0; pointer-events: none;
+      transition: opacity .2s, transform .2s;
+      z-index: 20;
+    }
+    .toast.show { opacity: 1; transform: translateX(-50%); }
+
+    @media (max-width: 760px) {
+      body { flex-direction: column; }
+      .sidebar { position: static; width: 100%; height: auto; display: flex; gap: 4px; overflow-x: auto; padding: 12px; border-right: 0; border-bottom: 1px solid var(--border); }
+      .sb-brand { display: none; }
+      .sb-item { width: auto; white-space: nowrap; }
+    }
+  </style>
+</head>
+<body>
+  <nav class="sidebar" id="sidebar">
+    <div class="sb-brand"><img src="calopsia://assets/logo.svg" alt="" />Configurações</div>
+  </nav>
+
+  <div class="content">
+    <div class="page">
+      <div class="page-head">
+        <h1 id="section-title">Aparência</h1>
+        <p id="section-desc">Ajuste o visual do Calopsia ao seu gosto.</p>
+      </div>
+      <div id="sections"></div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+  <script type="module" src="settings.js"></script>
+</body>
+</html>
