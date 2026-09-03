@@ -6,7 +6,6 @@ on:
   pull_request:
     branches: [main, master]
 
-# Evita runs duplicados em PRs
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
@@ -32,7 +31,7 @@ jobs:
         run: npm ci --ignore-scripts
 
       - name: Build macOS (.dmg x64 + arm64)
-        run: npm run build:mac
+        run: npx electron-builder --mac dmg zip --publish never
         env:
           CSC_IDENTITY_AUTO_DISCOVERY: false
 
@@ -84,7 +83,7 @@ jobs:
         run: npm ci --ignore-scripts
 
       - name: Build Linux (.AppImage + .deb)
-        run: npm run build:linux
+        run: npx electron-builder --linux AppImage deb --publish never
         env:
           USE_HARD_LINKS: false
 
@@ -120,7 +119,7 @@ jobs:
         run: npm ci --ignore-scripts
 
       - name: Build Windows (.exe NSIS + portable)
-        run: npm run build:win
+        run: npx electron-builder --win nsis portable --publish never
 
       - name: List dist/
         shell: pwsh
@@ -143,11 +142,12 @@ jobs:
     needs: [build-mac, build-linux, build-windows]
     if: always()
     steps:
-      - name: Result
+      - name: Write summary
         run: |
           echo "## 🦋 Calopsia Build Results" >> $GITHUB_STEP_SUMMARY
-          echo "| Platform | Status |" >> $GITHUB_STEP_SUMMARY
-          echo "|----------|--------|" >> $GITHUB_STEP_SUMMARY
-          echo "| 🍎 macOS | ${{ needs.build-mac.result }} |" >> $GITHUB_STEP_SUMMARY
-          echo "| 🐧 Linux | ${{ needs.build-linux.result }} |" >> $GITHUB_STEP_SUMMARY
-          echo "| 🪟 Windows | ${{ needs.build-windows.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Platform | Artefatos | Status |" >> $GITHUB_STEP_SUMMARY
+          echo "|----------|-----------|--------|" >> $GITHUB_STEP_SUMMARY
+          echo "| 🍎 macOS | \`.dmg\` x64 + arm64, \`.zip\` | ${{ needs.build-mac.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| 🐧 Linux | \`.AppImage\`, \`.deb\` | ${{ needs.build-linux.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| 🪟 Windows | \`.exe\` NSIS + Portable | ${{ needs.build-windows.result }} |" >> $GITHUB_STEP_SUMMARY

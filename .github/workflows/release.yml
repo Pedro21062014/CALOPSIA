@@ -30,10 +30,9 @@ jobs:
       - name: Install dependencies
         run: npm ci --ignore-scripts
 
-      - name: Build & upload macOS
-        run: npm run build:mac
+      - name: Build macOS
+        run: npx electron-builder --mac dmg zip --publish never
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           CSC_IDENTITY_AUTO_DISCOVERY: false
 
       - name: Upload release assets
@@ -78,10 +77,9 @@ jobs:
       - name: Install Node dependencies
         run: npm ci --ignore-scripts
 
-      - name: Build & upload Linux
-        run: npm run build:linux
+      - name: Build Linux
+        run: npx electron-builder --linux AppImage deb --publish never
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           USE_HARD_LINKS: false
 
       - name: Upload release assets
@@ -110,10 +108,8 @@ jobs:
       - name: Install dependencies
         run: npm ci --ignore-scripts
 
-      - name: Build & upload Windows
-        run: npm run build:win
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Build Windows
+        run: npx electron-builder --win nsis portable --publish never
 
       - name: Upload release assets
         uses: actions/upload-artifact@v4
@@ -165,14 +161,7 @@ jobs:
             | 🪟 Windows | `Calopsia-*-Setup.exe` | Instalador NSIS |
             | 🪟 Windows | `Calopsia-*-Portable.exe` | Portátil |
 
-            ### O que há de novo
-            - Navegador Chromium rápido, privado e elegante
-            - Bloqueador de anúncios e rastreadores integrado
-            - Multi-abas, marcadores, histórico e downloads
-            - Tema escuro / claro / sistema
-
             ### Instalação
-
             **macOS:** Abra o `.dmg` e arraste para Aplicativos.
             **Linux:** `chmod +x Calopsia-*.AppImage && ./Calopsia-*.AppImage`
             **Windows:** Execute o `*-Setup.exe` e siga o assistente.
