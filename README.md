@@ -1,11 +1,12 @@
-# 🦋 Calopsia Browser
+# CALOPSIA Browser
 
 <div align="center">
+  <img src="assets/icon.png" width="150" alt="Logo oficial do CALOPSIA" />
   <h3>Fast · Private · Elegant</h3>
   <p>A modern Chromium-based browser built with Electron</p>
 
-  ![Build](https://github.com/calopsia-browser/calopsia/actions/workflows/build.yml/badge.svg)
-  ![Release](https://img.shields.io/github/v/release/calopsia-browser/calopsia)
+  [![Build](https://github.com/Pedro21062014/CALOPSIA/actions/workflows/build.yml/badge.svg)](https://github.com/Pedro21062014/CALOPSIA/actions/workflows/build.yml)
+  ![Release](https://img.shields.io/github/v/release/Pedro21062014/CALOPSIA)
   ![Platform](https://img.shields.io/badge/platform-macOS%20%7C%20Linux%20%7C%20Windows-blue)
   ![License](https://img.shields.io/badge/license-MIT-green)
 </div>
@@ -24,6 +25,18 @@
 - 🌐 **Search Engines** – Google, DuckDuckGo, Bing, Brave & more
 - ⌨️ **Keyboard Shortcuts** – Power-user friendly
 - 🖥️ **Cross-platform** – macOS (Intel + Apple Silicon), Linux, Windows
+
+## Identidade visual oficial
+
+O [logo oficial fornecido](https://s6.imgcdn.dev/YEbsRH.png) está integrado à barra de guias, página de nova guia e guias sem favicon. A imagem original permanece em `assets/logo-official-source.png`.
+
+Os instaladores usam recursos nativos gerados sem distorção:
+
+- `assets/icon.icns` para macOS;
+- `assets/icon.ico` multi-resolução para Windows;
+- `assets/icon.png` 1024×1024 para Linux e para a interface.
+
+Para regenerar os ícones: `python3 -m pip install Pillow && python3 scripts/generate-icons.py`.
 
 ---
 
@@ -48,8 +61,8 @@ Go to the [**Releases**](../../releases) page to download the latest version.
 ### Setup
 
 ```bash
-git clone https://github.com/calopsia-browser/calopsia.git
-cd calopsia
+git clone https://github.com/Pedro21062014/CALOPSIA.git
+cd CALOPSIA
 npm install
 npm start
 ```

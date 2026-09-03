@@ -153,7 +153,7 @@ function renderTabs() {
     } else if (tab.favicon) {
       el.innerHTML = `<img class="tab-favicon" src="${tab.favicon}" onerror="this.style.display='none'" />`;
     } else {
-      el.innerHTML = `<span style="width:14px;font-size:12px">🌐</span>`;
+      el.innerHTML = `<img class="tab-favicon tab-brand-icon" src="../../assets/icon.png" alt="" />`;
     }
 
     const title = document.createElement('span');

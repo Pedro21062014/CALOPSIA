@@ -1,8 +1,8 @@
 {
   "name": "calopsia",
-  "productName": "Calopsia",
-  "version": "1.0.0",
-  "description": "Calopsia – A modern, fast and elegant Chromium-based browser built with Electron",
+  "productName": "CALOPSIA",
+  "version": "1.0.1",
+  "description": "CALOPSIA — navegador moderno, rápido e elegante baseado em Chromium e Electron",
   "main": "src/main/main.js",
   "author": {
     "name": "Calopsia Browser",
@@ -16,7 +16,8 @@
     "build:linux": "electron-builder --linux",
     "build:win": "electron-builder --win",
     "build:all": "electron-builder --mac --linux --win",
-    "lint": "eslint src --ext .js"
+    "lint": "eslint src --ext .js",
+    "test": "npm run lint"
   },
   "dependencies": {
     "electron-store": "^8.1.0"
@@ -28,62 +29,113 @@
   },
   "build": {
     "appId": "app.calopsia.browser",
-    "productName": "Calopsia",
-    "copyright": "Copyright © 2025 Calopsia Browser",
+    "productName": "CALOPSIA",
+    "copyright": "Copyright © 2026 CALOPSIA",
     "directories": {
       "output": "dist",
       "buildResources": "assets"
     },
     "files": [
       "src/**/*",
-      "assets/**/*",
-      "!assets/icon.icns",
-      "!assets/icon.ico",
-      "node_modules/**/*",
+      "assets/icon.png",
       "package.json"
     ],
     "mac": {
       "category": "public.app-category.utilities",
       "target": [
-        { "target": "dmg", "arch": ["x64", "arm64"] },
-        { "target": "zip", "arch": ["x64", "arm64"] }
+        {
+          "target": "dmg",
+          "arch": [
+            "x64",
+            "arm64"
+          ]
+        },
+        {
+          "target": "zip",
+          "arch": [
+            "x64",
+            "arm64"
+          ]
+        }
       ],
-      "icon": "assets/icon.png",
+      "icon": "assets/icon.icns",
       "darkModeSupport": true
     },
     "linux": {
       "target": [
-        { "target": "AppImage", "arch": ["x64"] },
-        { "target": "deb", "arch": ["x64"] }
+        {
+          "target": "AppImage",
+          "arch": [
+            "x64"
+          ]
+        },
+        {
+          "target": "deb",
+          "arch": [
+            "x64"
+          ]
+        }
       ],
       "icon": "assets/icon.png",
       "category": "Network;WebBrowser"
     },
     "win": {
       "target": [
-        { "target": "nsis", "arch": ["x64"] },
-        { "target": "portable", "arch": ["x64"] }
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        },
+        {
+          "target": "portable",
+          "arch": [
+            "x64"
+          ]
+        }
       ],
-      "icon": "assets/icon.png"
+      "icon": "assets/icon.ico"
     },
     "nsis": {
       "oneClick": false,
       "allowToChangeInstallationDirectory": true,
       "createDesktopShortcut": true,
       "createStartMenuShortcut": true,
-      "shortcutName": "Calopsia"
+      "shortcutName": "CALOPSIA"
     },
     "dmg": {
-      "title": "Install Calopsia",
-      "window": { "width": 540, "height": 380 },
+      "title": "Instalar CALOPSIA",
+      "window": {
+        "width": 540,
+        "height": 380
+      },
       "contents": [
-        { "x": 150, "y": 190, "type": "file" },
-        { "x": 390, "y": 190, "type": "link", "path": "/Applications" }
+        {
+          "x": 150,
+          "y": 190,
+          "type": "file"
+        },
+        {
+          "x": 390,
+          "y": 190,
+          "type": "link",
+          "path": "/Applications"
+        }
       ]
     },
     "publish": {
       "provider": "github",
       "releaseType": "release"
-    }
+    },
+    "artifactName": "CALOPSIA-${version}-${os}-${arch}.${ext}"
+  },
+  "homepage": "https://github.com/Pedro21062014/CALOPSIA",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Pedro21062014/CALOPSIA.git"
+  },
+  "private": true,
+  "engines": {
+    "node": ">=20"
   }
 }

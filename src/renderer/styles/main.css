@@ -68,6 +68,28 @@ ul { list-style: none; }
   flex-shrink: 0;
 }
 
+#app-brand {
+  height: 100%;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 0 9px 0 5px;
+  flex: 0 0 auto;
+  -webkit-app-region: no-drag;
+}
+#app-brand img {
+  width: 27px;
+  height: 27px;
+  object-fit: contain;
+  filter: drop-shadow(0 4px 8px rgba(0, 145, 215, .24));
+}
+#app-brand span {
+  color: var(--text);
+  font-size: 10px;
+  font-weight: 750;
+  letter-spacing: .16em;
+}
+
 /* macOS dots */
 #macos-controls { display: flex; gap: 7px; padding: 0 4px; }
 .dot {
@@ -140,6 +162,7 @@ ul { list-style: none; }
   flex-shrink: 0;
   border-radius: 3px;
 }
+.tab .tab-brand-icon { filter: drop-shadow(0 2px 4px rgba(0, 145, 215, .2)); }
 .tab .tab-title {
   flex: 1;
   white-space: nowrap;
@@ -284,6 +307,13 @@ ul { list-style: none; }
 }
 #nt-center { text-align: center; display: flex; flex-direction: column; align-items: center; gap: 18px; }
 #nt-logo { animation: float 4s ease-in-out infinite; }
+#nt-logo img {
+  width: 128px;
+  height: 128px;
+  display: block;
+  object-fit: contain;
+  filter: drop-shadow(0 22px 36px rgba(0, 145, 215, .28));
+}
 @keyframes float {
   0%,100% { transform: translateY(0); }
   50%      { transform: translateY(-8px); }

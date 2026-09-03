@@ -1,16 +1,18 @@
-# Assets
+# Identidade visual do CALOPSIA
 
-Place your icon files here:
+O logo oficial fornecido está preservado em `logo-official-source.png`.
 
-- `icon.png`  – 1024×1024 PNG (Linux + fallback)
-- `icon.icns` – macOS icon
-- `icon.ico`  – Windows icon
-- `dmg-background.png` – 540×380 PNG for macOS DMG installer background
+Arquivos utilizados pelo Electron e pelos instaladores:
 
-You can convert `icon.png` → `icon.icns` and `icon.ico` using tools like:
-- [png2icns](https://github.com/nicephil/png2icns)
-- [electron-icon-builder](https://www.npmjs.com/package/electron-icon-builder)
+- `icon.png` — PNG quadrado 1024×1024 para Linux, janela e interface;
+- `icon.icns` — ícone multi-resolução para macOS;
+- `icon.ico` — ícone multi-resolução para Windows.
+
+Para recriar os três arquivos a partir da imagem original:
 
 ```bash
-npx electron-icon-builder --input=assets/icon.png --output=assets
+python3 -m pip install Pillow
+python3 scripts/generate-icons.py
 ```
+
+O script recorta somente a área visível do logo, mantém a proporção e adiciona margem transparente em uma tela quadrada, evitando deformação nos instaladores.
