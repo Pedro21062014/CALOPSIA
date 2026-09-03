@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta http-equiv="Content-Security-Policy"
-        content="default-src 'none'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self'" />
+        content="default-src 'none'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' calopsia: data:; connect-src 'self'" />
   <title>Configurações — Calopsia</title>
   <link rel="stylesheet" href="page.css" />
   <style>
@@ -23,7 +23,7 @@
       padding: 0 10px 22px;
       font-size: 16px; font-weight: 650; letter-spacing: -.02em;
     }
-    .sb-brand img { width: 26px; height: 26px; }
+    .sb-brand img { width: auto; height: 30px; object-fit: contain; }
     .sb-item {
       display: flex; align-items: center; gap: 11px;
       width: 100%; height: 38px;

@@ -33,7 +33,8 @@ body { overflow-x: hidden; }
 
 .nt-brand { margin-bottom: 30px; }
 .nt-logo {
-  width: 76px; height: 76px;
+  width: auto; height: 104px;
+  object-fit: contain;
   filter: drop-shadow(0 8px 26px rgba(1, 167, 228, .30));
   animation: rise .5s cubic-bezier(.22,.61,.36,1) both;
 }

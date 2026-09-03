@@ -17,6 +17,7 @@
   "scripts": {
     "start": "electron .",
     "dev": "electron . --dev",
+    "logo": "electron scripts/prepare-logo.js",
     "icons": "node scripts/generate-icons.js",
     "smoke": "electron scripts/smoke.js",
     "screenshots": "electron scripts/screenshot.js",

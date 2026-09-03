@@ -63,6 +63,29 @@ app.whenReady().then(async () => {
     }
   }
 
+  // Imagens da marca precisam realmente decodificar (a CSP das páginas
+  // internas já bloqueou calopsia://assets uma vez — este teste evita regressão)
+  const brandWc = views
+    .map((v) => v.webContents)
+    .find((wc) => wc && wc.getURL().startsWith('calopsia://'));
+  if (brandWc) {
+    try {
+      const img = await brandWc.executeJavaScript(`(() => {
+        const el = document.querySelector('img[src*="assets/logo"]');
+        if (!el) return { found: false };
+        return { found: true, complete: el.complete, w: el.naturalWidth, h: el.naturalHeight,
+                 shownW: el.clientWidth, shownH: el.clientHeight };
+      })()`);
+      check('logo presente no DOM', img.found);
+      check('logo decodificado', img.found && img.w > 0 && img.h > 0,
+        img.found ? `natural ${img.w}x${img.h}` : 'ausente');
+      check('logo visível na tela', img.found && img.shownW > 8 && img.shownH > 8,
+        img.found ? `render ${img.shownW}x${img.shownH}` : 'ausente');
+    } catch (err) {
+      check('verificação do logo', false, err.message);
+    }
+  }
+
   const contentWc = views
     .map((v) => v.webContents)
     .find((wc) => wc && wc.getURL().startsWith('calopsia://'));

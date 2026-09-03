@@ -84,7 +84,8 @@ npm start          # abre o navegador
 | Comando | O que faz |
 |---|---|
 | `npm start` | Executa o Calopsia em modo desenvolvimento |
-| `npm run icons` | Gera `build/icon.png` (usa `build/logo.png` se existir) |
+| `npm run logo` | Reenquadra a arte da marca a partir de `src/assets/logo-original.png` |
+| `npm run icons` | Gera `build/icon.png` a partir de `build/logo.png` |
 | `npm run smoke` | Sobe o navegador e verifica os invariantes da UI (roda no CI) |
 | `npm run screenshots` | Regenera as imagens de `docs/` |
 | `npm run pack` | Empacota sem criar instalador (rápido, para testar) |
@@ -157,11 +158,18 @@ original em `src/assets/logo-original.png`. A paleta da interface foi derivada d
 | `#fd7225` | Laranja do bico — progresso e alertas suaves |
 | `#fddb8c` | Amarelo da crista — realces secundários |
 
-Para trocar o logo:
+Para trocar o logo, substitua **apenas** `src/assets/logo-original.png` (qualquer
+tamanho, fundo transparente) e rode:
 
-1. Substitua `build/logo.png` (PNG quadrado, **1024×1024**, com transparência).
-2. Rode `npm run icons` — o `electron-builder` deriva o `.icns` (macOS) e o `.ico` (Windows).
-3. Substitua também `src/assets/logo.png`, usado na Nova aba, nas Configurações e no Sobre.
+```bash
+npm run logo     # recorta a bounding box e reenquadra
+npm run icons    # deriva build/icon.png
+```
+
+O `prepare-logo` detecta a área útil da arte, descarta a margem transparente e gera
+duas saídas: `src/assets/logo.png` (proporção original, para a interface) e
+`build/logo.png` (mascote centralizado em canvas quadrado 1024×1024, para o ícone).
+O `electron-builder` deriva daí o `.icns` do macOS e o `.ico` do Windows.
 
 ## Segurança
 

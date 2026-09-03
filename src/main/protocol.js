@@ -84,7 +84,7 @@ function registerProtocolHandler(ses) {
     const host = url.hostname || 'newtab';
     const pathname = decodeURIComponent(url.pathname || '/');
 
-    // Assets compartilhados: calopsia://assets/logo.svg
+    // Assets compartilhados: calopsia://assets/logo.png
     if (host === 'assets') {
       const target = safeResolve(PATHS.ASSETS, pathname);
       if (!target) return new Response('Forbidden', { status: 403 });
