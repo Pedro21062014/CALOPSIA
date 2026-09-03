@@ -1,0 +1,7 @@
+node_modules/
+release/
+package-lock.json
+docs/
+build/*.png
+build/*.ico
+build/*.icns
