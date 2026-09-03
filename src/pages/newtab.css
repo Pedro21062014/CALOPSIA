@@ -12,12 +12,12 @@ body { overflow-x: hidden; }
 .b1 {
   width: 520px; height: 520px;
   top: -180px; left: -120px;
-  background: radial-gradient(circle, #f7b32b, transparent 70%);
+  background: radial-gradient(circle, #01a7e4, transparent 70%);
 }
 .b2 {
   width: 620px; height: 620px;
   bottom: -280px; right: -160px;
-  background: radial-gradient(circle, #ff7a45, transparent 70%);
+  background: radial-gradient(circle, #fd7225, transparent 70%);
   opacity: .22;
 }
 [data-theme="light"] .blob { opacity: .22; }
@@ -34,7 +34,7 @@ body { overflow-x: hidden; }
 .nt-brand { margin-bottom: 30px; }
 .nt-logo {
   width: 76px; height: 76px;
-  filter: drop-shadow(0 8px 26px rgba(247, 179, 43, .28));
+  filter: drop-shadow(0 8px 26px rgba(1, 167, 228, .30));
   animation: rise .5s cubic-bezier(.22,.61,.36,1) both;
 }
 .nt-word {

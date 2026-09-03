@@ -22,7 +22,7 @@ async function update(patch) {
 
 /* ---------------------------------------------------------------- esquema */
 
-const ACCENTS = ['#f7b32b', '#ff7a45', '#46d19a', '#4aa8ff', '#a78bfa', '#ff6b9d', '#e2e8f0'];
+const ACCENTS = ['#01a7e4', '#fd7225', '#fddb8c', '#46d19a', '#a78bfa', '#ff6b9d', '#e2e8f0'];
 
 const SECTIONS = [
   {

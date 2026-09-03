@@ -90,7 +90,7 @@ class Store {
 
 const DEFAULT_SETTINGS = {
   theme: 'system', // 'system' | 'dark' | 'light'
-  accent: '#f7b32b',
+  accent: '#01a7e4',
   searchEngine: 'duckduckgo',
   homepage: 'calopsia://newtab',
   startup: 'newtab', // 'newtab' | 'restore' | 'homepage'

@@ -13,9 +13,10 @@
   --text:          #e9e9ee;
   --text-dim:      #a3a3af;
   --text-faint:    #6d6d79;
-  --accent:        #f7b32b;
-  --accent-2:      #ff7a45;
-  --accent-soft:   rgba(247,179,43,.14);
+  --accent:        #01a7e4;   /* azul da marca */
+  --accent-2:      #fd7225;   /* laranja do bico */
+  --accent-3:      #fddb8c;   /* amarelo da crista */
+  --accent-soft:   rgba(1,167,228,.16);
   --danger:        #ff5d5d;
   --success:       #46d19a;
   --radius:        12px;
@@ -35,8 +36,8 @@
   --text:          #17181c;
   --text-dim:      #5c606a;
   --text-faint:    #8a8e98;
-  --accent:        #d99206;
-  --accent-soft:   rgba(217,146,6,.12);
+  --accent:        #0186c4;
+  --accent-soft:   rgba(1,134,196,.13);
   --shadow:        0 10px 40px rgba(0,0,0,.10);
 }
 

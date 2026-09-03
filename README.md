@@ -1,6 +1,6 @@
 <div align="center">
 
-<img src="src/assets/logo.svg" width="110" alt="Calopsia" />
+<img src="src/assets/logo.png" width="128" alt="Calopsia" />
 
 # Calopsia
 
@@ -8,7 +8,7 @@
 Rápido, privado e com uma interface que sai da frente.
 
 [![Build](https://github.com/Pedro21062014/CALOPSIA/actions/workflows/build.yml/badge.svg)](https://github.com/Pedro21062014/CALOPSIA/actions/workflows/build.yml)
-[![Licença MIT](https://img.shields.io/badge/licen%C3%A7a-MIT-f7b32b)](LICENSE)
+[![Licença MIT](https://img.shields.io/badge/licen%C3%A7a-MIT-01a7e4)](LICENSE)
 [![Electron](https://img.shields.io/badge/Electron-44-47848F?logo=electron&logoColor=white)](https://electronjs.org)
 [![Plataformas](https://img.shields.io/badge/plataformas-Windows%20%7C%20macOS%20%7C%20Linux-6e6e7a)](#instalação)
 
@@ -146,15 +146,22 @@ continue rolável durante a busca.
 | `Ctrl/⌘ 1…8` | Ir para a aba N | | `F11` | Tela cheia |
 | `Ctrl/⌘ 9` | Última aba | | `F12` | Ferramentas do dev |
 
-## Trocar o logo
+## Identidade visual
 
-O ícone atual é **provisório**, desenhado por código. Para usar o definitivo:
+O logo oficial está em `src/assets/logo.png` (1024×1024, fundo transparente) e a arte
+original em `src/assets/logo-original.png`. A paleta da interface foi derivada dele:
 
-1. Salve o arquivo como `build/logo.png` (PNG quadrado, **1024×1024**, com transparência).
-2. Rode `npm run icons`.
-3. Opcionalmente, substitua `src/assets/logo.svg` — é ele que aparece na Nova aba e no Sobre.
+| Cor | Uso |
+|---|---|
+| `#01a7e4` | Azul da marca — destaque padrão da interface |
+| `#fd7225` | Laranja do bico — progresso e alertas suaves |
+| `#fddb8c` | Amarelo da crista — realces secundários |
 
-O `electron-builder` deriva automaticamente o `.icns` (macOS) e o `.ico` (Windows).
+Para trocar o logo:
+
+1. Substitua `build/logo.png` (PNG quadrado, **1024×1024**, com transparência).
+2. Rode `npm run icons` — o `electron-builder` deriva o `.icns` (macOS) e o `.ico` (Windows).
+3. Substitua também `src/assets/logo.png`, usado na Nova aba, nas Configurações e no Sobre.
 
 ## Segurança
 
