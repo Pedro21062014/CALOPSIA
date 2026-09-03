@@ -1,0 +1,90 @@
+{
+  "name": "calopsia",
+  "productName": "Calopsia",
+  "version": "1.0.0",
+  "description": "Calopsia – A modern, fast and elegant Chromium-based browser built with Electron",
+  "main": "src/main/main.js",
+  "author": {
+    "name": "Calopsia Browser",
+    "email": "hello@calopsia.app"
+  },
+  "license": "MIT",
+  "scripts": {
+    "start": "electron .",
+    "dev": "NODE_ENV=development electron .",
+    "build:mac": "electron-builder --mac",
+    "build:linux": "electron-builder --linux",
+    "build:win": "electron-builder --win",
+    "build:all": "electron-builder --mac --linux --win",
+    "lint": "eslint src --ext .js",
+    "postinstall": "electron-builder install-app-deps"
+  },
+  "dependencies": {
+    "electron-store": "^8.1.0"
+  },
+  "devDependencies": {
+    "electron": "^29.4.0",
+    "electron-builder": "^24.13.3",
+    "eslint": "^8.57.0"
+  },
+  "build": {
+    "appId": "app.calopsia.browser",
+    "productName": "Calopsia",
+    "copyright": "Copyright © 2025 Calopsia Browser",
+    "directories": {
+      "output": "dist",
+      "buildResources": "assets"
+    },
+    "files": [
+      "src/**/*",
+      "assets/**/*",
+      "node_modules/**/*",
+      "package.json"
+    ],
+    "mac": {
+      "category": "public.app-category.utilities",
+      "target": [
+        { "target": "dmg", "arch": ["x64", "arm64"] },
+        { "target": "zip", "arch": ["x64", "arm64"] }
+      ],
+      "icon": "assets/icon.icns",
+      "darkModeSupport": true
+    },
+    "linux": {
+      "target": [
+        { "target": "AppImage", "arch": ["x64", "arm64"] },
+        { "target": "deb", "arch": ["x64"] },
+        { "target": "rpm", "arch": ["x64"] }
+      ],
+      "icon": "assets/icon.png",
+      "category": "Network;WebBrowser"
+    },
+    "win": {
+      "target": [
+        { "target": "nsis", "arch": ["x64", "arm64"] },
+        { "target": "portable", "arch": ["x64"] }
+      ],
+      "icon": "assets/icon.ico"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "Calopsia"
+    },
+    "dmg": {
+      "title": "Install Calopsia",
+      "background": "assets/dmg-background.png",
+      "window": { "width": 540, "height": 380 },
+      "contents": [
+        { "x": 150, "y": 190, "type": "file" },
+        { "x": 390, "y": 190, "type": "link", "path": "/Applications" }
+      ]
+    },
+    "publish": {
+      "provider": "github",
+      "releaseType": "release"
+    }
+  }
+}

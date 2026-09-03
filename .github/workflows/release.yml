@@ -1,0 +1,99 @@
+name: 🚀 Release Calopsia
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+
+permissions:
+  contents: write
+
+jobs:
+  # ─────────────────────────────────────
+  release-mac:
+    name: 🍎 Release – macOS
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+      - run: npm ci
+      - name: Build & Publish macOS
+        run: npm run build:mac
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          CSC_IDENTITY_AUTO_DISCOVERY: false
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_APP_SPECIFIC_PASSWORD: ${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+
+  # ─────────────────────────────────────
+  release-linux:
+    name: 🐧 Release – Linux
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+      - run: npm ci
+      - run: sudo apt-get update && sudo apt-get install -y libgtk-3-dev libwebkit2gtk-4.0-dev rpm
+      - name: Build & Publish Linux
+        run: npm run build:linux
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  # ─────────────────────────────────────
+  release-windows:
+    name: 🪟 Release – Windows
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+      - run: npm ci
+      - name: Build & Publish Windows
+        run: npm run build:win
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  # ─────────────────────────────────────
+  create-release-notes:
+    name: 📝 Create Release Notes
+    runs-on: ubuntu-latest
+    needs: [release-mac, release-linux, release-windows]
+    steps:
+      - uses: actions/checkout@v4
+      - name: Generate release notes
+        uses: softprops/action-gh-release@v2
+        with:
+          name: "Calopsia ${{ github.ref_name }}"
+          body: |
+            ## 🦋 Calopsia ${{ github.ref_name }}
+
+            ### What's New
+            - Fast, private, and elegant browsing experience
+            - Multi-platform: macOS, Linux, Windows
+            - Built-in Ad & Tracker Blocker
+            - Smart tab management
+            - Bookmark manager
+            - Browsing history
+            - Download manager
+            - Dark / Light / System theme
+
+            ### Downloads
+            | Platform | File |
+            |----------|------|
+            | 🍎 macOS (Intel) | `Calopsia-*-x64.dmg` |
+            | 🍎 macOS (Apple Silicon) | `Calopsia-*-arm64.dmg` |
+            | 🐧 Linux | `Calopsia-*.AppImage` / `.deb` / `.rpm` |
+            | 🪟 Windows | `Calopsia-*-Setup.exe` / portable |
+          draft: false
+          prerelease: ${{ contains(github.ref_name, 'beta') || contains(github.ref_name, 'alpha') }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta http-equiv="Content-Security-Policy"
+        content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline';" />
+  <title>Calopsia</title>
+  <link rel="stylesheet" href="styles/main.css" />
+</head>
+<body>
+
+<!-- ════════════════════════════════════════════════════════════
+     TITLE BAR / CHROME
+═══════════════════════════════════════════════════════════════ -->
+<div id="titlebar">
+  <!-- macOS traffic lights area -->
+  <div id="tb-left">
+    <div id="macos-controls" class="hidden">
+      <span class="dot red" id="btn-close" title="Close"></span>
+      <span class="dot yellow" id="btn-min" title="Minimize"></span>
+      <span class="dot green" id="btn-max" title="Maximize"></span>
+    </div>
+    <div id="win-controls" class="hidden">
+      <button class="wc-btn" id="btn-min-win" title="Minimize">&#8722;</button>
+      <button class="wc-btn" id="btn-max-win" title="Maximize">&#9633;</button>
+      <button class="wc-btn danger" id="btn-close-win" title="Close">&#10005;</button>
+    </div>
+  </div>
+
+  <!-- Tab bar -->
+  <div id="tabs-container">
+    <div id="tabs-list"></div>
+    <button id="btn-new-tab" title="New Tab">+</button>
+  </div>
+
+  <!-- Drag region -->
+  <div id="tb-drag"></div>
+</div>
+
+<!-- ════════════════════════════════════════════════════════════
+     NAVIGATION BAR
+═══════════════════════════════════════════════════════════════ -->
+<div id="navbar">
+  <div id="nav-left">
+    <button class="nav-btn" id="btn-back"    title="Back">&#8592;</button>
+    <button class="nav-btn" id="btn-forward" title="Forward">&#8594;</button>
+    <button class="nav-btn" id="btn-reload"  title="Reload">&#8635;</button>
+    <button class="nav-btn" id="btn-home"    title="Home">⌂</button>
+  </div>
+
+  <div id="omnibox-wrap">
+    <span id="ssl-icon">🔒</span>
+    <input id="omnibox" type="text" spellcheck="false"
+           placeholder="Search or enter address…" autocomplete="off" />
+    <span id="omnibox-clear" title="Clear">✕</span>
+  </div>
+
+  <div id="nav-right">
+    <button class="nav-btn" id="btn-bookmark"  title="Bookmark">☆</button>
+    <button class="nav-btn" id="btn-downloads" title="Downloads">↓</button>
+    <button class="nav-btn" id="btn-history"   title="History">🕐</button>
+    <button class="nav-btn" id="btn-settings"  title="Settings">⚙</button>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════════════════
+     CONTENT AREA  (webviews live here)
+═══════════════════════════════════════════════════════════════ -->
+<div id="content-area"></div>
+
+<!-- ════════════════════════════════════════════════════════════
+     NEW TAB PAGE  (shown when no url loaded)
+═══════════════════════════════════════════════════════════════ -->
+<div id="newtab-page" class="hidden">
+  <div id="nt-center">
+    <div id="nt-logo">
+      <svg viewBox="0 0 120 120" width="90" height="90" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <linearGradient id="lg1" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" style="stop-color:#7c5cfc"/>
+            <stop offset="100%" style="stop-color:#c084fc"/>
+          </linearGradient>
+        </defs>
+        <circle cx="60" cy="60" r="56" fill="url(#lg1)" opacity="0.15"/>
+        <circle cx="60" cy="60" r="42" fill="none" stroke="url(#lg1)" stroke-width="3"/>
+        <ellipse cx="60" cy="60" rx="18" ry="42" fill="none" stroke="url(#lg1)" stroke-width="2.5"/>
+        <line x1="18" y1="60" x2="102" y2="60" stroke="url(#lg1)" stroke-width="2"/>
+        <circle cx="60" cy="60" r="7" fill="url(#lg1)"/>
+      </svg>
+    </div>
+    <h1 id="nt-brand">Calopsia</h1>
+    <p id="nt-tagline">Fast · Private · Elegant</p>
+
+    <div id="nt-search">
+      <span>🔍</span>
+      <input id="nt-search-input" type="text" placeholder="Search the web…" />
+    </div>
+
+    <div id="nt-quicklinks"></div>
+
+    <div id="nt-clock"></div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════════════════
+     PANELS (Settings, History, Downloads)
+═══════════════════════════════════════════════════════════════ -->
+<div id="panel-overlay" class="hidden"></div>
+
+<!-- Settings Panel -->
+<div id="panel-settings" class="side-panel hidden">
+  <div class="panel-header"><h2>Settings</h2><button class="panel-close">✕</button></div>
+  <div class="panel-body">
+    <section class="setting-group">
+      <label>Homepage</label>
+      <input id="cfg-homepage" type="text" />
+    </section>
+    <section class="setting-group">
+      <label>Search Engine</label>
+      <select id="cfg-search">
+        <option value="https://www.google.com/search?q=">Google</option>
+        <option value="https://search.yahoo.com/search?p=">Yahoo</option>
+        <option value="https://www.bing.com/search?q=">Bing</option>
+        <option value="https://duckduckgo.com/?q=">DuckDuckGo</option>
+        <option value="https://search.brave.com/search?q=">Brave Search</option>
+        <option value="https://search.yahoo.com/search?p=">Yahoo</option>
+      </select>
+    </section>
+    <section class="setting-group">
+      <label>Theme</label>
+      <select id="cfg-theme">
+        <option value="system">System Default</option>
+        <option value="light">Light</option>
+        <option value="dark">Dark</option>
+      </select>
+    </section>
+    <section class="setting-group toggle-row">
+      <label>Ad & Tracker Blocker</label>
+      <label class="toggle">
+        <input type="checkbox" id="cfg-adblock" />
+        <span class="slider"></span>
+      </label>
+    </section>
+    <section class="setting-group toggle-row">
+      <label>JavaScript</label>
+      <label class="toggle">
+        <input type="checkbox" id="cfg-js" checked />
+        <span class="slider"></span>
+      </label>
+    </section>
+    <button id="cfg-save" class="btn-primary">Save Settings</button>
+    <button id="cfg-clear-history" class="btn-danger">Clear History</button>
+  </div>
+</div>
+
+<!-- History Panel -->
+<div id="panel-history" class="side-panel hidden">
+  <div class="panel-header"><h2>History</h2><button class="panel-close">✕</button></div>
+  <div class="panel-body">
+    <input id="hist-search" type="text" placeholder="Search history…" class="panel-search" />
+    <ul id="hist-list" class="item-list"></ul>
+  </div>
+</div>
+
+<!-- Downloads Panel -->
+<div id="panel-downloads" class="side-panel hidden">
+  <div class="panel-header"><h2>Downloads</h2><button class="panel-close">✕</button></div>
+  <div class="panel-body">
+    <ul id="dl-list" class="item-list"></ul>
+    <p id="dl-empty" class="empty-msg">No downloads yet.</p>
+  </div>
+</div>
+
+<!-- Bookmarks Panel -->
+<div id="panel-bookmarks" class="side-panel hidden">
+  <div class="panel-header"><h2>Bookmarks</h2><button class="panel-close">✕</button></div>
+  <div class="panel-body">
+    <input id="bm-search" type="text" placeholder="Search bookmarks…" class="panel-search" />
+    <ul id="bm-list" class="item-list"></ul>
+    <p id="bm-empty" class="empty-msg">No bookmarks yet.</p>
+  </div>
+</div>
+
+<!-- Toast notification -->
+<div id="toast"></div>
+
+<script src="scripts/browser.js"></script>
+</body>
+</html>
