@@ -30,9 +30,6 @@
     "electron": "^30.0.0",
     "electron-builder": "^24.13.3"
   },
-  "dependencies": {
-    "electron-tabs": "^0.15.0"
-  },
   "author": "Pedro21062014",
   "license": "MIT"
 }
