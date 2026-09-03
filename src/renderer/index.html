@@ -1,0 +1,197 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data: https: http:; connect-src 'none'; object-src 'none'; base-uri 'none'; frame-src 'none'"
+    />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>CALOPSIA</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <svg class="icon-sprite" aria-hidden="true">
+      <symbol id="i-back" viewBox="0 0 24 24"><path d="m14.5 5-7 7 7 7" /></symbol>
+      <symbol id="i-forward" viewBox="0 0 24 24"><path d="m9.5 5 7 7-7 7" /></symbol>
+      <symbol id="i-reload" viewBox="0 0 24 24">
+        <path d="M20 7v5h-5" />
+        <path d="M18.5 16a8 8 0 1 1-.8-9.2L20 9" />
+      </symbol>
+      <symbol id="i-stop" viewBox="0 0 24 24"><path d="M7 7h10v10H7z" /></symbol>
+      <symbol id="i-home" viewBox="0 0 24 24">
+        <path d="m4 11 8-7 8 7" />
+        <path d="M6.5 9.5V20h11V9.5M10 20v-6h4v6" />
+      </symbol>
+      <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14" /></symbol>
+      <symbol id="i-close" viewBox="0 0 24 24"><path d="m7 7 10 10M17 7 7 17" /></symbol>
+      <symbol id="i-minimize" viewBox="0 0 24 24"><path d="M6 12h12" /></symbol>
+      <symbol id="i-maximize" viewBox="0 0 24 24"><path d="M7 7h10v10H7z" /></symbol>
+      <symbol id="i-restore" viewBox="0 0 24 24">
+        <path d="M9 6h9v9" />
+        <path d="M6 9h9v9H6z" />
+      </symbol>
+      <symbol id="i-lock" viewBox="0 0 24 24">
+        <rect x="5" y="10" width="14" height="10" rx="3" />
+        <path d="M8.5 10V7.5a3.5 3.5 0 0 1 7 0V10" />
+      </symbol>
+      <symbol id="i-info" viewBox="0 0 24 24">
+        <circle cx="12" cy="12" r="8" />
+        <path d="M12 11v5M12 8h.01" />
+      </symbol>
+      <symbol id="i-search" viewBox="0 0 24 24">
+        <circle cx="10.5" cy="10.5" r="6.5" />
+        <path d="m15.5 15.5 4 4" />
+      </symbol>
+      <symbol id="i-download" viewBox="0 0 24 24">
+        <path d="M12 4v11m0 0 4-4m-4 4-4-4" />
+        <path d="M5 19h14" />
+      </symbol>
+      <symbol id="i-chevron-up" viewBox="0 0 24 24"><path d="m8 14 4-4 4 4" /></symbol>
+      <symbol id="i-chevron-down" viewBox="0 0 24 24"><path d="m8 10 4 4 4-4" /></symbol>
+    </svg>
+
+    <header class="browser-chrome" aria-label="Controles do navegador">
+      <div class="tab-strip">
+        <div class="brand" aria-label="CALOPSIA">
+          <img src="assets/logo-mark.svg" alt="" />
+          <span>CALOPSIA</span>
+        </div>
+        <div id="tabs" class="tabs" role="tablist" aria-label="Abas abertas"></div>
+        <button
+          id="new-tab"
+          class="new-tab chrome-button"
+          type="button"
+          title="Nova aba (Ctrl+T)"
+          aria-label="Nova aba"
+        >
+          <svg><use href="#i-plus"></use></svg>
+        </button>
+        <div class="drag-space"></div>
+        <div class="window-controls" aria-label="Controles da janela">
+          <button data-window="minimize" type="button" aria-label="Minimizar">
+            <svg><use href="#i-minimize"></use></svg>
+          </button>
+          <button data-window="maximize" type="button" aria-label="Maximizar">
+            <svg id="maximize-icon"><use href="#i-maximize"></use></svg>
+          </button>
+          <button data-window="close" class="window-close" type="button" aria-label="Fechar">
+            <svg><use href="#i-close"></use></svg>
+          </button>
+        </div>
+      </div>
+
+      <div class="navigation-bar">
+        <nav class="navigation-controls" aria-label="Navegação">
+          <button
+            id="back"
+            class="chrome-button"
+            type="button"
+            title="Voltar (Alt+←)"
+            aria-label="Voltar"
+          >
+            <svg><use href="#i-back"></use></svg>
+          </button>
+          <button
+            id="forward"
+            class="chrome-button"
+            type="button"
+            title="Avançar (Alt+→)"
+            aria-label="Avançar"
+          >
+            <svg><use href="#i-forward"></use></svg>
+          </button>
+          <button
+            id="reload"
+            class="chrome-button"
+            type="button"
+            title="Recarregar (Ctrl+R)"
+            aria-label="Recarregar"
+          >
+            <svg><use id="reload-symbol" href="#i-reload"></use></svg>
+          </button>
+          <button
+            id="home"
+            class="chrome-button home-button"
+            type="button"
+            title="Página inicial"
+            aria-label="Página inicial"
+          >
+            <svg><use href="#i-home"></use></svg>
+          </button>
+        </nav>
+
+        <form id="address-form" class="address-form" autocomplete="off">
+          <button
+            id="security"
+            class="security-indicator"
+            type="button"
+            tabindex="-1"
+            aria-label="Informações da conexão"
+            title="CALOPSIA"
+          >
+            <svg><use id="security-symbol" href="#i-search"></use></svg>
+          </button>
+          <input
+            id="address"
+            name="address"
+            type="text"
+            inputmode="url"
+            autocapitalize="off"
+            autocomplete="off"
+            autocorrect="off"
+            spellcheck="false"
+            aria-label="Pesquisar ou digitar endereço"
+            placeholder="Pesquise na web ou digite um endereço"
+          />
+          <span id="loading-line" class="loading-line" aria-hidden="true"></span>
+        </form>
+
+        <div class="toolbar-actions">
+          <button id="zoom-chip" class="zoom-chip" type="button" title="Restaurar zoom" hidden>
+            100%
+          </button>
+          <button
+            id="downloads"
+            class="chrome-button"
+            type="button"
+            title="Abrir pasta de downloads"
+            aria-label="Downloads"
+          >
+            <svg><use href="#i-download"></use></svg>
+          </button>
+        </div>
+
+        <div id="find-panel" class="find-panel" aria-hidden="true">
+          <svg class="find-icon"><use href="#i-search"></use></svg>
+          <input
+            id="find-input"
+            type="text"
+            autocomplete="off"
+            aria-label="Localizar na página"
+            placeholder="Localizar"
+          />
+          <span id="find-count" class="find-count">0/0</span>
+          <button id="find-previous" type="button" aria-label="Resultado anterior">
+            <svg><use href="#i-chevron-up"></use></svg>
+          </button>
+          <button id="find-next" type="button" aria-label="Próximo resultado">
+            <svg><use href="#i-chevron-down"></use></svg>
+          </button>
+          <button id="find-close" type="button" aria-label="Fechar busca">
+            <svg><use href="#i-close"></use></svg>
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <footer class="status-bar">
+      <span class="status-dot"></span>
+      <span id="status">Pronto</span>
+      <span class="status-spacer"></span>
+      <span id="version"></span>
+    </footer>
+
+    <script src="app.js"></script>
+  </body>
+</html>

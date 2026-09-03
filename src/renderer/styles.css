@@ -1,0 +1,622 @@
+:root {
+  color-scheme: dark;
+  --bg: #090b10;
+  --surface: #10141c;
+  --surface-2: #151a24;
+  --surface-3: #1b2130;
+  --line: rgba(255, 255, 255, 0.075);
+  --line-strong: rgba(255, 255, 255, 0.13);
+  --text: #f4f7ff;
+  --muted: #8e98ad;
+  --muted-2: #657087;
+  --accent: #8b7cff;
+  --accent-2: #4ed8bf;
+  --danger: #ff5f73;
+  --tab-height: 36px;
+  font-family:
+    Inter,
+    ui-sans-serif,
+    -apple-system,
+    BlinkMacSystemFont,
+    'Segoe UI',
+    sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  overflow: hidden;
+  background: var(--bg);
+  color: var(--text);
+  font-size: 13px;
+  user-select: none;
+}
+
+button,
+input {
+  font: inherit;
+}
+
+button {
+  color: inherit;
+}
+
+.icon-sprite {
+  position: fixed;
+  width: 0;
+  height: 0;
+  overflow: hidden;
+}
+
+svg {
+  display: block;
+  width: 18px;
+  height: 18px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.browser-chrome {
+  position: fixed;
+  inset: 0 0 auto;
+  z-index: 10;
+  height: 108px;
+  background:
+    radial-gradient(circle at 34% -120%, rgba(117, 99, 255, 0.18), transparent 44%),
+    linear-gradient(180deg, #11151e 0%, #0d1118 100%);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.65);
+  box-shadow: 0 2px 20px rgba(0, 0, 0, 0.24);
+}
+
+.tab-strip {
+  height: 44px;
+  display: flex;
+  align-items: flex-end;
+  gap: 5px;
+  padding: 6px 0 0 9px;
+  -webkit-app-region: drag;
+}
+
+.brand {
+  height: var(--tab-height);
+  width: 118px;
+  flex: 0 0 118px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding-left: 7px;
+  color: #dad6ff;
+  letter-spacing: 0.13em;
+  font-size: 10px;
+  font-weight: 760;
+}
+
+.brand img {
+  width: 22px;
+  height: 22px;
+  filter: drop-shadow(0 4px 10px rgba(122, 103, 255, 0.25));
+}
+
+.tabs {
+  min-width: 0;
+  max-width: 840px;
+  height: var(--tab-height);
+  display: flex;
+  align-items: stretch;
+  gap: 4px;
+  overflow: hidden;
+  -webkit-app-region: no-drag;
+}
+
+.tab {
+  position: relative;
+  min-width: 92px;
+  width: 210px;
+  max-width: 235px;
+  height: var(--tab-height);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 7px 0 11px;
+  overflow: hidden;
+  color: var(--muted);
+  background: rgba(255, 255, 255, 0.025);
+  border: 1px solid transparent;
+  border-radius: 10px 10px 3px 3px;
+  cursor: default;
+  transition:
+    background 140ms ease,
+    color 140ms ease,
+    border-color 140ms ease;
+}
+
+.tab::after {
+  content: '';
+  position: absolute;
+  inset: auto 9px 0;
+  height: 2px;
+  border-radius: 3px 3px 0 0;
+  opacity: 0;
+  background: linear-gradient(90deg, var(--accent), var(--accent-2));
+}
+
+.tab:hover {
+  color: #d6dbea;
+  background: rgba(255, 255, 255, 0.055);
+}
+
+.tab.active {
+  color: var(--text);
+  background: linear-gradient(180deg, rgba(38, 43, 58, 0.96), rgba(25, 30, 41, 0.98));
+  border-color: rgba(255, 255, 255, 0.08);
+  box-shadow: 0 -8px 24px rgba(0, 0, 0, 0.08);
+}
+
+.tab.active::after {
+  opacity: 1;
+}
+
+.tab.drag-over {
+  box-shadow: inset 3px 0 var(--accent);
+}
+
+.tab-favicon {
+  width: 16px;
+  height: 16px;
+  flex: 0 0 16px;
+  border-radius: 4px;
+  object-fit: contain;
+}
+
+.tab-favicon.placeholder {
+  display: grid;
+  place-items: center;
+  background: linear-gradient(135deg, rgba(139, 124, 255, 0.7), rgba(78, 216, 191, 0.7));
+  color: white;
+  font-size: 9px;
+  font-weight: 800;
+}
+
+.tab-title {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  font-size: 12px;
+}
+
+.tab-loading {
+  width: 14px;
+  height: 14px;
+  flex: 0 0 14px;
+  border: 1.5px solid rgba(255, 255, 255, 0.15);
+  border-top-color: var(--accent-2);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.tab-close {
+  width: 24px;
+  height: 24px;
+  flex: 0 0 24px;
+  display: grid;
+  place-items: center;
+  margin-left: -2px;
+  padding: 0;
+  border: 0;
+  border-radius: 6px;
+  opacity: 0;
+  color: var(--muted);
+  background: transparent;
+  cursor: pointer;
+}
+
+.tab-close svg {
+  width: 14px;
+  height: 14px;
+}
+
+.tab:hover .tab-close,
+.tab.active .tab-close {
+  opacity: 1;
+}
+
+.tab-close:hover {
+  color: white;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.chrome-button,
+.window-controls button,
+.find-panel button {
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  flex: 0 0 34px;
+  padding: 0;
+  border: 0;
+  border-radius: 9px;
+  background: transparent;
+  color: var(--muted);
+  cursor: pointer;
+  transition:
+    color 120ms ease,
+    background 120ms ease,
+    transform 120ms ease;
+  -webkit-app-region: no-drag;
+}
+
+.chrome-button:hover:not(:disabled),
+.find-panel button:hover {
+  color: var(--text);
+  background: rgba(255, 255, 255, 0.075);
+}
+
+.chrome-button:active:not(:disabled),
+.find-panel button:active {
+  transform: scale(0.94);
+}
+
+.chrome-button:disabled {
+  color: #414958;
+  cursor: default;
+}
+
+.new-tab {
+  align-self: center;
+}
+
+.drag-space {
+  min-width: 20px;
+  flex: 1;
+  height: 100%;
+}
+
+.window-controls {
+  height: 44px;
+  display: flex;
+  align-items: flex-start;
+  align-self: flex-start;
+  margin-top: -6px;
+  -webkit-app-region: no-drag;
+}
+
+.window-controls button {
+  width: 46px;
+  height: 38px;
+  border-radius: 0;
+}
+
+.window-controls button:hover {
+  color: white;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.window-controls .window-close:hover {
+  background: #d83b50;
+}
+
+body.platform-darwin .tab-strip {
+  padding-left: 76px;
+}
+
+body.platform-darwin .brand {
+  width: 106px;
+  flex-basis: 106px;
+}
+
+body.platform-darwin .window-controls {
+  display: none;
+}
+
+.navigation-bar {
+  position: relative;
+  height: 64px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 13px 12px;
+  border-top: 1px solid rgba(255, 255, 255, 0.035);
+}
+
+.navigation-controls,
+.toolbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.home-button {
+  margin-left: 2px;
+}
+
+.address-form {
+  position: relative;
+  flex: 1;
+  height: 42px;
+  display: flex;
+  align-items: center;
+  min-width: 160px;
+  overflow: hidden;
+  background: rgba(3, 5, 9, 0.58);
+  border: 1px solid var(--line);
+  border-radius: 13px;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.025),
+    0 7px 20px rgba(0, 0, 0, 0.12);
+  transition:
+    border-color 150ms ease,
+    background 150ms ease,
+    box-shadow 150ms ease;
+}
+
+.address-form:focus-within {
+  background: rgba(6, 8, 14, 0.88);
+  border-color: rgba(139, 124, 255, 0.6);
+  box-shadow:
+    0 0 0 3px rgba(139, 124, 255, 0.11),
+    0 8px 24px rgba(0, 0, 0, 0.16);
+}
+
+.security-indicator {
+  width: 40px;
+  height: 40px;
+  flex: 0 0 40px;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  border: 0;
+  color: var(--muted-2);
+  background: transparent;
+}
+
+.security-indicator svg {
+  width: 16px;
+  height: 16px;
+}
+
+.security-indicator.secure {
+  color: var(--accent-2);
+}
+
+.security-indicator.insecure {
+  color: #ffad66;
+}
+
+.address-form input {
+  width: 100%;
+  min-width: 0;
+  height: 100%;
+  padding: 0 42px 0 0;
+  color: #ecf0f8;
+  caret-color: var(--accent-2);
+  background: transparent;
+  border: 0;
+  outline: 0;
+  user-select: text;
+  font-size: 13px;
+}
+
+.address-form input::placeholder {
+  color: #657086;
+}
+
+.loading-line {
+  position: absolute;
+  inset: auto 0 0;
+  height: 2px;
+  opacity: 0;
+  transform: translateX(-100%);
+  background: linear-gradient(90deg, transparent, var(--accent), var(--accent-2), transparent);
+}
+
+.address-form.loading .loading-line {
+  opacity: 1;
+  animation: loading-line 1.35s ease-in-out infinite;
+}
+
+@keyframes loading-line {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+.toolbar-actions {
+  gap: 4px;
+}
+
+.zoom-chip {
+  height: 28px;
+  padding: 0 9px;
+  border: 1px solid rgba(139, 124, 255, 0.24);
+  border-radius: 8px;
+  background: rgba(139, 124, 255, 0.09);
+  color: #c5bcff;
+  font-size: 11px;
+  cursor: pointer;
+}
+
+.find-panel {
+  position: absolute;
+  z-index: 20;
+  top: 10px;
+  right: 13px;
+  height: 42px;
+  width: min(410px, calc(100vw - 32px));
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  padding: 0 5px 0 12px;
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(-8px) scale(0.98);
+  color: var(--muted);
+  background: #181d28;
+  border: 1px solid var(--line-strong);
+  border-radius: 12px;
+  box-shadow: 0 14px 35px rgba(0, 0, 0, 0.4);
+  transition:
+    opacity 140ms ease,
+    transform 140ms ease;
+}
+
+.find-panel.open {
+  opacity: 1;
+  pointer-events: auto;
+  transform: none;
+}
+
+.find-icon {
+  width: 16px;
+  height: 16px;
+  flex: 0 0 16px;
+}
+
+.find-panel input {
+  flex: 1;
+  min-width: 80px;
+  color: var(--text);
+  background: transparent;
+  border: 0;
+  outline: none;
+  user-select: text;
+}
+
+.find-count {
+  min-width: 40px;
+  color: var(--muted-2);
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+  font-size: 11px;
+}
+
+.find-panel button {
+  width: 30px;
+  height: 30px;
+  flex-basis: 30px;
+}
+
+.find-panel button svg {
+  width: 15px;
+  height: 15px;
+}
+
+.status-bar {
+  position: fixed;
+  z-index: 10;
+  inset: auto 0 0;
+  height: 26px;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 0 12px;
+  overflow: hidden;
+  color: #6f7a90;
+  background: #0b0e14;
+  border-top: 1px solid rgba(255, 255, 255, 0.055);
+  font-size: 10px;
+}
+
+.status-dot {
+  width: 5px;
+  height: 5px;
+  flex: 0 0 5px;
+  border-radius: 50%;
+  background: var(--accent-2);
+  box-shadow: 0 0 8px rgba(78, 216, 191, 0.55);
+}
+
+#status {
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.status-spacer {
+  flex: 1;
+}
+
+#version {
+  color: #515a6d;
+  letter-spacing: 0.05em;
+}
+
+button:focus-visible,
+input:focus-visible {
+  outline: 2px solid rgba(139, 124, 255, 0.8);
+  outline-offset: 2px;
+}
+
+@media (max-width: 980px) {
+  .brand {
+    width: 39px;
+    flex-basis: 39px;
+  }
+
+  .brand span {
+    display: none;
+  }
+
+  .tabs {
+    max-width: none;
+  }
+
+  .home-button {
+    display: none;
+  }
+}
+
+@media (max-width: 720px) {
+  .tab-strip {
+    gap: 2px;
+  }
+
+  .tab {
+    width: 150px;
+  }
+
+  .navigation-bar {
+    gap: 5px;
+    padding-inline: 8px;
+  }
+
+  #forward,
+  #downloads {
+    display: none;
+  }
+
+  .window-controls button {
+    width: 39px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

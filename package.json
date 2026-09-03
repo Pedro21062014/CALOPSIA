@@ -1,0 +1,90 @@
+{
+  "name": "calopsia-browser",
+  "version": "0.1.0",
+  "description": "CALOPSIA — um navegador desktop elegante, rápido e multiplataforma.",
+  "productName": "CALOPSIA",
+  "author": "CALOPSIA",
+  "license": "UNLICENSED",
+  "private": true,
+  "main": "src/main/main.js",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "start": "electron .",
+    "dev": "electron . --dev",
+    "lint": "node --check src/main/main.js && node --check src/preload/preload.js && node --check src/renderer/app.js && node --check src/renderer/newtab.js && node --check src/renderer/error.js",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "pack": "electron-builder --dir",
+    "build": "electron-builder --publish never",
+    "build:mac": "electron-builder --mac --publish never",
+    "build:win": "electron-builder --win --publish never",
+    "build:linux": "electron-builder --linux --publish never"
+  },
+  "devDependencies": {
+    "electron": "44.1.1",
+    "electron-builder": "26.15.3",
+    "prettier": "3.9.6"
+  },
+  "build": {
+    "appId": "ai.calopsia.browser",
+    "productName": "CALOPSIA",
+    "artifactName": "CALOPSIA-${version}-${os}-${arch}.${ext}",
+    "asar": true,
+    "compression": "maximum",
+    "directories": {
+      "output": "release",
+      "buildResources": "build"
+    },
+    "files": [
+      "src/**/*",
+      "build/icon.png",
+      "package.json"
+    ],
+    "icon": "build/icon.png",
+    "mac": {
+      "category": "public.app-category.productivity",
+      "target": [
+        "dmg",
+        "zip"
+      ],
+      "darkModeSupport": true
+    },
+    "dmg": {
+      "title": "CALOPSIA ${version}"
+    },
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        },
+        {
+          "target": "portable",
+          "arch": [
+            "x64"
+          ]
+        }
+      ]
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "CALOPSIA"
+    },
+    "linux": {
+      "target": [
+        "AppImage",
+        "deb"
+      ],
+      "category": "Network;WebBrowser",
+      "maintainer": "CALOPSIA",
+      "synopsis": "Navegador desktop CALOPSIA"
+    }
+  }
+}

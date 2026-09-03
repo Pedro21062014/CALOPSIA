@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self'; connect-src 'none'; object-src 'none'; base-uri 'none'"
+    />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Não foi possível abrir</title>
+    <link rel="stylesheet" href="error.css" />
+  </head>
+  <body>
+    <main>
+      <img src="assets/logo-mark.svg" alt="" />
+      <p class="eyebrow">NÃO FOI POSSÍVEL CONECTAR</p>
+      <h1>Esta página não respondeu.</h1>
+      <p class="message">
+        Verifique a conexão, o endereço digitado ou tente novamente em alguns instantes.
+      </p>
+      <p id="url" class="url"></p>
+      <div class="actions">
+        <button id="retry" type="button">Tentar novamente</button>
+        <button id="home" class="secondary" type="button">Nova aba</button>
+      </div>
+      <p id="details" class="details"></p>
+    </main>
+    <script src="error.js"></script>
+  </body>
+</html>

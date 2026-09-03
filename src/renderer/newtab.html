@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'none'; object-src 'none'; base-uri 'none'; form-action https://duckduckgo.com"
+    />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Nova aba</title>
+    <link rel="stylesheet" href="newtab.css" />
+  </head>
+  <body>
+    <div class="aurora aurora-one"></div>
+    <div class="aurora aurora-two"></div>
+    <main>
+      <header class="hero">
+        <img src="assets/logo-mark.svg" alt="" />
+        <p class="eyebrow">CALOPSIA</p>
+        <h1 id="greeting">Sua janela para a web.</h1>
+        <p id="date" class="date"></p>
+      </header>
+
+      <form id="search-form" class="search" action="https://duckduckgo.com/" method="get">
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <circle cx="10.5" cy="10.5" r="6.5" />
+          <path d="m15.5 15.5 4 4" />
+        </svg>
+        <input
+          id="search"
+          name="q"
+          type="search"
+          autocomplete="off"
+          autofocus
+          placeholder="Pesquise com privacidade"
+          aria-label="Pesquisar na web"
+        />
+        <kbd>Enter</kbd>
+      </form>
+
+      <section class="shortcuts" aria-label="Atalhos">
+        <a href="https://github.com/">
+          <span class="shortcut-icon github">GH</span>
+          <span>GitHub</span>
+        </a>
+        <a href="https://www.youtube.com/">
+          <span class="shortcut-icon youtube">▶</span>
+          <span>YouTube</span>
+        </a>
+        <a href="https://pt.wikipedia.org/">
+          <span class="shortcut-icon wikipedia">W</span>
+          <span>Wikipédia</span>
+        </a>
+        <a href="https://duckduckgo.com/">
+          <span class="shortcut-icon duck">D</span>
+          <span>DuckDuckGo</span>
+        </a>
+      </section>
+    </main>
+
+    <footer>
+      <span></span>
+      <p>Chromium · Simples por design</p>
+    </footer>
+    <script src="newtab.js"></script>
+  </body>
+</html>
