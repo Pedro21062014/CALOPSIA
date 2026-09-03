@@ -1,0 +1,38 @@
+{
+  "name": "calopsia",
+  "version": "1.0.0",
+  "description": "CALOPSIA Browser",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "build:mac": "electron-builder --mac",
+    "build:win": "electron-builder --win",
+    "build:linux": "electron-builder --linux"
+  },
+  "build": {
+    "appId": "com.calopsia.browser",
+    "productName": "CALOPSIA",
+    "mac": {
+      "category": "public.app-category.productivity"
+    },
+    "win": {
+      "target": "nsis"
+    },
+    "linux": {
+      "target": [
+        "AppImage",
+        "deb"
+      ],
+      "category": "Network;WebBrowser"
+    }
+  },
+  "devDependencies": {
+    "electron": "^30.0.0",
+    "electron-builder": "^24.13.3"
+  },
+  "dependencies": {
+    "electron-tabs": "^0.15.0"
+  },
+  "author": "Pedro21062014",
+  "license": "MIT"
+}
