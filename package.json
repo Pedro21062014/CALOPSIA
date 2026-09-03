@@ -16,8 +16,7 @@
     "build:linux": "electron-builder --linux",
     "build:win": "electron-builder --win",
     "build:all": "electron-builder --mac --linux --win",
-    "lint": "eslint src --ext .js",
-    "postinstall": "electron-builder install-app-deps"
+    "lint": "eslint src --ext .js"
   },
   "dependencies": {
     "electron-store": "^8.1.0"
@@ -38,6 +37,8 @@
     "files": [
       "src/**/*",
       "assets/**/*",
+      "!assets/icon.icns",
+      "!assets/icon.ico",
       "node_modules/**/*",
       "package.json"
     ],
@@ -47,24 +48,23 @@
         { "target": "dmg", "arch": ["x64", "arm64"] },
         { "target": "zip", "arch": ["x64", "arm64"] }
       ],
-      "icon": "assets/icon.icns",
+      "icon": "assets/icon.png",
       "darkModeSupport": true
     },
     "linux": {
       "target": [
-        { "target": "AppImage", "arch": ["x64", "arm64"] },
-        { "target": "deb", "arch": ["x64"] },
-        { "target": "rpm", "arch": ["x64"] }
+        { "target": "AppImage", "arch": ["x64"] },
+        { "target": "deb", "arch": ["x64"] }
       ],
       "icon": "assets/icon.png",
       "category": "Network;WebBrowser"
     },
     "win": {
       "target": [
-        { "target": "nsis", "arch": ["x64", "arm64"] },
+        { "target": "nsis", "arch": ["x64"] },
         { "target": "portable", "arch": ["x64"] }
       ],
-      "icon": "assets/icon.ico"
+      "icon": "assets/icon.png"
     },
     "nsis": {
       "oneClick": false,
@@ -75,7 +75,6 @@
     },
     "dmg": {
       "title": "Install Calopsia",
-      "background": "assets/dmg-background.png",
       "window": { "width": 540, "height": 380 },
       "contents": [
         { "x": 150, "y": 190, "type": "file" },

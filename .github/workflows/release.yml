@@ -8,92 +8,173 @@ on:
 permissions:
   contents: write
 
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
 jobs:
-  # ─────────────────────────────────────
+  # ──────────────────────────────────────────────────────────
+  # 🍎  macOS
+  # ──────────────────────────────────────────────────────────
   release-mac:
-    name: 🍎 Release – macOS
+    name: 🍎 Release – macOS DMG
     runs-on: macos-latest
     steps:
       - uses: actions/checkout@v4
+
       - uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '22'
           cache: 'npm'
-      - run: npm ci
-      - name: Build & Publish macOS
+
+      - name: Install dependencies
+        run: npm ci --ignore-scripts
+
+      - name: Build & upload macOS
         run: npm run build:mac
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           CSC_IDENTITY_AUTO_DISCOVERY: false
-          APPLE_ID: ${{ secrets.APPLE_ID }}
-          APPLE_APP_SPECIFIC_PASSWORD: ${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}
-          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
 
-  # ─────────────────────────────────────
+      - name: Upload release assets
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-mac
+          path: |
+            dist/*.dmg
+            dist/*.zip
+          if-no-files-found: error
+
+  # ──────────────────────────────────────────────────────────
+  # 🐧  Linux
+  # ──────────────────────────────────────────────────────────
   release-linux:
-    name: 🐧 Release – Linux
-    runs-on: ubuntu-latest
+    name: 🐧 Release – Linux AppImage + deb
+    runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v4
+
       - uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '22'
           cache: 'npm'
-      - run: npm ci
-      - run: sudo apt-get update && sudo apt-get install -y libgtk-3-dev libwebkit2gtk-4.0-dev rpm
-      - name: Build & Publish Linux
+
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update -y
+          sudo apt-get install -y \
+            libgtk-3-dev \
+            libnotify-dev \
+            libnss3 \
+            libxss1 \
+            libxtst6 \
+            xauth \
+            xvfb \
+            libgbm-dev \
+            libasound2-dev \
+            rpm \
+            dpkg
+
+      - name: Install Node dependencies
+        run: npm ci --ignore-scripts
+
+      - name: Build & upload Linux
         run: npm run build:linux
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          USE_HARD_LINKS: false
 
-  # ─────────────────────────────────────
+      - name: Upload release assets
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-linux
+          path: |
+            dist/*.AppImage
+            dist/*.deb
+          if-no-files-found: error
+
+  # ──────────────────────────────────────────────────────────
+  # 🪟  Windows
+  # ──────────────────────────────────────────────────────────
   release-windows:
-    name: 🪟 Release – Windows
+    name: 🪟 Release – Windows EXE
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v4
+
       - uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '22'
           cache: 'npm'
-      - run: npm ci
-      - name: Build & Publish Windows
+
+      - name: Install dependencies
+        run: npm ci --ignore-scripts
+
+      - name: Build & upload Windows
         run: npm run build:win
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-  # ─────────────────────────────────────
-  create-release-notes:
-    name: 📝 Create Release Notes
+      - name: Upload release assets
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-windows
+          path: |
+            dist/*.exe
+          if-no-files-found: error
+
+  # ──────────────────────────────────────────────────────────
+  # 📦  Criar GitHub Release com todos os artefatos
+  # ──────────────────────────────────────────────────────────
+  publish-release:
+    name: 📦 Publish GitHub Release
     runs-on: ubuntu-latest
     needs: [release-mac, release-linux, release-windows]
+    permissions:
+      contents: write
     steps:
       - uses: actions/checkout@v4
-      - name: Generate release notes
+
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: release-assets
+          merge-multiple: true
+
+      - name: List all files
+        run: find release-assets -type f | sort
+
+      - name: Publish Release
         uses: softprops/action-gh-release@v2
         with:
-          name: "Calopsia ${{ github.ref_name }}"
+          name: "🦋 Calopsia ${{ github.ref_name }}"
+          draft: false
+          prerelease: ${{ contains(github.ref_name, 'beta') || contains(github.ref_name, 'alpha') || contains(github.ref_name, 'rc') }}
+          files: release-assets/**/*
           body: |
             ## 🦋 Calopsia ${{ github.ref_name }}
 
-            ### What's New
-            - Fast, private, and elegant browsing experience
-            - Multi-platform: macOS, Linux, Windows
-            - Built-in Ad & Tracker Blocker
-            - Smart tab management
-            - Bookmark manager
-            - Browsing history
-            - Download manager
-            - Dark / Light / System theme
-
             ### Downloads
-            | Platform | File |
-            |----------|------|
-            | 🍎 macOS (Intel) | `Calopsia-*-x64.dmg` |
-            | 🍎 macOS (Apple Silicon) | `Calopsia-*-arm64.dmg` |
-            | 🐧 Linux | `Calopsia-*.AppImage` / `.deb` / `.rpm` |
-            | 🪟 Windows | `Calopsia-*-Setup.exe` / portable |
-          draft: false
-          prerelease: ${{ contains(github.ref_name, 'beta') || contains(github.ref_name, 'alpha') }}
+
+            | Platform | Arquivo | Descrição |
+            |----------|---------|-----------|
+            | 🍎 macOS Intel | `Calopsia-*-x64.dmg` | Instalador DMG |
+            | 🍎 macOS Apple Silicon | `Calopsia-*-arm64.dmg` | Instalador DMG |
+            | 🐧 Linux | `Calopsia-*.AppImage` | Portátil (qualquer distro) |
+            | 🐧 Linux | `Calopsia-*.deb` | Ubuntu / Debian |
+            | 🪟 Windows | `Calopsia-*-Setup.exe` | Instalador NSIS |
+            | 🪟 Windows | `Calopsia-*-Portable.exe` | Portátil |
+
+            ### O que há de novo
+            - Navegador Chromium rápido, privado e elegante
+            - Bloqueador de anúncios e rastreadores integrado
+            - Multi-abas, marcadores, histórico e downloads
+            - Tema escuro / claro / sistema
+
+            ### Instalação
+
+            **macOS:** Abra o `.dmg` e arraste para Aplicativos.
+            **Linux:** `chmod +x Calopsia-*.AppImage && ./Calopsia-*.AppImage`
+            **Windows:** Execute o `*-Setup.exe` e siga o assistente.
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
