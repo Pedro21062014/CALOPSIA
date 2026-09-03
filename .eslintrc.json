@@ -1,0 +1,10 @@
+{
+  "env": { "node": true, "browser": true, "es2022": true },
+  "parserOptions": { "ecmaVersion": 2022, "sourceType": "script" },
+  "rules": {
+    "no-unused-vars": "warn",
+    "no-undef": "error",
+    "semi": ["warn", "always"],
+    "no-console": "off"
+  }
+}

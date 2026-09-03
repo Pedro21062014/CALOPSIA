@@ -1,0 +1,6 @@
+Place your logo files here:
+  - icon.icns  (macOS, 512x512 recommended)
+  - icon.ico   (Windows, multi-resolution)
+  - icon.png   (Linux & fallback, 512x512)
+
+The logo.svg is used in the browser titlebar and can be replaced at any time.

@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<meta http-equiv="Content-Security-Policy" content="default-src 'self' data: blob:; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src * data: blob:;"/>
+<title>Calopsia</title>
+<link rel="stylesheet" href="styles/main.css"/>
+</head>
+<body>
+<!-- ── Titlebar / Tab Strip ─────────────────────────────────────── -->
+<div id="titlebar">
+  <div id="drag-region"></div>
+
+  <!-- macOS traffic-lights placeholder (Electron draws native ones) -->
+  <div id="traffic-lights-spacer" class="platform-mac"></div>
+
+  <!-- Logo -->
+  <div id="logo-wrap">
+    <img id="logo-img" src="../assets/icons/logo.svg" alt="Calopsia" onerror="this.style.display='none'; document.getElementById('logo-text').style.display='flex'"/>
+    <span id="logo-text" style="display:none">C</span>
+  </div>
+
+  <!-- Tab bar -->
+  <div id="tab-bar">
+    <div id="tabs-list"></div>
+    <button id="btn-new-tab" title="New Tab (Ctrl+T)">
+      <svg viewBox="0 0 16 16"><path d="M8 3v10M3 8h10" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+    </button>
+  </div>
+
+  <!-- Window controls (Win / Linux) -->
+  <div id="win-controls" class="platform-win platform-linux">
+    <button id="btn-minimize" title="Minimize">
+      <svg viewBox="0 0 16 16"><path d="M3 8h10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+    </button>
+    <button id="btn-maximize" title="Maximize">
+      <svg viewBox="0 0 16 16"><rect x="3" y="3" width="10" height="10" rx="1" stroke="currentColor" stroke-width="1.5" fill="none"/></svg>
+    </button>
+    <button id="btn-close" title="Close">
+      <svg viewBox="0 0 16 16"><path d="M4 4l8 8M12 4l-8 8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+    </button>
+  </div>
+</div>
+
+<!-- ── Toolbar ──────────────────────────────────────────────────── -->
+<div id="toolbar">
+  <button id="btn-back"    class="nav-btn" title="Back (Alt+←)">
+    <svg viewBox="0 0 20 20"><path d="M13 4l-7 6 7 6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg>
+  </button>
+  <button id="btn-forward" class="nav-btn" title="Forward (Alt+→)">
+    <svg viewBox="0 0 20 20"><path d="M7 4l7 6-7 6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg>
+  </button>
+  <button id="btn-reload"  class="nav-btn" title="Reload (Ctrl+R)" data-state="reload">
+    <!-- reload icon -->
+    <svg class="icon-reload" viewBox="0 0 20 20">
+      <path d="M16.5 4.5A8 8 0 1 0 18 10" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" fill="none"/>
+      <path d="M18 4.5v4h-4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+    </svg>
+    <!-- stop icon -->
+    <svg class="icon-stop" viewBox="0 0 20 20"><path d="M5 5l10 10M15 5L5 15" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" fill="none"/></svg>
+  </button>
+
+  <!-- Address bar -->
+  <div id="omnibox-wrap">
+    <span id="omnibox-secure">
+      <svg viewBox="0 0 16 16">
+        <rect x="3" y="7" width="10" height="8" rx="1.5" stroke="currentColor" stroke-width="1.3" fill="none"/>
+        <path d="M5.5 7V5a2.5 2.5 0 0 1 5 0v2" stroke="currentColor" stroke-width="1.3" fill="none"/>
+      </svg>
+    </span>
+    <input id="omnibox" type="text" spellcheck="false" autocomplete="off" placeholder="Search or enter address…"/>
+    <button id="btn-bookmark-toggle" title="Bookmark this page">
+      <svg viewBox="0 0 16 16"><path d="M3 2h10v12l-5-3-5 3V2z" stroke="currentColor" stroke-width="1.3" fill="none" class="bm-icon-empty"/><path d="M3 2h10v12l-5-3-5 3V2z" stroke="currentColor" stroke-width="1.3" fill="currentColor" class="bm-icon-filled" style="display:none"/></svg>
+    </button>
+  </div>
+
+  <!-- Right buttons -->
+  <button id="btn-zoom-out"  class="nav-btn small" title="Zoom Out">
+    <svg viewBox="0 0 16 16"><path d="M3 8h10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+  </button>
+  <button id="btn-zoom-in"   class="nav-btn small" title="Zoom In">
+    <svg viewBox="0 0 16 16"><path d="M8 3v10M3 8h10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+  </button>
+  <button id="btn-devtools"  class="nav-btn" title="Developer Tools (F12)">
+    <svg viewBox="0 0 20 20"><path d="M7 7l-3 3 3 3M13 7l3 3-3 3M11 5l-2 10" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg>
+  </button>
+  <button id="btn-menu"      class="nav-btn" title="Menu">
+    <svg viewBox="0 0 20 20"><circle cx="10" cy="4"  r="1.3" fill="currentColor"/><circle cx="10" cy="10" r="1.3" fill="currentColor"/><circle cx="10" cy="16" r="1.3" fill="currentColor"/></svg>
+  </button>
+</div>
+
+<!-- ── Side Panel (Bookmarks / History) ────────────────────────── -->
+<div id="side-panel" class="hidden">
+  <div id="panel-tabs">
+    <button class="panel-tab active" data-panel="bookmarks">Bookmarks</button>
+    <button class="panel-tab" data-panel="history">History</button>
+  </div>
+  <div id="panel-search-wrap">
+    <input id="panel-search" type="text" placeholder="Search…"/>
+  </div>
+  <div id="panel-content"></div>
+</div>
+
+<!-- ── Drop-down Menu ───────────────────────────────────────────── -->
+<div id="dropdown-menu" class="hidden">
+  <div class="menu-section">
+    <button data-action="new-tab">New Tab <span>Ctrl+T</span></button>
+    <button data-action="history-panel">History <span>Ctrl+H</span></button>
+    <button data-action="bookmarks-panel">Bookmarks <span>Ctrl+B</span></button>
+  </div>
+  <div class="menu-separator"></div>
+  <div class="menu-section">
+    <button data-action="zoom-out">Zoom Out <span>Ctrl+-</span></button>
+    <button data-action="zoom-in">Zoom In <span>Ctrl+=</span></button>
+    <button data-action="zoom-reset">Reset Zoom <span>Ctrl+0</span></button>
+  </div>
+  <div class="menu-separator"></div>
+  <div class="menu-section">
+    <button data-action="devtools">Developer Tools <span>F12</span></button>
+  </div>
+</div>
+
+<!-- ── Toast ────────────────────────────────────────────────────── -->
+<div id="toast"></div>
+
+<script src="scripts/renderer.js"></script>
+</body>
+</html>

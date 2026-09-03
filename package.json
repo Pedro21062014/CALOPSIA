@@ -1,0 +1,84 @@
+{
+  "name": "calopsia",
+  "version": "1.0.0",
+  "description": "Calopsia Browser – A modern Chromium-based browser built with Electron",
+  "main": "src/main/main.js",
+  "homepage": "https://github.com/calopsia-browser/calopsia",
+  "author": "Calopsia Browser Team",
+  "license": "MIT",
+  "scripts": {
+    "start": "electron .",
+    "dev": "cross-env NODE_ENV=development electron .",
+    "build": "electron-builder",
+    "build:mac": "electron-builder --mac",
+    "build:win": "electron-builder --win",
+    "build:linux": "electron-builder --linux",
+    "lint": "eslint src --ext .js",
+    "pack": "electron-builder --dir"
+  },
+  "dependencies": {
+    "electron-store": "^8.1.0"
+  },
+  "devDependencies": {
+    "cross-env": "^7.0.3",
+    "electron": "^29.4.6",
+    "electron-builder": "^24.13.3",
+    "eslint": "^8.57.0"
+  },
+  "build": {
+    "appId": "com.calopsia.browser",
+    "productName": "Calopsia",
+    "copyright": "Copyright © 2025 Calopsia Browser",
+    "asar": true,
+    "directories": {
+      "output": "dist",
+      "buildResources": "assets"
+    },
+    "files": [
+      "src/**/*",
+      "assets/**/*",
+      "package.json"
+    ],
+    "mac": {
+      "category": "public.app-category.productivity",
+      "icon": "assets/icons/icon.icns",
+      "target": [
+        { "target": "dmg", "arch": ["x64", "arm64"] },
+        { "target": "zip", "arch": ["x64", "arm64"] }
+      ],
+      "hardenedRuntime": true,
+      "gatekeeperAssess": false,
+      "entitlements": "assets/entitlements.mac.plist",
+      "entitlementsInherit": "assets/entitlements.mac.plist"
+    },
+    "win": {
+      "icon": "assets/icons/icon.ico",
+      "target": [
+        { "target": "nsis", "arch": ["x64", "ia32", "arm64"] },
+        { "target": "portable", "arch": ["x64"] }
+      ]
+    },
+    "linux": {
+      "icon": "assets/icons/",
+      "category": "Network",
+      "target": [
+        { "target": "AppImage", "arch": ["x64", "arm64"] },
+        { "target": "deb", "arch": ["x64"] },
+        { "target": "rpm", "arch": ["x64"] }
+      ]
+    },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": false,
+      "allowToChangeInstallationDirectory": true,
+      "deleteAppDataOnUninstall": false,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "Calopsia"
+    },
+    "dmg": {
+      "title": "Install Calopsia",
+      "icon": "assets/icons/icon.icns"
+    }
+  }
+}
